@@ -25,13 +25,22 @@ const TOP_OFFSET = 58;
 // flat SVG image to an arbitrary height (needed now that the panel's own
 // height tracks the real viewport) distorts every curve non-uniformly --
 // the rounded corners and the notch both warp. This traces the identical
-// path as a `clip-path`, parametrized on the actual panel height: the top
-// ~110px (the notch geometry) is fixed regardless of height, only the
-// right/bottom/left edges and the three plain rounded corners scale to
-// wherever the real bottom edge (`h`) ends up, exactly like a 9-slice image
-// would but expressed as path math instead.
-function panelClipPath(h: number) {
-  return `path("M25 1H93C106.255 1 117 11.7452 117 25V35C117 63.1665 139.833 86 168 86H250C263.255 86 274 96.7452 274 110V${h - 25}C274 ${h - 11.75} 263.255 ${h - 1} 250 ${h - 1}H25C11.7452 ${h - 1} 1 ${h - 11.75} 1 ${h - 25}V25L1.00781 24.3809C1.33623 11.4122 11.9522 1 25 1Z")`;
+// path, parametrized on the actual panel height: the top ~110px (the notch
+// geometry) is fixed regardless of height, only the right/bottom/left edges
+// and the three plain rounded corners scale to wherever the real bottom
+// edge (`h`) ends up, exactly like a 9-slice image would but expressed as
+// path math instead.
+//
+// Uses the IDENTICAL coordinates as fade-mask.svg below (not a
+// hand-adjusted approximation) -- the border ring and the message list's
+// fade mask are two independent DOM layers, and if their shapes are ever
+// maintained as separately-tuned numbers they can drift apart. Rendering
+// this as a real SVG `<path>` with a `stroke` (centered on the path by
+// definition) rather than a CSS `border` on a `clip-path`'d box also
+// removes the need to hand-inset every coordinate by ~1px to fake that
+// same centering -- one shared source of numbers, no compensation math.
+function panelPath(h: number) {
+  return `M25 0H93C106.807 0 118 11.1929 118 25V35C118 62.6142 140.386 85 168 85H250C263.807 85 275 96.1929 275 110V${h - 25}C275 ${h - 11.1929} 263.807 ${h} 250 ${h}H25C11.1929 ${h} 0 ${h - 11.1929} 0 ${h - 25}V25C0 11.1929 11.1929 0 25 0Z`;
 }
 
 export type TalkingBarProps = {
@@ -62,7 +71,7 @@ function ChannelButton({ active, icon, onClick, label }: { active: boolean; icon
 // multi-person chat panel that Talk_section rows live inside). The panel's
 // own outline -- a rounded rect with a notch bitten out of the top-right
 // corner so the channel switcher can nest into it -- traces Figma's own
-// "Union" export as a `clip-path` (see `panelClipPath`) rather than using
+// "Union" export as a stroked SVG path (see `panelPath`) rather than using
 // that export as a flat background image, since the panel's height now
 // tracks the real viewport and a stretched image would warp every curve.
 // The message list is masked with Figma's matching fade SVG so messages
@@ -138,21 +147,23 @@ export default function TalkingBar({ messages, privateMessages, simulatedMessage
 
   return (
     <div className="relative w-[275px] shrink-0" style={{ height: panelHeight }}>
-      {/* The clip-path shape itself (including the top-right notch the
-          channel switcher nests into) is correct at any height -- verified
-          directly by inspecting its rendered boundary. What actually reads
-          as "the border/notch disappeared" is contrast: `border-[#f4f4f4]`
-          + `bg-white/50` was designed as backdrop-blur over vivid hero art,
-          and is nearly invisible once this panel extends down over the
-          page's own plain white/light sections (Win List, Business) with
-          nothing colorful behind it to blur. A drop shadow keeps the panel
-          -- and its notch -- visually legible regardless of what's under
-          it, the same way most frosted-glass card patterns pair blur with
-          a shadow rather than relying on the border alone. */}
-      <div
-        className="pointer-events-none absolute inset-0 border-2 border-[#f4f4f4] bg-white/50 backdrop-blur-[10px]"
-        style={{ clipPath: panelClipPath(panelHeight), filter: "drop-shadow(0 4px 20px rgba(0,0,0,0.12))" }}
-      />
+      {/* What used to read as "the border/notch disappeared" is contrast:
+          `border-[#f4f4f4]` + `bg-white/50` was designed as backdrop-blur
+          over vivid hero art, and is nearly invisible once this panel
+          extends down over the page's own plain white/light sections (Win
+          List, Business) with nothing colorful behind it to blur. A drop
+          shadow keeps the panel -- and its notch -- visually legible
+          regardless of what's under it, the same way most frosted-glass
+          card patterns pair blur with a shadow rather than relying on the
+          border alone. */}
+      <svg
+        className="pointer-events-none absolute inset-0 size-full"
+        style={{ backdropFilter: "blur(10px)", filter: "drop-shadow(0 4px 20px rgba(0,0,0,0.12))" }}
+        viewBox={`0 0 275 ${panelHeight}`}
+        preserveAspectRatio="none"
+      >
+        <path d={panelPath(panelHeight)} fill="white" fillOpacity={0.5} stroke="#f4f4f4" strokeWidth={2} />
+      </svg>
 
       <div
         ref={scrollRef}
