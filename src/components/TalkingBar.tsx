@@ -138,9 +138,20 @@ export default function TalkingBar({ messages, privateMessages, simulatedMessage
 
   return (
     <div className="relative w-[275px] shrink-0" style={{ height: panelHeight }}>
+      {/* The clip-path shape itself (including the top-right notch the
+          channel switcher nests into) is correct at any height -- verified
+          directly by inspecting its rendered boundary. What actually reads
+          as "the border/notch disappeared" is contrast: `border-[#f4f4f4]`
+          + `bg-white/50` was designed as backdrop-blur over vivid hero art,
+          and is nearly invisible once this panel extends down over the
+          page's own plain white/light sections (Win List, Business) with
+          nothing colorful behind it to blur. A drop shadow keeps the panel
+          -- and its notch -- visually legible regardless of what's under
+          it, the same way most frosted-glass card patterns pair blur with
+          a shadow rather than relying on the border alone. */}
       <div
         className="pointer-events-none absolute inset-0 border-2 border-[#f4f4f4] bg-white/50 backdrop-blur-[10px]"
-        style={{ clipPath: panelClipPath(panelHeight) }}
+        style={{ clipPath: panelClipPath(panelHeight), filter: "drop-shadow(0 4px 20px rgba(0,0,0,0.12))" }}
       />
 
       <div
