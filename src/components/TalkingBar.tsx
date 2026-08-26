@@ -31,7 +31,7 @@ const TOP_OFFSET = 58;
 // wherever the real bottom edge (`h`) ends up, exactly like a 9-slice image
 // would but expressed as path math instead.
 function panelClipPath(h: number) {
-  return `path("M25 1H93C106.255 1 117 11.7452 117 25V35C117 63.1665 139.833 86 168 86H250C263.255 86 274 96.7452 274 110V${h - 25}C274 ${h - 11.75} 263.255 ${h - 1} 250 ${h - 1}H25C11.7452 ${h - 1} 1 ${h - 11.75} 1 ${h - 25}V25L1.00781 24.3809C1.33623 11.4122 11.9522 1 25 1Z")`;
+  return `path("M25 1H171.5A32.5 32.5 0 0 0 139 33.5A32.5 32.5 0 0 0 171.5 66H274V${h - 25}C274 ${h - 11.75} 263.255 ${h - 1} 250 ${h - 1}H25C11.7452 ${h - 1} 1 ${h - 11.75} 1 ${h - 25}V25L1.00781 24.3809C1.33623 11.4122 11.9522 1 25 1Z")`;
 }
 
 export type TalkingBarProps = {
