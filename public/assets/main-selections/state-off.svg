@@ -1,0 +1,14 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="93" height="89" viewBox="0 0 93 89" fill="none" xmlns="http://www.w3.org/2000/svg">
+<foreignObject x="-20" y="-20" width="133" height="129"><div xmlns="http://www.w3.org/1999/xhtml" style="backdrop-filter:blur(10px);clip-path:url(#bgblur_0_0_18_clip_path);height:100%;width:100%"></div></foreignObject><g id="Main Selections" data-figma-bg-blur-radius="20">
+<path d="M25 1H68C81.2548 1 92 11.7452 92 25V64C92 77.2548 81.2548 88 68 88H25C11.7452 88 1 77.2548 1 64V25C1 11.7452 11.7452 1 25 1Z" fill="white" fill-opacity="0.8"/>
+<path d="M25 1H68C81.2548 1 92 11.7452 92 25V64C92 77.2548 81.2548 88 68 88H25C11.7452 88 1 77.2548 1 64V25C1 11.7452 11.7452 1 25 1Z" stroke="#F4F4F4" stroke-width="2"/>
+<g id="Actions">
+<circle id="Ellipse 27" cx="50" cy="49" r="5" fill="#23F3D5"/>
+<path id="Union" d="M45.5213 35.9954C46.1141 35.6041 46.8865 35.604 47.4793 35.9954L56.2112 41.7604C57.6637 42.7197 56.9781 44.9623 55.2322 44.9626H54.0015V51.0801C54.0015 52.5279 52.816 53.7017 51.354 53.7019H41.6465C40.1844 53.7019 38.9991 52.528 38.999 51.0801V44.9626H37.7684C36.0221 44.9626 35.3363 42.7197 36.7893 41.7604L45.5213 35.9954Z" stroke="#3E4140" stroke-width="2" stroke-linejoin="round"/>
+<rect id="Rectangle 4" x="49.4977" y="49" width="2" height="6" rx="1" transform="rotate(89.912 49.4977 49)" fill="#3E4140"/>
+</g>
+</g>
+<defs>
+<clipPath id="bgblur_0_0_18_clip_path" transform="translate(20 20)"><path d="M25 1H68C81.2548 1 92 11.7452 92 25V64C92 77.2548 81.2548 88 68 88H25C11.7452 88 1 77.2548 1 64V25C1 11.7452 11.7452 1 25 1Z"/>
+</clipPath></defs>
+</svg>

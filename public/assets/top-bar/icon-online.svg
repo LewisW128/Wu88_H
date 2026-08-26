@@ -1,0 +1,15 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Actions" clip-path="url(#clip0_0_63)">
+<path id="Ellipse 2" d="M8.53466 16.32C8.53466 14.0667 10.3613 12.24 12.6147 12.24C14.868 12.24 16.6947 14.0667 16.6947 16.32" stroke="#3E4140" stroke-width="1.36" stroke-linecap="round"/>
+<path id="Ellipse 3" d="M5.1 14.96C5.1 13.0822 6.53269 11.56 8.3 11.56C9.17215 11.56 9.9628 11.9307 10.54 12.5319C9.18 12.5319 8.16 14.1506 7.82 14.96H5.1Z" fill="#3E4140" stroke="#3E4140" stroke-width="1.36" stroke-linejoin="round"/>
+<circle id="Ellipse 1" cx="1.7" cy="1.7" r="1.7" transform="matrix(-1 0 0 1 13.8933 6.8)" stroke="#3E4140" stroke-width="1.36"/>
+<circle id="Ellipse 4" cx="1.50666" cy="1.50666" r="1.50666" transform="matrix(-1 0 0 1 8.45333 6.8)" fill="#3E4140" stroke="#3E4140" stroke-width="1.36"/>
+<path id="Vector" d="M12.3933 6.8V2.99457C12.3933 2.09182 11.7148 1.36 10.8779 1.36H4.38865C3.55172 1.36 2.87326 2.09182 2.87326 2.99457V13.3254C2.87326 14.2282 3.55172 14.96 4.38865 14.96H7.63326" stroke="#3E4140" stroke-width="1.36" stroke-miterlimit="10"/>
+<path id="Line 6" d="M6.96 3.4H8.32" stroke="#3E4140" stroke-width="1.36" stroke-linecap="round"/>
+</g>
+<defs>
+<clipPath id="clip0_0_63">
+<rect width="17" height="17" fill="white"/>
+</clipPath>
+</defs>
+</svg>

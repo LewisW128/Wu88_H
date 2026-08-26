@@ -1,0 +1,90 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { withBasePath } from "../lib/asset";
+import LeftRight from "./LeftRight";
+import RankedProductCard, { type RankedProductCardProps } from "./RankedProductCard";
+import Tag from "./Tag";
+
+const FADE = 120;
+const SCROLL_STEP = 317; // one card (297px) + its gap (20px)
+
+function buildFadeMask(canLeft: boolean, canRight: boolean) {
+  const leftColor = canLeft ? "transparent" : "black";
+  const rightColor = canRight ? "transparent" : "black";
+  return `linear-gradient(to right, ${leftColor} 0px, black ${FADE}px, black calc(100% - ${FADE}px), ${rightColor} 100%)`;
+}
+
+export type HotGamesProps = {
+  games: RankedProductCardProps[];
+};
+
+// Figma "Hot Games" component (Components Library node 672:19756): a title
+// bar (icon + "熱門遊戲", a "更多" Tag, and a real Left&Right scroll pair --
+// same functional-nav pattern as Business's own prev/next buttons) above a
+// horizontally scrolling row of ranked cards, edge-faded like every other
+// scrollable row in this project. A large decorative dot-scatter graphic
+// sits low behind the row's left edge, peeking out from under rank 01.
+export default function HotGames({ games }: HotGamesProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScroll, setCanScroll] = useState({ left: false, right: false });
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    function update() {
+      if (!el) return;
+      const { scrollLeft, scrollWidth, clientWidth } = el;
+      setCanScroll({
+        left: scrollLeft > 0,
+        right: scrollLeft < scrollWidth - clientWidth - 1,
+      });
+    }
+
+    update();
+    el.addEventListener("scroll", update);
+    window.addEventListener("resize", update);
+    return () => {
+      el.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [games]);
+
+  function scrollBy(direction: "left" | "right") {
+    scrollRef.current?.scrollBy({ left: direction === "left" ? -SCROLL_STEP : SCROLL_STEP, behavior: "smooth" });
+  }
+
+  return (
+    <div className="flex w-full flex-col items-start gap-[15px]">
+      <div className="flex h-[44px] w-full items-center justify-between">
+        <div className="flex items-center gap-[10px]">
+          <img alt="" src={withBasePath("/assets/section-header/icon-hot-games.svg")} className="size-[25px]" />
+          <p className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#444242]">熱門遊戲</p>
+        </div>
+        <div className="flex items-center gap-[20px]">
+          <Tag label="更多" active />
+          <LeftRight onLeft={() => scrollBy("left")} onRight={() => scrollBy("right")} />
+        </div>
+      </div>
+
+      <div className="relative h-[292px] w-full">
+        <img
+          alt=""
+          src={withBasePath("/assets/hot-games/digital-dots-large.svg")}
+          className="pointer-events-none absolute left-0 top-0 h-[361px] w-[378.536px]"
+        />
+
+        <div
+          ref={scrollRef}
+          className="no-scrollbar relative flex h-full items-center gap-[20px] overflow-x-auto overflow-y-hidden"
+          style={{ maskImage: buildFadeMask(canScroll.left, canScroll.right) }}
+        >
+          {games.map((game) => (
+            <RankedProductCard key={game.rank} {...game} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

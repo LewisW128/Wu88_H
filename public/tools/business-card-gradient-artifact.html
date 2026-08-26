@@ -1,0 +1,519 @@
+<title>漸層編輯器 · Business Card 邊匡</title>
+<style>
+  :root {
+    --bg: #f4f5f8;
+    --panel: #ffffff;
+    --ink: #23212b;
+    --sub: #6b6875;
+    --line: #e2e1e8;
+    --accent: #8d54d8;
+    --accent-soft: #f1e9fb;
+    --mono: "SF Mono", "Menlo", "Consolas", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    --radius: 16px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17151d;
+      --panel: #211f29;
+      --ink: #f0eef5;
+      --sub: #a29dae;
+      --line: #37344a;
+      --accent: #b98cf0;
+      --accent-soft: #2c2438;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #17151d;
+    --panel: #211f29;
+    --ink: #f0eef5;
+    --sub: #a29dae;
+    --line: #37344a;
+    --accent: #b98cf0;
+    --accent-soft: #2c2438;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f5f8;
+    --panel: #ffffff;
+    --ink: #23212b;
+    --sub: #6b6875;
+    --line: #e2e1e8;
+    --accent: #8d54d8;
+    --accent-soft: #f1e9fb;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    font-family: var(--sans);
+    color: var(--ink);
+    background: var(--bg);
+    margin: 0;
+    padding: 32px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  h1 { font-size: 20px; font-weight: 700; margin: 0 0 4px; letter-spacing: 0.2px; }
+  .lede { color: var(--sub); font-size: 13.5px; margin: 0 0 24px; line-height: 1.6; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 760px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .card + .card { margin-top: 20px; }
+
+  .card h2 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--sub);
+    margin: 0 0 14px;
+    font-weight: 700;
+  }
+
+  /* business card preview */
+  .previews { display: flex; justify-content: center; padding: 8px 0 4px; }
+  .bc-wrap { position: relative; width: 346px; height: 130px; flex-shrink: 0; }
+  .bc-card {
+    position: relative;
+    width: 100%; height: 100%;
+    border-radius: 25px;
+    background: #f4f4f4;
+    border: 2px solid #f4f4f4;
+    overflow: hidden;
+  }
+  .bc-dots {
+    position: absolute;
+    left: 50%; top: calc(50% + 93.5px);
+    width: 378.536px; height: 361px;
+    transform: translate(-50%, -50%);
+    background-image: radial-gradient(circle, #dbdbdb 2.5px, transparent 2.5px);
+    background-size: 22px 22px;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .bc-logo {
+    position: absolute; left: 18px; top: 9px; width: 108px; height: 108px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 15px; color: #444; letter-spacing: 1px;
+  }
+  .bc-name {
+    position: absolute; right: 18px; top: 47px;
+    font-size: 20px; font-weight: 700; color: #021128; white-space: nowrap;
+  }
+  .bc-ring {
+    position: absolute; inset: 0;
+    border-radius: 25px;
+    border: 2px solid transparent;
+    -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0) border-box;
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+  .corner-hint { display: flex; justify-content: space-between; width: 346px; font-size: 11px; color: var(--sub); margin-top: 6px; }
+
+  .preview-bar {
+    height: 46px; border-radius: 12px; margin-top: 18px;
+  }
+
+  /* angle */
+  .row { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .row label { font-size: 13px; color: var(--sub); width: 60px; flex-shrink: 0; }
+  input[type="range"] { flex: 1; accent-color: var(--accent); }
+  .angle-val { font-family: var(--mono); font-size: 12.5px; width: 60px; text-align: right; color: var(--ink); }
+
+  /* gradient bar with stops */
+  .bar-wrap { position: relative; padding: 22px 10px 30px; margin-top: 10px; }
+  .bar {
+    position: relative;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    cursor: crosshair;
+  }
+  .ruler { display: flex; justify-content: space-between; font-size: 10px; color: var(--sub); font-family: var(--mono); padding: 0 2px; margin-top: 6px; }
+  .stop {
+    position: absolute;
+    top: 50%;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 1.5px rgba(0,0,0,0.35), 0 2px 6px rgba(0,0,0,0.3);
+    transform: translate(-50%, -50%);
+    cursor: grab;
+    touch-action: none;
+  }
+  .stop.selected { box-shadow: 0 0 0 2.5px var(--accent), 0 2px 8px rgba(0,0,0,0.35); }
+  .stop:active { cursor: grabbing; }
+
+  .btn-row { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+  button {
+    font-family: var(--sans);
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 7px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--ink);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  button.primary:hover { filter: brightness(1.06); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button:focus-visible, .stop:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* selected stop editor */
+  .editor { display: flex; align-items: center; gap: 14px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+  .editor.hidden { display: none; }
+  .swatch-input {
+    width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--line);
+    padding: 0; background: none; cursor: pointer;
+  }
+  .editor-field { display: flex; flex-direction: column; gap: 4px; }
+  .editor-field label { font-size: 10.5px; color: var(--sub); text-transform: uppercase; letter-spacing: 0.4px; }
+  .editor-field input[type="number"] {
+    width: 64px; font-family: var(--mono); font-size: 13px;
+    border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px;
+    background: var(--bg); color: var(--ink);
+  }
+  .editor-field input[type="text"] {
+    width: 88px; font-family: var(--mono); font-size: 13px;
+    border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px;
+    background: var(--bg); color: var(--ink); text-transform: uppercase;
+  }
+
+  /* palette */
+  .palette { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+  .palette button {
+    width: 26px; height: 26px; padding: 0; border-radius: 50%;
+    border: 2px solid var(--line);
+  }
+
+  /* presets */
+  .presets { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* output */
+  textarea {
+    width: 100%; min-height: 64px; resize: vertical;
+    font-family: var(--mono); font-size: 12.5px; line-height: 1.6;
+    border: 1px solid var(--line); border-radius: 10px; padding: 12px;
+    background: var(--bg); color: var(--ink);
+  }
+  .copy-row { display: flex; justify-content: flex-end; margin-top: 10px; gap: 8px; align-items: center; }
+  .copied-msg { font-size: 12px; color: var(--accent); opacity: 0; transition: opacity 0.2s; }
+  .copied-msg.show { opacity: 1; }
+</style>
+
+<div class="wrap">
+  <h1>漸層編輯器 · Business Card 邊匡</h1>
+  <p class="lede">拖曳圓點調整色標位置,點一下圓點可改顏色與精確數值。預覽是真實 346×130 卡片尺寸與遮罩技巧,跟正式頁面上看到的一致。完成後複製下方 CSS 貼回程式碼。</p>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <h2>角度</h2>
+        <div class="row">
+          <label>Angle</label>
+          <input type="range" id="angleSlider" min="-180" max="180" step="0.1" value="-48.0664842153752" />
+          <span class="angle-val" id="angleVal"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>快速比例</h2>
+        <div class="presets" id="presets"></div>
+      </div>
+
+      <div class="card">
+        <h2>WU88 色盤</h2>
+        <div class="palette" id="palette"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>預覽 (Business Card 實際尺寸)</h2>
+      <div class="previews">
+        <div class="bc-wrap">
+          <div class="bc-card">
+            <div class="bc-dots"></div>
+            <div class="bc-logo">CQ9</div>
+            <div class="bc-name">CQ9 GAMING</div>
+          </div>
+          <div class="bc-ring" id="previewRing"></div>
+        </div>
+      </div>
+      <div class="corner-hint"><span>左上 ↖</span><span>右下 ↘</span></div>
+      <div class="preview-bar" id="previewBar"></div>
+
+      <div class="bar-wrap">
+        <div class="bar" id="bar"></div>
+        <div class="ruler"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+      </div>
+
+      <div class="btn-row">
+        <button id="addStopBtn">+ 新增色標</button>
+        <button id="removeStopBtn" disabled>刪除選取色標</button>
+        <button id="resetBtn">重設為目前版本</button>
+      </div>
+
+      <div class="editor hidden" id="editor">
+        <input type="color" id="colorPicker" class="swatch-input" />
+        <div class="editor-field">
+          <label>Hex</label>
+          <input type="text" id="hexInput" maxlength="7" />
+        </div>
+        <div class="editor-field">
+          <label>位置 %</label>
+          <input type="number" id="posInput" min="0" max="100" step="1" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>CSS 輸出</h2>
+    <textarea id="output" readonly></textarea>
+    <div class="copy-row">
+      <span class="copied-msg" id="copiedMsg">已複製!</span>
+      <button class="primary" id="copyBtn">複製 CSS</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const PALETTE = [
+    "#01FAB0", "#14E8B8", "#48BACE", "#9A71F1",
+    "#B65AFD", "#8D54D8", "#6F4FBD", "#644EB3"
+  ];
+
+  const CURRENT_STOPS = [
+    { pos: 0,   color: "#01FAB0" },
+    { pos: 10,  color: "#14E8B8" },
+    { pos: 20,  color: "#48BACE" },
+    { pos: 45,  color: "#9A71F1" },
+    { pos: 55,  color: "#B65AFD" },
+    { pos: 70,  color: "#8D54D8" },
+    { pos: 85,  color: "#6F4FBD" },
+    { pos: 100, color: "#644EB3" },
+  ];
+
+  const PRESETS = [
+    { label: "目前 (套用中)", stops: CURRENT_STOPS },
+    { label: "均衡", stops: [
+      { pos: 0,  color: "#01FAB0" },
+      { pos: 25, color: "#48BACE" },
+      { pos: 50, color: "#9A71F1" },
+      { pos: 75, color: "#B65AFD" },
+      { pos: 100, color: "#644EB3" },
+    ]},
+    { label: "青色偏多", stops: [
+      { pos: 0,  color: "#01FAB0" },
+      { pos: 35, color: "#14E8B8" },
+      { pos: 60, color: "#48BACE" },
+      { pos: 80, color: "#9A71F1" },
+      { pos: 100, color: "#B65AFD" },
+    ]},
+  ];
+
+  let stops = CURRENT_STOPS.map(s => ({ ...s, id: crypto.randomUUID() }));
+  let angle = -48.0664842153752;
+  let selectedId = stops[0].id;
+  let dragId = null;
+
+  const bar = document.getElementById("bar");
+  const previewRing = document.getElementById("previewRing");
+  const previewBar = document.getElementById("previewBar");
+  const output = document.getElementById("output");
+  const angleSlider = document.getElementById("angleSlider");
+  const angleVal = document.getElementById("angleVal");
+  const editor = document.getElementById("editor");
+  const colorPicker = document.getElementById("colorPicker");
+  const hexInput = document.getElementById("hexInput");
+  const posInput = document.getElementById("posInput");
+  const removeStopBtn = document.getElementById("removeStopBtn");
+  const copiedMsg = document.getElementById("copiedMsg");
+
+  function sorted() {
+    return [...stops].sort((a, b) => a.pos - b.pos);
+  }
+
+  function gradientCss(dir) {
+    const stopStr = sorted().map(s => `${s.color} ${round(s.pos)}%`).join(", ");
+    return `linear-gradient(${dir}deg, ${stopStr})`;
+  }
+
+  function round(n) {
+    return Math.round(n * 100) / 100;
+  }
+
+  function render() {
+    const css = gradientCss(round(angle));
+    previewRing.style.background = css;
+    previewRing.style.webkitMask = "linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0) border-box";
+    previewRing.style.webkitMaskComposite = "xor";
+    previewRing.style.maskComposite = "exclude";
+    previewBar.style.backgroundImage = gradientCss(90);
+    bar.style.backgroundImage = gradientCss(90);
+    output.value = `background: ${css};`;
+
+    angleVal.textContent = `${round(angle)}°`;
+
+    // render handles
+    bar.querySelectorAll(".stop").forEach(el => el.remove());
+    stops.forEach(s => {
+      const el = document.createElement("div");
+      el.className = "stop" + (s.id === selectedId ? " selected" : "");
+      el.style.left = s.pos + "%";
+      el.style.background = s.color;
+      el.dataset.id = s.id;
+      el.tabIndex = 0;
+      el.addEventListener("pointerdown", onStopPointerDown);
+      bar.appendChild(el);
+    });
+
+    const sel = stops.find(s => s.id === selectedId);
+    if (sel) {
+      editor.classList.remove("hidden");
+      colorPicker.value = sel.color;
+      hexInput.value = sel.color;
+      posInput.value = round(sel.pos);
+      removeStopBtn.disabled = stops.length <= 2;
+    } else {
+      editor.classList.add("hidden");
+      removeStopBtn.disabled = true;
+    }
+  }
+
+  function onStopPointerDown(e) {
+    selectedId = e.currentTarget.dataset.id;
+    dragId = selectedId;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    render();
+  }
+
+  bar.addEventListener("pointermove", (e) => {
+    if (!dragId) return;
+    const rect = bar.getBoundingClientRect();
+    let pct = ((e.clientX - rect.left) / rect.width) * 100;
+    pct = Math.max(0, Math.min(100, pct));
+    const stop = stops.find(s => s.id === dragId);
+    if (stop) {
+      stop.pos = pct;
+      render();
+    }
+  });
+  window.addEventListener("pointerup", () => { dragId = null; });
+  window.addEventListener("pointercancel", () => { dragId = null; });
+
+  bar.addEventListener("click", (e) => {
+    if (e.target !== bar) return;
+    const rect = bar.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+    addStop(pct);
+  });
+
+  function addStop(pos) {
+    const id = crypto.randomUUID();
+    stops.push({ id, pos, color: "#ffffff" });
+    selectedId = id;
+    render();
+  }
+
+  document.getElementById("addStopBtn").addEventListener("click", () => {
+    addStop(50);
+  });
+
+  removeStopBtn.addEventListener("click", () => {
+    if (stops.length <= 2) return;
+    stops = stops.filter(s => s.id !== selectedId);
+    selectedId = stops[0]?.id ?? null;
+    render();
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    stops = CURRENT_STOPS.map(s => ({ ...s, id: crypto.randomUUID() }));
+    angle = -48.0664842153752;
+    angleSlider.value = angle;
+    selectedId = stops[0].id;
+    render();
+  });
+
+  colorPicker.addEventListener("input", () => {
+    const s = stops.find(s => s.id === selectedId);
+    if (s) { s.color = colorPicker.value; render(); }
+  });
+
+  hexInput.addEventListener("change", () => {
+    let v = hexInput.value.trim();
+    if (!v.startsWith("#")) v = "#" + v;
+    if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+      const s = stops.find(s => s.id === selectedId);
+      if (s) { s.color = v; render(); }
+    }
+  });
+
+  posInput.addEventListener("change", () => {
+    const v = Math.max(0, Math.min(100, Number(posInput.value)));
+    const s = stops.find(s => s.id === selectedId);
+    if (s) { s.pos = v; render(); }
+  });
+
+  angleSlider.addEventListener("input", () => {
+    angle = Number(angleSlider.value);
+    render();
+  });
+
+  document.getElementById("copyBtn").addEventListener("click", async () => {
+    const css = gradientCss(round(angle));
+    try {
+      await navigator.clipboard.writeText(css);
+      copiedMsg.classList.add("show");
+      setTimeout(() => copiedMsg.classList.remove("show"), 1400);
+    } catch (e) {
+      output.select();
+    }
+  });
+
+  // palette chips
+  const paletteEl = document.getElementById("palette");
+  PALETTE.forEach(hex => {
+    const b = document.createElement("button");
+    b.style.background = hex;
+    b.title = hex;
+    b.addEventListener("click", () => {
+      const s = stops.find(s => s.id === selectedId);
+      if (s) { s.color = hex; render(); }
+    });
+    paletteEl.appendChild(b);
+  });
+
+  // presets
+  const presetsEl = document.getElementById("presets");
+  PRESETS.forEach(p => {
+    const b = document.createElement("button");
+    b.textContent = p.label;
+    b.addEventListener("click", () => {
+      stops = p.stops.map(s => ({ ...s, id: crypto.randomUUID() }));
+      selectedId = stops[0].id;
+      render();
+    });
+    presetsEl.appendChild(b);
+  });
+
+  render();
+})();
+</script>

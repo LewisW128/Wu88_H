@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<title>Gradient Editor</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #1a1a2e;
+    color: #f4f4f4;
+  }
+  .editor {
+    display: flex;
+    border-bottom: 1px solid #33334d;
+  }
+  .panel {
+    padding: 28px 32px;
+  }
+  .preview-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    width: 260px;
+    flex-shrink: 0;
+    border-right: 1px solid #33334d;
+  }
+  .preview-label { font-size: 13px; color: #a2a2a2; letter-spacing: 0.5px; }
+  .avatar-preview {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: #2a2a45;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .avatar-photo {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #444 0%, #222 100%);
+  }
+  .avatar-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    padding: 6px;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+  .badge-preview {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .badge-icon { width: 30px; height: 30px; opacity: 0.9; }
+  .controls { flex: 1; min-width: 0; }
+  h1 { font-size: 16px; margin: 0 0 4px; }
+  .hint { color: #a2a2a2; font-size: 12px; margin-bottom: 18px; }
+  .row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .row label { width: 60px; font-size: 13px; color: #ccc; flex-shrink: 0; }
+  input[type="range"] { flex: 1; }
+  input[type="number"] { width: 64px; background: #26263f; border: 1px solid #3a3a5c; color: #fff; border-radius: 6px; padding: 4px 6px; }
+  .stops { margin-top: 16px; }
+  .stop-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; background: #22223a; padding: 8px 10px; border-radius: 8px; }
+  .stop-row input[type="color"] { width: 32px; height: 32px; border: none; border-radius: 6px; padding: 0; background: none; cursor: pointer; }
+  .stop-row input[type="range"] { flex: 1; }
+  .stop-row .pos-val { width: 44px; font-size: 12px; text-align: right; color: #a2a2a2; }
+  .stop-row button { background: #3e3e5e; border: none; color: #f88; border-radius: 6px; width: 26px; height: 26px; cursor: pointer; font-size: 14px; }
+  .add-btn { margin-top: 8px; background: #23f3d5; color: #1a1a2e; border: none; border-radius: 8px; padding: 8px 16px; font-weight: 700; cursor: pointer; font-size: 13px; }
+  .output { margin-top: 20px; }
+  .output label { font-size: 13px; color: #ccc; display: block; margin-bottom: 6px; }
+  textarea {
+    width: 100%;
+    background: #111122;
+    color: #23f3d5;
+    border: 1px solid #3a3a5c;
+    border-radius: 8px;
+    padding: 12px;
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 12px;
+    resize: vertical;
+    min-height: 50px;
+  }
+  .copy-btn { margin-top: 6px; background: #444; color: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; }
+  .copy-btn.copied { background: #23f3d5; color: #1a1a2e; }
+</style>
+</head>
+<body>
+
+<div class="editor" id="editor-ring">
+  <div class="panel preview-panel">
+    <div class="preview-label">頭像外框圈</div>
+    <div class="avatar-preview">
+      <div class="avatar-photo"></div>
+      <div class="avatar-ring" data-role="ringPreview"></div>
+    </div>
+  </div>
+  <div class="panel controls">
+    <h1>外框圈漸層</h1>
+    <div class="hint">這組只控制頭像外框圈,跟徽章背景是獨立分開的。</div>
+    <div class="row">
+      <label>角度</label>
+      <input type="range" data-role="angle" min="-180" max="180" value="-48" />
+      <input type="number" data-role="angleNum" min="-180" max="180" value="-48" />
+      <span>deg</span>
+    </div>
+    <div class="stops" data-role="stops"></div>
+    <button class="add-btn" data-role="addStop">+ 新增色標</button>
+    <div class="output">
+      <label>CSS linear-gradient</label>
+      <textarea data-role="cssOut" readonly></textarea>
+      <button class="copy-btn" data-role="copyBtn">複製</button>
+    </div>
+  </div>
+</div>
+
+<div class="editor" id="editor-badge">
+  <div class="panel preview-panel">
+    <div class="preview-label">右下角徽章背景</div>
+    <div class="badge-preview" data-role="badgePreview">
+      <svg class="badge-icon" viewBox="0 0 12.7119 12.7119" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3.3051 10.6363H9.40683" stroke="white" stroke-width="1.01696" stroke-linecap="round"/>
+        <path d="M6.35569 3.14372C6.52333 3.14377 6.68083 3.2271 6.77561 3.3654L8.30002 5.59099L10.0988 4.52458C10.2714 4.42226 10.4888 4.43127 10.6526 4.54704C10.8159 4.66289 10.8965 4.8642 10.8576 5.06072L10.0295 9.25212C9.98234 9.49014 9.77315 9.66221 9.53049 9.66228H3.18186C2.93915 9.66228 2.73004 9.49015 2.68283 9.25212L1.85471 5.06072C1.81587 4.86412 1.89629 4.66286 2.05979 4.54704C2.22358 4.43127 2.44098 4.42226 2.6135 4.52458L4.41135 5.59001L5.93576 3.3654C6.03055 3.22702 6.18795 3.14374 6.35569 3.14372ZM5.59299 7.11833C5.31225 7.11841 5.08422 7.34637 5.0842 7.62712C5.0842 7.9079 5.31223 8.13583 5.59299 8.13591H7.11838C7.3992 8.13591 7.62717 7.90795 7.62717 7.62712C7.62715 7.34632 7.39919 7.11833 7.11838 7.11833H5.59299Z" fill="white"/>
+        <circle cx="2.06214" cy="3.57287" r="0.536728" fill="white"/>
+        <circle cx="10.6498" cy="3.57287" r="0.536728" fill="white"/>
+        <circle cx="6.35596" cy="1.8285" r="0.67091" fill="white"/>
+      </svg>
+    </div>
+  </div>
+  <div class="panel controls">
+    <h1>徽章背景漸層</h1>
+    <div class="hint">這組只控制右下角徽章的背景,跟外框圈是獨立分開的。</div>
+    <div class="row">
+      <label>角度</label>
+      <input type="range" data-role="angle" min="-180" max="180" value="-48" />
+      <input type="number" data-role="angleNum" min="-180" max="180" value="-48" />
+      <span>deg</span>
+    </div>
+    <div class="stops" data-role="stops"></div>
+    <button class="add-btn" data-role="addStop">+ 新增色標</button>
+    <div class="output">
+      <label>CSS linear-gradient</label>
+      <textarea data-role="cssOut" readonly></textarea>
+      <button class="copy-btn" data-role="copyBtn">複製</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function createEditor(root, initialStops, applyPreview) {
+    let stops = initialStops.map(s => ({ ...s }));
+
+    const angleEl = root.querySelector('[data-role="angle"]');
+    const angleNumEl = root.querySelector('[data-role="angleNum"]');
+    const stopsEl = root.querySelector('[data-role="stops"]');
+    const cssOut = root.querySelector('[data-role="cssOut"]');
+    const copyBtn = root.querySelector('[data-role="copyBtn"]');
+    const addStopBtn = root.querySelector('[data-role="addStop"]');
+
+    function buildGradientString() {
+      const angle = angleEl.value;
+      const sorted = [...stops].sort((a, b) => a.pos - b.pos);
+      const stopStr = sorted.map(s => `${s.color} ${s.pos}%`).join(", ");
+      return `linear-gradient(${angle}deg, ${stopStr})`;
+    }
+
+    function render() {
+      const gradient = buildGradientString();
+      applyPreview(gradient);
+      cssOut.value = gradient;
+      copyBtn.classList.remove("copied");
+      copyBtn.textContent = "複製";
+    }
+
+    function renderStopRows() {
+      stopsEl.innerHTML = "";
+      stops.forEach((stop, i) => {
+        const row = document.createElement("div");
+        row.className = "stop-row";
+        row.innerHTML = `
+          <input type="color" value="${stop.color}" data-idx="${i}" class="colorInput" />
+          <input type="range" min="0" max="100" value="${stop.pos}" data-idx="${i}" class="posInput" />
+          <span class="pos-val">${stop.pos}%</span>
+          <button data-idx="${i}" class="removeBtn">×</button>
+        `;
+        stopsEl.appendChild(row);
+      });
+
+      stopsEl.querySelectorAll(".colorInput").forEach(el => {
+        el.addEventListener("input", e => {
+          stops[+e.target.dataset.idx].color = e.target.value;
+          render();
+        });
+      });
+      stopsEl.querySelectorAll(".posInput").forEach(el => {
+        el.addEventListener("input", e => {
+          const idx = +e.target.dataset.idx;
+          stops[idx].pos = +e.target.value;
+          el.closest(".stop-row").querySelector(".pos-val").textContent = e.target.value + "%";
+          render();
+        });
+      });
+      stopsEl.querySelectorAll(".removeBtn").forEach(el => {
+        el.addEventListener("click", e => {
+          const idx = +e.target.dataset.idx;
+          stops.splice(idx, 1);
+          renderStopRows();
+          render();
+        });
+      });
+    }
+
+    angleEl.addEventListener("input", () => { angleNumEl.value = angleEl.value; render(); });
+    angleNumEl.addEventListener("input", () => { angleEl.value = angleNumEl.value; render(); });
+
+    addStopBtn.addEventListener("click", () => {
+      stops.push({ color: "#ffffff", pos: 50 });
+      renderStopRows();
+      render();
+    });
+
+    copyBtn.addEventListener("click", () => {
+      navigator.clipboard.writeText(cssOut.value).then(() => {
+        copyBtn.textContent = "已複製";
+        copyBtn.classList.add("copied");
+      });
+    });
+
+    renderStopRows();
+    render();
+  }
+
+  const defaultStops = [
+    { color: "#01fab0", pos: 0 },
+    { color: "#14e8b8", pos: 0 },
+    { color: "#48bace", pos: 11 },
+    { color: "#9a71f1", pos: 34 },
+    { color: "#b65afd", pos: 49 },
+    { color: "#8d54d8", pos: 74 },
+  ];
+
+  createEditor(
+    document.getElementById("editor-ring"),
+    defaultStops,
+    (gradient) => {
+      document.querySelector('#editor-ring [data-role="ringPreview"]').style.background = gradient;
+    }
+  );
+
+  createEditor(
+    document.getElementById("editor-badge"),
+    defaultStops,
+    (gradient) => {
+      document.querySelector('#editor-badge [data-role="badgePreview"]').style.backgroundImage = gradient;
+    }
+  );
+</script>
+
+</body>
+</html>
