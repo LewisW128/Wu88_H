@@ -23,6 +23,8 @@ export type GameCardProps = {
   image?: string;
   mainText: string;
   subText: string;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 };
 
 // Hover state (node 670:6505, "state=on") renders the same card ~12.4%
@@ -43,18 +45,23 @@ export type GameCardProps = {
 // its own bottom-left corner: upward keeps it from creeping into the row
 // below (cards are bottom-aligned via `items-end`), rightward is the
 // natural flex-reflow direction that pushes later siblings away.
-export default function GameCard({ video, image, mainText, subText }: GameCardProps) {
+export default function GameCard({ video, image, mainText, subText, onMouseEnter, onMouseLeave }: GameCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   return (
     <div
       className="group relative h-[184px] w-[161px] shrink-0 origin-bottom-left transition-[width,height] duration-300 ease-out hover:z-10 hover:h-[206.816px] hover:w-[180.964px]"
-      onMouseEnter={() => videoRef.current?.play()}
+      onMouseEnter={() => {
+        videoRef.current?.play();
+        onMouseEnter?.();
+      }}
       onMouseLeave={() => {
         const el = videoRef.current;
-        if (!el) return;
-        el.pause();
-        el.currentTime = 0;
+        if (el) {
+          el.pause();
+          el.currentTime = 0;
+        }
+        onMouseLeave?.();
       }}
     >
       <div className="absolute bottom-0 left-0 h-[184px] w-[161px] origin-bottom-left transition-transform duration-300 ease-out group-hover:scale-[1.124]">

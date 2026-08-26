@@ -2,7 +2,8 @@ import { DEFAULT_RING_COLOR } from "../components/Avatar";
 import Business from "../components/Business";
 import ContainerBg from "../components/ContainerBg";
 import Footer from "../components/Footer";
-import GameCard, { type GameCardProps } from "../components/GameCard";
+import { type GameCardProps } from "../components/GameCard";
+import FormBar from "../components/FormBar";
 import HotGames from "../components/HotGames";
 import Language from "../components/Language";
 import ProductCard, { type ProductCardProps } from "../components/ProductCard";
@@ -257,22 +258,7 @@ export default function Home() {
               {/* Figma "Form Bar" sits inside this same hero layer, between
                   the carousel dots and Hot Games -- not below the fold with
                   the other sections. */}
-              {/* Fixed at the card's own hover-grown height (not its 184px
-                  resting height): `overflow-x-auto` forces the browser to
-                  compute overflow-y as "auto" too (a well-known CSS quirk --
-                  you can't pair non-visible overflow on one axis with
-                  visible on the other), so any resting height here would
-                  clip a card's hover-growth instead of letting it expand
-                  upward into open space. `overflow-y-hidden` overrides that
-                  same auto-Y back off -- without it this row can pick up
-                  its own independent vertical scrollbar (e.g. from a
-                  sub-pixel height mismatch) that hijacks the mouse wheel
-                  instead of it scrolling the page. */}
-              <div className="no-scrollbar flex h-[206.816px] items-end gap-[20px] overflow-x-auto overflow-y-hidden">
-                {formBarGames.map((game) => (
-                  <GameCard key={game.mainText} {...game} />
-                ))}
-              </div>
+              <FormBar games={formBarGames} />
 
               <HotGames games={hotGames} />
 
