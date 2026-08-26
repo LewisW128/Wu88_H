@@ -88,6 +88,18 @@ export default function FormBar({ games }: FormBarProps) {
   // so no conversion against `scale` is needed here.
   const [extraShift, setExtraShift] = useState(0);
 
+  // A one-time measurement (plus a window-resize listener) raced against
+  // this row's own asset loading: fonts and the category videos can still
+  // be settling their intrinsic size after mount, so a measurement taken
+  // right away could lock in a stale scrollWidth from before that settled
+  // -- too small on one load, too generous on another -- with nothing to
+  // ever correct it afterwards, since neither event fires again on its
+  // own. That inconsistency is what showed up as the shift sometimes
+  // undershooting (right edge clipped) and sometimes overshooting (first
+  // card faded further than it needed to). A ResizeObserver instead
+  // re-measures every time the row's own box actually changes size, for
+  // any reason, so a late-settling layout keeps this correct instead of
+  // needing the stars to align at mount time.
   useEffect(() => {
     const el = rowRef.current;
     if (!el) return;
@@ -96,14 +108,21 @@ export default function FormBar({ games }: FormBarProps) {
       setExtraShift(Math.max(0, el.scrollWidth - el.clientWidth));
     }
     measure();
-    window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
   }, [games]);
 
   const lastIndex = games.length - 1;
   const isLastHovered = hoveredIndex === lastIndex;
   const isOtherHovered = hoveredIndex !== null && !isLastHovered;
-  const lastCardShift = LAST_CARD_GROWTH_DELTA + extraShift;
+  // A few extra px on top of the measured minimum: a right edge clipped
+  // by even one stray pixel of rounding is a visible, hard-edged defect,
+  // while a shift that's a few px more generous than strictly necessary
+  // just moves the fade's own start point slightly earlier -- an
+  // unnoticeable trade the wrong direction to be cautious about.
+  const SAFETY_MARGIN = 5;
+  const lastCardShift = LAST_CARD_GROWTH_DELTA + extraShift + SAFETY_MARGIN;
 
   return (
     <div className="overflow-hidden">
