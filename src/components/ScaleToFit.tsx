@@ -45,6 +45,21 @@ export default function ScaleToFit({ children }: { children: React.ReactNode }) 
     // tick -- visible as the whole page continuously twitching. The
     // content's natural height only actually needs re-measuring when the
     // viewport itself changes.
+    //
+    // This used to also try to preserve scroll position (as a fraction of
+    // page height) across a resize, since narrowing the window shrinks
+    // this wrapper's height and can make the browser force-clamp scrollY.
+    // That restoration attempt turned out to be its own worse bug: normal
+    // hover-driven layout changes elsewhere on the page (Top_up's
+    // hover-expand, a card's hover-grow) were intermittently misread as
+    // needing the same correction, causing large, inconsistent scroll
+    // jumps during ordinary interaction -- confirmed by triggering the
+    // exact same hover state repeatedly and getting different scroll
+    // results each time, a race condition rather than a deterministic
+    // effect of the resize fix. A resize-triggered scroll clamp on a
+    // narrower window is a minor, rare inconvenience; unpredictable jumps
+    // during normal use are much worse, so this was removed rather than
+    // patched further.
     function update() {
       const nextScale = Math.min(1, window.innerWidth / DESIGN_WIDTH);
       setScale(nextScale);
