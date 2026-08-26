@@ -1,43 +1,53 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useScale } from "./ScaleToFit";
 
-// Design-space scroll distance (matching Container_BG's own 1078px height)
-// over which this row fades from transparent to opaque white.
-const FADE_DISTANCE = 900;
+const SENTINEL_ID = "hero-zone-end-sentinel";
 
-// Search/Language/Top_up need to be transparent at rest (they float over
-// vivid hero art -- an opaque fill there cuts a hard white bar across the
-// image) but opaque once scrolling has carried the hero away, so whatever
-// comes up next (Hot Games, Form Bar) is hidden behind this row instead of
-// showing through it. A binary switch at a single scroll threshold just
-// relocates the hard-edge problem to whatever's crossing that threshold at
-// the moment it flips, so this fades continuously with scroll progress
-// instead -- by the time real content needs hiding, opacity has already
-// climbed most of the way to solid.
+// Search/Language/Top_up need to be transparent while the hero-associated
+// content (the hero art itself, Form Bar, Hot Games -- all overlapping
+// Container_BG's own art) is still directly behind them: an opaque fill
+// there cuts a hard white bar across vivid artwork. But once scrolling has
+// carried that whole zone away, transparent would let whatever comes up
+// next (General Games, etc.) show/bleed through this row instead of being
+// hidden behind it, per spec.
+//
+// A *continuous* fade between those two states (this component's earlier
+// version) sounds like a compromise but is actually worse than either
+// pure state: partway through the fade, this row sits over Form Bar/Hot
+// Games at, say, 50% white opacity -- a washed-out translucent smear
+// across game art that's scrolling right past it, for the entire
+// multi-hundred-pixel scroll distance of that transition. There's no
+// opacity value that looks right for that moment; the fix is to not pass
+// through it. A sentinel dropped exactly where the hero-associated zone
+// ends (see page.tsx) flips this row instantly, with no CSS transition --
+// so it's always either cleanly transparent (art shows through crisply)
+// or cleanly opaque (content is fully hidden), never the smear in between.
 export default function StickyUtilityBar({ children }: { children: React.ReactNode }) {
-  const scale = useScale();
-  const [opacity, setOpacity] = useState(0);
+  const [heroZonePassed, setHeroZonePassed] = useState(false);
 
   useEffect(() => {
-    function update() {
-      const fadeDistancePx = FADE_DISTANCE * (scale || 1);
-      setOpacity(Math.min(1, window.scrollY / fadeDistancePx));
-    }
-    update();
-    window.addEventListener("scroll", update);
-    window.addEventListener("resize", update);
-    return () => {
-      window.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
-    };
-  }, [scale]);
+    const sentinel = document.getElementById(SENTINEL_ID);
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setHeroZonePassed(!entry.isIntersecting && entry.boundingClientRect.top < 0);
+      },
+      { threshold: 0 }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <div className="sticky top-[38px] z-10 flex items-center justify-between pt-[21px]">
-      <div className="pointer-events-none absolute inset-0 bg-white" style={{ opacity }} />
+      {heroZonePassed && <div className="pointer-events-none absolute inset-0 bg-white" />}
       <div className="relative flex w-full items-center justify-between">{children}</div>
     </div>
   );
+}
+
+export function HeroZoneEndSentinel() {
+  return <div id={SENTINEL_ID} className="h-0" />;
 }

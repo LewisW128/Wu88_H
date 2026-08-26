@@ -14,7 +14,7 @@ import Search from "../components/Search";
 import SectionHeader from "../components/SectionHeader";
 import Sidebar from "../components/Sidebar";
 import SocialLinks from "../components/SocialLinks";
-import StickyUtilityBar from "../components/StickyUtilityBar";
+import StickyUtilityBar, { HeroZoneEndSentinel } from "../components/StickyUtilityBar";
 import TalkingBar from "../components/TalkingBar";
 import type { TalkSectionProps } from "../components/TalkSection";
 import TopBar from "../components/TopBar";
@@ -230,13 +230,17 @@ export default function Home() {
 
             <div className="flex flex-col gap-[40px] pb-[40px]">
               {/* Sticky like Top_bar/Sidebar/Talking_Bar, but its background
-                  can't be a flat always-on white: while the hero is still
-                  in view this row sits directly over vivid art, and an
-                  opaque fill cut a hard white bar across it -- yet once
-                  scrolled well past the hero, transparent lets whatever
-                  comes up next (Hot Games, Form Bar) show through instead
-                  of being hidden behind it. StickyUtilityBar fades between
-                  the two as the page scrolls. */}
+                  can't be a flat always-on white: while the hero-associated
+                  zone (hero art, Form Bar, Hot Games) is still in view this
+                  row sits directly over vivid art, and an opaque fill cuts
+                  a hard white bar across it -- yet once that whole zone has
+                  scrolled away, transparent would let General Games/etc.
+                  bleed through instead of being hidden behind it. Rather
+                  than a continuous fade (which smears a washed-out
+                  translucent band across Form Bar/Hot Games' art for the
+                  whole transition), StickyUtilityBar flips instantly, with
+                  no transition, the moment the HeroZoneEndSentinel dropped
+                  after Hot Games below scrolls past it. */}
               <StickyUtilityBar>
                 <div className="flex items-center gap-[20px]">
                   <Search />
@@ -271,6 +275,8 @@ export default function Home() {
               </div>
 
               <HotGames games={hotGames} />
+
+              <HeroZoneEndSentinel />
 
               <div className="flex flex-col gap-[15px]">
                 <SectionHeader icon="/assets/section-header/icon-general-games.svg" title="推薦遊戲" />
