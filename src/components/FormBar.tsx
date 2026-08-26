@@ -5,10 +5,21 @@ import GameCard, { type GameCardProps } from "./GameCard";
 
 const FADE = 120; // matches Hot Games' own edge fade distance.
 
-function buildFadeMask(fadeLeft: boolean, fadeRight: boolean) {
-  const leftColor = fadeLeft ? "transparent" : "black";
+// `leftShiftBy` is the row's own current translateX distance (0 when not
+// shifted). The mask's coordinates live in the ROW's own space, but the
+// row is what actually moves -- shifting it left by N carries the
+// gradient's "transparent at 0px" point N px left of the wrapper's real
+// (stationary) clip edge along with it. Without correcting for that, the
+// content actually sitting at the wrapper's visible boundary is only
+// partway through the fade (not yet transparent) when `overflow-hidden`
+// hard-cuts it, showing a visible seam right where a card is still
+// partially opaque. Offsetting the gradient's stops by `leftShiftBy`
+// keeps "fully transparent" pinned to the wrapper's real edge regardless
+// of how far the row itself has shifted.
+function buildFadeMask(leftShiftBy: number, fadeRight: boolean) {
+  const leftStop = leftShiftBy > 0 ? `transparent ${-leftShiftBy}px, black ${FADE - leftShiftBy}px` : "black 0px";
   const rightColor = fadeRight ? "transparent" : "black";
-  return `linear-gradient(to right, ${leftColor} 0px, black ${FADE}px, black calc(100% - ${FADE}px), ${rightColor} 100%)`;
+  return `linear-gradient(to right, ${leftStop}, black calc(100% - ${FADE}px), ${rightColor} 100%)`;
 }
 
 export type FormBarProps = {
@@ -101,7 +112,7 @@ export default function FormBar({ games }: FormBarProps) {
         ref={rowRef}
         id={rowId}
         className="no-scrollbar flex h-[206.816px] items-end gap-[20px] overflow-x-auto overflow-y-hidden transition-transform duration-300 ease-out"
-        style={{ maskImage: buildFadeMask(isLastHovered, isOtherHovered) }}
+        style={{ maskImage: buildFadeMask(isLastHovered ? lastCardShift : 0, isOtherHovered) }}
       >
         {games.map((game, index) => (
           <GameCard
