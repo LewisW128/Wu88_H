@@ -228,7 +228,7 @@ export default function Home() {
               <Sidebar />
             </div>
 
-            <div className="flex flex-col gap-[40px] pb-[40px]">
+            <div className="flex flex-col gap-[25px] pb-[40px]">
               {/* Sticky like Top_bar/Sidebar/Talking_Bar, but its background
                   can't be a flat always-on white: while the hero-associated
                   zone (hero art, Form Bar, Hot Games) is still in view this
