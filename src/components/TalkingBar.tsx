@@ -151,18 +151,45 @@ export default function TalkingBar({ messages, privateMessages, simulatedMessage
           `border-[#f4f4f4]` + `bg-white/50` was designed as backdrop-blur
           over vivid hero art, and is nearly invisible once this panel
           extends down over the page's own plain white/light sections (Win
-          List, Business) with nothing colorful behind it to blur. A drop
-          shadow keeps the panel -- and its notch -- visually legible
-          regardless of what's under it, the same way most frosted-glass
-          card patterns pair blur with a shadow rather than relying on the
-          border alone. */}
+          List, Business) with nothing colorful behind it to blur. */}
       <svg
         className="pointer-events-none absolute inset-0 size-full"
-        style={{ backdropFilter: "blur(10px)", filter: "drop-shadow(0 4px 20px rgba(0,0,0,0.12))" }}
+        style={{ backdropFilter: "blur(10px)" }}
         viewBox={`0 0 275 ${panelHeight}`}
         preserveAspectRatio="none"
       >
-        <path d={panelPath(panelHeight)} fill="white" fillOpacity={0.5} stroke="#f4f4f4" strokeWidth={2} />
+        {/* Fill and stroke are two separate paths sharing the same `d`, not
+            one path with both attributes set. A single path's stroke
+            straddles the outline (half inside, half outside) -- the inside
+            half sits on top of this same element's own semi-transparent
+            fill and blends with it, while the outside half doesn't, so the
+            line reads as a different effective thickness/opacity depending
+            on how much of each half a given stretch of curve exposes. Two
+            paths keep the stroke's own rendering independent of the fill
+            underneath it, so all 2px of it reads the same everywhere.
+
+            They also carry two DIFFERENT drop-shadows rather than one
+            shared filter on the parent <svg>. A single 20px-blur shadow
+            (sized for lifting the whole panel off the page) completely
+            dissolves a lone 2px line -- a straight stretch of the stroke
+            has no neighboring edges to reinforce it, so that stretch of
+            shadow just spreads into an imperceptible haze, while a curve
+            or corner has nearby edges whose shadows overlap and reinforce
+            each other, reading as a noticeably thicker/darker line by
+            comparison. Same stroke width throughout; only the shadow's
+            visibility varies with local geometry. The fill keeps the big
+            soft shadow (that's what makes the panel read as lifted off the
+            page); the stroke gets its own tight, small-blur shadow sized
+            to actually hug a 2px line, so it stays legible at the exact
+            same strength whether it's on a straight edge or a curve. */}
+        <path d={panelPath(panelHeight)} fill="white" fillOpacity={0.5} style={{ filter: "drop-shadow(0 4px 20px rgba(0,0,0,0.12))" }} />
+        <path
+          d={panelPath(panelHeight)}
+          fill="none"
+          stroke="#f4f4f4"
+          strokeWidth={2}
+          style={{ filter: "drop-shadow(0 0 1px rgba(0,0,0,0.35))" }}
+        />
       </svg>
 
       <div
