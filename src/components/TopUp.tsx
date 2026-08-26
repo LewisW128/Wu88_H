@@ -17,7 +17,7 @@ export type TopUpProps = {
 // value).
 export default function TopUp({ account }: TopUpProps) {
   return (
-    <div className="group flex items-center gap-[38px] rounded-[50px] bg-[#f4f4f4]/50 p-[15px] backdrop-blur-[15px] transition-[gap] duration-300 hover:gap-[20px]">
+    <div className="group flex h-[65px] items-center gap-[38px] rounded-[50px] bg-[#f4f4f4] p-[15px] backdrop-blur-[15px] transition-[gap] duration-300 hover:gap-[20px]">
       <div className="flex shrink-0 items-center gap-[10px]">
         <div className="relative size-[34px] shrink-0 overflow-hidden rounded-full border-2 border-[#3e4140] bg-white">
           <img
