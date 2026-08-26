@@ -181,7 +181,7 @@ export default function TalkingBar({ messages, privateMessages, simulatedMessage
             inside-only stroke never has an outer half to lose, so all 2px
             of it reads the same everywhere without needing a shadow to
             compensate. */}
-        <path d={panelPath(panelHeight)} fill="white" fillOpacity={0.5} style={{ filter: "drop-shadow(0 4px 20px rgba(0,0,0,0.12))" }} />
+        <path d={panelPath(panelHeight)} fill="white" fillOpacity={0.5} />
         <defs>
           <clipPath id={clipId}>
             <path d={panelPath(panelHeight)} />
@@ -230,17 +230,9 @@ export default function TalkingBar({ messages, privateMessages, simulatedMessage
         </button>
       </div>
 
-      {/* Same clip/overflow-vs-shadow conflict as the panel background above:
-          `overflow-hidden` (needed to keep the two ChannelButtons clipped to
-          the pill shape) clips away a `box-shadow` on this same element just
-          like `clip-path` does. Wrapping it in an unclipped element carrying
-          `filter: drop-shadow` instead keeps the pill visually separated
-          from the panel/notch underneath it, matching the reference look. */}
-      <div className="absolute right-0 top-0" style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.15))" }}>
-        <div className="flex h-[65px] w-[136px] items-center justify-between overflow-hidden rounded-full border-2 border-[#f4f4f4] bg-[#f4f4f4]/50 backdrop-blur-[15px]">
-          <ChannelButton active={channel === "all"} icon="/assets/talk-section/message-all.svg" onClick={() => setChannel("all")} label="群組聊天" />
-          <ChannelButton active={channel === "private"} icon="/assets/talk-section/message-private.svg" onClick={() => setChannel("private")} label="私人訊息" />
-        </div>
+      <div className="absolute right-0 top-0 flex h-[65px] w-[136px] items-center justify-between overflow-hidden rounded-full border-2 border-[#f4f4f4] bg-[#f4f4f4]/50 backdrop-blur-[15px]">
+        <ChannelButton active={channel === "all"} icon="/assets/talk-section/message-all.svg" onClick={() => setChannel("all")} label="群組聊天" />
+        <ChannelButton active={channel === "private"} icon="/assets/talk-section/message-private.svg" onClick={() => setChannel("private")} label="私人訊息" />
       </div>
     </div>
   );
