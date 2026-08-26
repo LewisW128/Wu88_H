@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import TalkSection, { type TalkSectionProps } from "./TalkSection";
 import { useScale } from "./ScaleToFit";
 import { withBasePath } from "../lib/asset";
@@ -80,6 +80,7 @@ function ChannelButton({ active, icon, onClick, label }: { active: boolean; icon
 // actually swaps the rendered message list, not just a static screenshot
 // of "all" selected with the switch as inert decoration.
 export default function TalkingBar({ messages, privateMessages, simulatedMessages = [] }: TalkingBarProps) {
+  const clipId = useId();
   const [channel, setChannel] = useState<Channel>("all");
   const [liveMessages, setLiveMessages] = useState(messages);
   const activeMessages = channel === "all" ? liveMessages : privateMessages;
@@ -166,30 +167,27 @@ export default function TalkingBar({ messages, privateMessages, simulatedMessage
             line reads as a different effective thickness/opacity depending
             on how much of each half a given stretch of curve exposes. Two
             paths keep the stroke's own rendering independent of the fill
-            underneath it, so all 2px of it reads the same everywhere.
+            underneath it.
 
-            They also carry two DIFFERENT drop-shadows rather than one
-            shared filter on the parent <svg>. A single 20px-blur shadow
-            (sized for lifting the whole panel off the page) completely
-            dissolves a lone 2px line -- a straight stretch of the stroke
-            has no neighboring edges to reinforce it, so that stretch of
-            shadow just spreads into an imperceptible haze, while a curve
-            or corner has nearby edges whose shadows overlap and reinforce
-            each other, reading as a noticeably thicker/darker line by
-            comparison. Same stroke width throughout; only the shadow's
-            visibility varies with local geometry. The fill keeps the big
-            soft shadow (that's what makes the panel read as lifted off the
-            page); the stroke gets its own tight, small-blur shadow sized
-            to actually hug a 2px line, so it stays legible at the exact
-            same strength whether it's on a straight edge or a curve. */}
+            SVG has no native "inside" stroke alignment, so the stroke path
+            draws at DOUBLE width (4) and gets clipped to its own outline --
+            clip-path keeps only the half that falls inside the shape,
+            discarding the half that would've drawn outside it. That outer
+            half was the actual source of the "thicker on curves, thinner
+            on straight edges" look: it's the part liable to fall across
+            whatever sits just past this panel's own edge (neighboring
+            elements, the panel's own container boundary), so how much of
+            it actually stayed visible varied with local geometry. An
+            inside-only stroke never has an outer half to lose, so all 2px
+            of it reads the same everywhere without needing a shadow to
+            compensate. */}
         <path d={panelPath(panelHeight)} fill="white" fillOpacity={0.5} style={{ filter: "drop-shadow(0 4px 20px rgba(0,0,0,0.12))" }} />
-        <path
-          d={panelPath(panelHeight)}
-          fill="none"
-          stroke="#f4f4f4"
-          strokeWidth={2}
-          style={{ filter: "drop-shadow(0 0 1px rgba(0,0,0,0.35))" }}
-        />
+        <defs>
+          <clipPath id={clipId}>
+            <path d={panelPath(panelHeight)} />
+          </clipPath>
+        </defs>
+        <path d={panelPath(panelHeight)} fill="none" stroke="#f4f4f4" strokeWidth={4} clipPath={`url(#${clipId})`} />
       </svg>
 
       <div
