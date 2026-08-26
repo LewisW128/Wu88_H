@@ -64,7 +64,12 @@ export default function HotGames({ games }: HotGamesProps) {
         </div>
         <div className="flex items-center gap-[20px]">
           <Tag label="更多" active />
-          <LeftRight onLeft={() => scrollBy("left")} onRight={() => scrollBy("right")} />
+          <LeftRight
+            canLeft={canScroll.left}
+            canRight={canScroll.right}
+            onLeft={() => scrollBy("left")}
+            onRight={() => scrollBy("right")}
+          />
         </div>
       </div>
 
