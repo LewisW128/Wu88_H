@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import GameCard, { type GameCardProps } from "./GameCard";
 
 const FADE = 120; // matches Hot Games' own edge fade distance.
@@ -40,10 +40,27 @@ export type FormBarProps = {
 // next door -- `overflow-hidden` on the wrapper clips that bleed at the
 // row's true boundary, and the mask's left edge fades that same card out
 // right at that boundary instead of just hard-cutting it.
+//
+// The shift itself is driven by a real `:has(:hover)` CSS rule (in the
+// injected <style> below), not by React state + an inline `transform`.
+// The last card's own width growth is native `:hover` (instant, no JS
+// round-trip); a React state update always takes at least one extra
+// render to reach the DOM. Driving the shift from state meant it
+// consistently started a frame or more behind the card's own growth for
+// the ENTIRE 300ms of the transition, not just a one-off flash -- long
+// enough that the card's right edge was visibly past the (React-state-
+// driven) shifted boundary and getting hard-clipped by `overflow-hidden`
+// the whole time you hovered it, correcting only once the transition
+// settled. A `:has()` rule reacts to the same native `:hover` change the
+// card's own width does, so both start on the same tick. React state
+// still drives the fade mask below (hoveredIndex) -- a fade lagging by a
+// frame is imperceptible in a way a hard clip lagging by a frame is not.
 const LAST_CARD_GROWTH_DELTA = 19.964; // 180.964 - 161
 
 export default function FormBar({ games }: FormBarProps) {
   const rowRef = useRef<HTMLDivElement>(null);
+  const rawId = useId();
+  const rowId = `form-bar-row-${rawId.replace(/:/g, "")}`;
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   // How far the row needs to shift left so the grown last card's own right
   // edge lands exactly on the row's real right edge. Naively this is just
@@ -79,13 +96,12 @@ export default function FormBar({ games }: FormBarProps) {
 
   return (
     <div className="overflow-hidden">
+      <style>{`#${rowId}:has(> div:last-child:hover) { transform: translateX(-${lastCardShift}px); }`}</style>
       <div
         ref={rowRef}
+        id={rowId}
         className="no-scrollbar flex h-[206.816px] items-end gap-[20px] overflow-x-auto overflow-y-hidden transition-transform duration-300 ease-out"
-        style={{
-          maskImage: buildFadeMask(isLastHovered, isOtherHovered),
-          transform: isLastHovered ? `translateX(-${lastCardShift}px)` : undefined,
-        }}
+        style={{ maskImage: buildFadeMask(isLastHovered, isOtherHovered) }}
       >
         {games.map((game, index) => (
           <GameCard
