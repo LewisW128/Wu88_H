@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 const DESIGN_WIDTH = 1728;
 
@@ -22,69 +22,35 @@ export function useScale() {
 // "fit-to-width" technique fixed-size admin dashboards/prototypes use, so
 // the page fills edge-to-edge with no horizontal overflow.
 //
-// Scale is capped at 1 -- deliberately NOT scaled *up* past the design's
-// own 100% size on wider screens. Uncapped, `viewportWidth / 1728` blows
-// every element up beyond its real Figma dimensions on any monitor wider
-// than 1728px (the common case), which is exactly what "everything looks
-// oversized" was: the whole page rendering at e.g. 1920/1728 = 1.11x. On
-// those wider screens the canvas instead sits at its true 1:1 size,
-// centered, with the page's own gray base layer showing on both sides --
-// consistent with the two-layer background model (gray base, white
-// content panel on top) rather than treating the canvas as infinitely
-// stretchy.
+// Uses the CSS `zoom` property, NOT `transform: scale()`. `transform`
+// only changes paint -- the element's layout box stays at its pre-scale
+// size, so anything computed relative to real viewport pixels inside it
+// goes wrong at any scale other than exactly 1. `position: sticky`
+// (Top_bar, Sidebar, Talking_Bar, the utility row) is exactly that kind of
+// calculation: at scale=1 its threshold math happened to line up by
+// coincidence, but at any other window width sticky simply stopped
+// engaging and the whole page scrolled as one rigid block -- confirmed by
+// the bug only appearing at widths other than exactly 1728x900. `zoom`
+// instead changes the actual effective pixel size of its subtree, so
+// child layout, scroll, and sticky math all stay internally consistent at
+// any scale -- and this wrapper doesn't need to separately track/apply a
+// scaled height or width either, since zoom already makes the browser
+// treat this box as `DESIGN_WIDTH * scale` real pixels wide on its own.
 export default function ScaleToFit({ children }: { children: React.ReactNode }) {
-  const contentRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
-  const [scaledHeight, setScaledHeight] = useState<number>();
 
   useEffect(() => {
-    // Deliberately window-resize-only, NOT a ResizeObserver on the content
-    // itself: every card's hover-grow, the chat panel's live message drip,
-    // and any other in-page layout change would also fire a content
-    // resize, re-measuring and re-applying `scale`/height on every such
-    // tick -- visible as the whole page continuously twitching. The
-    // content's natural height only actually needs re-measuring when the
-    // viewport itself changes.
-    //
-    // This used to also try to preserve scroll position (as a fraction of
-    // page height) across a resize, since narrowing the window shrinks
-    // this wrapper's height and can make the browser force-clamp scrollY.
-    // That restoration attempt turned out to be its own worse bug: normal
-    // hover-driven layout changes elsewhere on the page (Top_up's
-    // hover-expand, a card's hover-grow) were intermittently misread as
-    // needing the same correction, causing large, inconsistent scroll
-    // jumps during ordinary interaction -- confirmed by triggering the
-    // exact same hover state repeatedly and getting different scroll
-    // results each time, a race condition rather than a deterministic
-    // effect of the resize fix. A resize-triggered scroll clamp on a
-    // narrower window is a minor, rare inconvenience; unpredictable jumps
-    // during normal use are much worse, so this was removed rather than
-    // patched further.
     function update() {
-      const nextScale = Math.min(1, window.innerWidth / DESIGN_WIDTH);
-      setScale(nextScale);
-      if (contentRef.current) setScaledHeight(contentRef.current.scrollHeight * nextScale);
+      setScale(Math.min(1, window.innerWidth / DESIGN_WIDTH));
     }
-
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
   }, []);
 
   return (
-    // Width is the actual on-screen (post-scale) size, not "100%" -- a
-    // transform doesn't shrink an element's own layout box, so sizing this
-    // wrapper to the *unscaled* 1728px child would get it centered by the
-    // page's own `items-center` against the wrong (pre-scale) width,
-    // shifting the visually-scaled content off-true. Explicitly sizing to
-    // `scale * DESIGN_WIDTH` keeps centering correct in both directions:
-    // it equals the full viewport width when scale < 1 (flush edges, no
-    // overflow) and equals 1728px when scale is capped at 1 (centered at
-    // true size on wide screens).
-    <div style={{ height: scaledHeight, width: scale * DESIGN_WIDTH }}>
-      <div ref={contentRef} style={{ width: DESIGN_WIDTH, transform: `scale(${scale})`, transformOrigin: "top left" }}>
-        <ScaleContext.Provider value={scale}>{children}</ScaleContext.Provider>
-      </div>
+    <div style={{ width: DESIGN_WIDTH, zoom: scale } as React.CSSProperties}>
+      <ScaleContext.Provider value={scale}>{children}</ScaleContext.Provider>
     </div>
   );
 }
