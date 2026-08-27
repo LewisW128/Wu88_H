@@ -39,7 +39,7 @@ function AnnouncementItem({ name, amount }: TopBarAnnouncement) {
 // than static repeated text.
 export default function TopBar({ onlineCount, totalReward, announcements }: TopBarProps) {
   return (
-    <div className="flex h-[38px] w-[1728px] items-center gap-[20px] overflow-hidden bg-[#f4f4f4] pl-[40px]">
+    <div className="flex h-[38px] w-full items-center gap-[20px] overflow-hidden bg-[#f4f4f4] pl-[40px]">
       <div className="flex items-center gap-[20px]">
         <StatItem icon="/assets/top-bar/icon-online.svg" value={onlineCount} label="在線人數" />
         <StatItem icon="/assets/top-bar/icon-reward.svg" value={totalReward} label="累計獎勵" />
