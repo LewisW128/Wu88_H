@@ -27,10 +27,21 @@ export default function TopUp({ account }: TopUpProps) {
   // across other cards' art the way fading a bar spanning the whole row
   // would. `useHeroZonePassed` defaults to true outside that provider,
   // so this still looks right (opaque) used on its own.
+  //
+  // `backdrop-blur` has to be conditional too, not just the solid-color
+  // overlay below it: backdrop-blur draws its own filtered copy of
+  // whatever is behind the element, inside the element's own rounded
+  // shape -- so with the fill faded to fully transparent, the blur was
+  // STILL rendering a hazy white pill on its own whenever the actual
+  // page content behind it (Container_BG's fade-to-white gradient, or
+  // the plain white panel once that's scrolled away) happened to be
+  // white, which is exactly the "white block" this was meant to remove.
   const heroZonePassed = useHeroZonePassed();
 
   return (
-    <div className="group relative flex h-[65px] items-center gap-[38px] rounded-[50px] p-[15px] backdrop-blur-[15px] transition-[gap] duration-300 hover:gap-[20px]">
+    <div
+      className={`group relative flex h-[65px] items-center gap-[38px] rounded-[50px] p-[15px] transition-[gap,backdrop-filter] duration-300 hover:gap-[20px] ${heroZonePassed ? "backdrop-blur-[15px]" : "backdrop-blur-none"}`}
+    >
       <div
         className={`pointer-events-none absolute inset-0 rounded-[50px] bg-[#f4f4f4] transition-opacity duration-300 ${heroZonePassed ? "opacity-100" : "opacity-0"}`}
       />
