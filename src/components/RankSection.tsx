@@ -12,6 +12,13 @@ export type RankSectionProps = {
   win: string;
   odds: string;
   thumb: string;
+  // Row-relative x-offsets for the bet/win/odds columns. Default to the
+  // fixed design-width positions so this component still works
+  // standalone; WinList overrides these with values that grow along with
+  // the row's actual (fluid) width -- see the comment there.
+  betLeft?: number;
+  winLeft?: number;
+  oddsLeft?: number;
 };
 
 // Figma "Rank_section" component (Components Library node 672:16776). No
@@ -26,9 +33,22 @@ export type RankSectionProps = {
 // vertical middle. Making the outer box 81px tall too (this component's
 // first pass did) removes the crop and lets the whole oversized pill
 // protrude past the row.
-export default function RankSection({ avatar, name, levelLabel, levelBackground, levelOpacity, bet, win, odds, thumb }: RankSectionProps) {
+export default function RankSection({
+  avatar,
+  name,
+  levelLabel,
+  levelBackground,
+  levelOpacity,
+  bet,
+  win,
+  odds,
+  thumb,
+  betLeft = 264,
+  winLeft = 557,
+  oddsLeft = 887,
+}: RankSectionProps) {
   return (
-    <div className="relative h-[49px] w-[1206px] shrink-0">
+    <div className="relative h-[49px] w-full shrink-0">
       <div className="absolute left-0 top-1/2 flex -translate-y-1/2 items-center gap-[10px]">
         <Avatar photo={avatar} size={50} ringColor={levelBackground} badgeColor={levelBackground} />
         <div className="flex flex-col items-start gap-[5px]">
@@ -37,17 +57,17 @@ export default function RankSection({ avatar, name, levelLabel, levelBackground,
         </div>
       </div>
 
-      <div className="absolute left-[264px] top-1/2 flex -translate-y-1/2 items-center gap-[10px]">
+      <div className="absolute top-1/2 flex -translate-y-1/2 items-center gap-[10px]" style={{ left: betLeft }}>
         <img alt="" src={withBasePath("/icons/actions/bet.svg")} className="size-[25px]" />
         <p className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#3e4140]">{bet}</p>
       </div>
 
-      <div className="absolute left-[557px] top-1/2 flex -translate-y-1/2 items-center gap-[10px]">
+      <div className="absolute top-1/2 flex -translate-y-1/2 items-center gap-[10px]" style={{ left: winLeft }}>
         <img alt="" src={withBasePath("/icons/actions/win.svg")} className="size-[25px]" />
         <p className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#3e4140]">{win}</p>
       </div>
 
-      <p className="absolute left-[887px] top-1/2 -translate-y-1/2 whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#3e4140]">
+      <p className="absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#3e4140]" style={{ left: oddsLeft }}>
         {odds}
       </p>
 

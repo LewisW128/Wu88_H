@@ -217,7 +217,20 @@ export default function Home() {
             utility row, and the sidebar are all still visible alongside
             Win List despite the hero having scrolled away above them. */}
         <div className="relative rounded-tl-[60px] bg-white">
-          <div className="pointer-events-none absolute left-0 top-0">
+          {/* Anchored to the RIGHT edge, not the left: Container_BG is a
+              fixed 1728x1078 asset that can't stretch to fill a wider
+              fluid panel without distorting or zooming the video, so on a
+              screen wider than the design width it stays its own native
+              size and instead slides right to keep its right edge flush
+              with the panel's own (now wider) right edge -- following
+              Talking_Bar rather than sitting stuck flush against Sidebar
+              with a growing gap of dead white space to its right. At the
+              design width this is pixel-identical to left-0 (panel width
+              == 1728 == this box's own width), and the area it uncovers
+              on the left as it slides right repaints as this panel's own
+              white background, indistinguishable from the video's own
+              blank left margin it used to show there. */}
+          <div className="pointer-events-none absolute right-0 top-0">
             <ContainerBg />
           </div>
 
