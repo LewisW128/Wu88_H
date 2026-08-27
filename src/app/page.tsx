@@ -317,7 +317,11 @@ export default function Home() {
 
               <Business cards={businessCards} />
 
-              <div className="flex items-center justify-between">
+              {/* 80px below Business specifically, not this column's
+                  shared gap-[25px] every other pair of sections uses --
+                  mt-[55px] tops that up to 80 (25+55) without changing
+                  the gap value itself. */}
+              <div className="mt-[55px] flex items-center justify-between">
                 <SocialLinks />
                 <QuickLinks />
               </div>
