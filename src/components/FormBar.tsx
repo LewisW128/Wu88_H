@@ -87,15 +87,26 @@ export default function FormBar({ games }: FormBarProps) {
   // derived from GameCard's own sizes rather than measured off a
   // mid-transition DOM -- sidesteps that race the same way "start"'s
   // fixed 0 does.
+  //
+  // `behavior: "instant"`, not "smooth": a smooth scroll moves the ROW's
+  // content under a mouse cursor that stays at the same screen position
+  // the whole time -- so every card the content slides past during that
+  // couple hundred ms genuinely passes under the cursor and fires its own
+  // real mouseenter/mouseleave, growing and fading each one in turn as it
+  // sweeps by. That's what produced multiple cards appearing "hover-
+  // grown" at once and the fade turning on/off at seemingly the wrong
+  // times -- not a logic bug in which state was tracked, but a cascade of
+  // genuine extra hover events the animated scroll itself was causing.
+  // Jumping straight to the target removes the window for that entirely.
   function scrollToEnd(edge: "start" | "end") {
     const el = rowRef.current;
     if (!el) return;
     if (edge === "start") {
-      el.scrollTo({ left: 0, behavior: "smooth" });
+      el.scrollTo({ left: 0, behavior: "instant" });
       return;
     }
     const totalGrownWidth = (games.length - 1) * (CARD_WIDTH + CARD_GAP) + CARD_WIDTH_GROWN;
-    el.scrollTo({ left: totalGrownWidth - el.clientWidth, behavior: "smooth" });
+    el.scrollTo({ left: totalGrownWidth - el.clientWidth, behavior: "instant" });
   }
 
   return (
