@@ -11,6 +11,14 @@ function buildFadeMask(canLeft: boolean, canRight: boolean) {
   return `linear-gradient(to right, ${leftColor} 0px, black ${FADE}px, black calc(100% - ${FADE}px), ${rightColor} 100%)`;
 }
 
+// Design-space card/gap widths (GameCard's own resting/hover-grown sizes),
+// used to compute the row's total content width at the exact moment the
+// last card is fully grown -- see the comment on `scrollToEnd` below for
+// why this is a fixed calculation instead of a live measurement.
+const CARD_WIDTH = 161;
+const CARD_WIDTH_GROWN = 180.964;
+const CARD_GAP = 20;
+
 export type FormBarProps = {
   games: GameCardProps[];
 };
@@ -65,10 +73,29 @@ export default function FormBar({ games }: FormBarProps) {
     };
   }, [games]);
 
+  // The "start" case can just target a fixed 0 -- correct at any moment,
+  // regardless of any card's own hover-transition state. "end" used to
+  // read `el.scrollWidth` live instead, but that reflects whatever width
+  // the last card happens to have AT THAT INSTANT: this handler fires the
+  // moment the mouse enters (real CSS :hover, no JS delay), which is
+  // BEFORE the card's own 300ms width transition has actually grown it --
+  // so the scroll target was calculated from the card's still-shrunk
+  // resting width, undershooting where it needed to land once the card
+  // finished growing a moment later. Computing the same fixed target the
+  // "start" case uses -- the row's total width once every card except the
+  // last is at rest and the last one is fully grown, a known constant
+  // derived from GameCard's own sizes rather than measured off a
+  // mid-transition DOM -- sidesteps that race the same way "start"'s
+  // fixed 0 does.
   function scrollToEnd(edge: "start" | "end") {
     const el = rowRef.current;
     if (!el) return;
-    el.scrollTo({ left: edge === "start" ? 0 : el.scrollWidth, behavior: "smooth" });
+    if (edge === "start") {
+      el.scrollTo({ left: 0, behavior: "smooth" });
+      return;
+    }
+    const totalGrownWidth = (games.length - 1) * (CARD_WIDTH + CARD_GAP) + CARD_WIDTH_GROWN;
+    el.scrollTo({ left: totalGrownWidth - el.clientWidth, behavior: "smooth" });
   }
 
   return (
