@@ -208,6 +208,23 @@ export default function Home() {
           />
         </div>
 
+        {/* Scrolling content used to hard-clip the instant it reached
+            Top_bar's bottom edge (y=38) -- fine for Top_bar itself (it's
+            solidly opaque, nothing needs to show through it), but jarring
+            for whatever's scrolling up underneath: one frame it's fully
+            visible, the next it's sliced off flat. This fades it out over
+            80px instead, white at the top fading to transparent, so
+            content passing behind Top_bar/StickyUtilityBar gets a soft
+            exit instead of a hard cut. Restores itself naturally: once
+            scrolled back to the top there's nothing left in this band to
+            fade in the first place. */}
+        <div className="sticky top-[38px] left-0 z-20 h-0 w-full">
+          <div
+            className="pointer-events-none h-[80px] w-full"
+            style={{ background: "linear-gradient(to bottom, white, transparent)" }}
+          />
+        </div>
+
         {/* Figma "Rectangle 10": everything below Top_bar sits on one white,
             top-left-rounded panel over the page's own gray base -- not a
             per-section white background repeated down the page. Sidebar and
