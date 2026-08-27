@@ -1,4 +1,7 @@
+"use client";
+
 import { withBasePath } from "../lib/asset";
+import { useHeroZonePassed } from "./StickyUtilityBar";
 
 export type TopUpProps = {
   account: string;
@@ -16,9 +19,22 @@ export type TopUpProps = {
 // plain width/max-width transition can't without hardcoding a guessed px
 // value).
 export default function TopUp({ account }: TopUpProps) {
+  // Fades this pill's own background out while the hero zone (hero art,
+  // Form Bar, Hot Games) is still in view behind it. Unlike
+  // StickyUtilityBar's own full-width fill (an instant, transition-free
+  // flip -- see its own comment for why), this pill is small and
+  // self-contained, so a smooth fade doesn't smear translucent white
+  // across other cards' art the way fading a bar spanning the whole row
+  // would. `useHeroZonePassed` defaults to true outside that provider,
+  // so this still looks right (opaque) used on its own.
+  const heroZonePassed = useHeroZonePassed();
+
   return (
-    <div className="group flex h-[65px] items-center gap-[38px] rounded-[50px] bg-[#f4f4f4] p-[15px] backdrop-blur-[15px] transition-[gap] duration-300 hover:gap-[20px]">
-      <div className="flex shrink-0 items-center gap-[10px]">
+    <div className="group relative flex h-[65px] items-center gap-[38px] rounded-[50px] p-[15px] backdrop-blur-[15px] transition-[gap] duration-300 hover:gap-[20px]">
+      <div
+        className={`pointer-events-none absolute inset-0 rounded-[50px] bg-[#f4f4f4] transition-opacity duration-300 ${heroZonePassed ? "opacity-100" : "opacity-0"}`}
+      />
+      <div className="relative flex shrink-0 items-center gap-[10px]">
         <div className="relative size-[34px] shrink-0 overflow-hidden rounded-full border-2 border-[#3e4140] bg-white">
           <img
             alt=""
