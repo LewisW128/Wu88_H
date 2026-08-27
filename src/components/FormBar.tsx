@@ -18,6 +18,10 @@ function buildFadeMask(canLeft: boolean, canRight: boolean) {
 const CARD_WIDTH = 161;
 const CARD_WIDTH_GROWN = 180.964;
 const CARD_GAP = 20;
+// Extra scroll past the exact minimum needed to reveal the grown last
+// card, so it settles with real breathing room on both sides instead of
+// sitting flush against the edge.
+const END_SCROLL_MARGIN = 20;
 
 export type FormBarProps = {
   games: GameCardProps[];
@@ -106,7 +110,7 @@ export default function FormBar({ games }: FormBarProps) {
       return;
     }
     const totalGrownWidth = (games.length - 1) * (CARD_WIDTH + CARD_GAP) + CARD_WIDTH_GROWN;
-    el.scrollTo({ left: totalGrownWidth - el.clientWidth, behavior: "instant" });
+    el.scrollTo({ left: totalGrownWidth - el.clientWidth + END_SCROLL_MARGIN, behavior: "instant" });
   }
 
   return (
@@ -132,7 +136,26 @@ export default function FormBar({ games }: FormBarProps) {
                     }
                   : undefined
             }
-            onMouseLeave={isLast ? () => setIsLastHovered(false) : undefined}
+            onMouseLeave={
+              isLast
+                ? () => {
+                    // Scrolling back to 0 here (not just clearing the
+                    // suppression flag) matters: without it, scrollLeft
+                    // stays wherever "end" left it, so the moment
+                    // isLastHovered flips off, the real scroll-position
+                    // fade logic sees that non-zero scrollLeft and turns
+                    // the left fade on immediately -- reading as "the
+                    // fade only starts once you leave," which is exactly
+                    // backwards from wanting no fade while interacting
+                    // with this row at all. Returning to the same
+                    // resting scroll position removes the need for the
+                    // suppression flag to still be doing anything by the
+                    // time it's cleared.
+                    scrollToEnd("start");
+                    setIsLastHovered(false);
+                  }
+                : undefined
+            }
           />
         );
       })}
