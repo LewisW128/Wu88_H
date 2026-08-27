@@ -1,23 +1,8 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 const SENTINEL_ID = "hero-zone-end-sentinel";
-
-// Whether the hero-associated zone (hero art, Form Bar, Hot Games) has
-// scrolled past this row. Exposed via context rather than a render-prop
-// on `children`: page.tsx is a Server Component, and passing a function
-// as a prop into a Client Component from server-rendered JSX isn't
-// allowed (functions can't cross that boundary) -- context lets Top_up
-// read this value itself without page.tsx needing to call anything.
-// Defaults to `true` so a consumer rendered outside this provider (e.g.
-// Top_up used on its own, elsewhere) still looks right -- opaque, not
-// stuck assuming it's still sitting over hero art.
-const HeroZoneContext = createContext(true);
-
-export function useHeroZonePassed() {
-  return useContext(HeroZoneContext);
-}
 
 // Search/Language/Top_up need to be transparent while the hero-associated
 // content (the hero art itself, Form Bar, Hot Games -- all overlapping
@@ -39,12 +24,9 @@ export function useHeroZonePassed() {
 // so it's always either cleanly transparent (art shows through crisply)
 // or cleanly opaque (content is fully hidden), never the smear in between.
 //
-// Top_up's own pill background doesn't have that problem -- unlike this
-// row's full-width fill, it's one small, self-contained shape in the
-// corner, not a bar stretched edge-to-edge across other cards' art. It
-// reads `useHeroZonePassed()` itself (see HeroZoneContext above) and
-// fades its pill smoothly instead of matching this row's instant,
-// transition-free flip.
+// Top_up itself sits OUTSIDE this scroll-aware behavior -- per its own
+// Figma spec (nodes 750:8076 / 750:8115) its pill is a plain, permanently
+// opaque bg-[#f4f4f4], not something that fades with scroll position.
 export default function StickyUtilityBar({ children }: { children: React.ReactNode }) {
   const [heroZonePassed, setHeroZonePassed] = useState(false);
 
@@ -65,9 +47,7 @@ export default function StickyUtilityBar({ children }: { children: React.ReactNo
   return (
     <div className="sticky top-[38px] z-10 flex items-center justify-between pt-[21px]">
       {heroZonePassed && <div className="pointer-events-none absolute inset-0 bg-white" />}
-      <div className="relative flex w-full items-center justify-between">
-        <HeroZoneContext.Provider value={heroZonePassed}>{children}</HeroZoneContext.Provider>
-      </div>
+      <div className="relative flex w-full items-center justify-between">{children}</div>
     </div>
   );
 }
