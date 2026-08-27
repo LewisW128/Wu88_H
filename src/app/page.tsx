@@ -16,7 +16,7 @@ import ScaleToFit from "../components/ScaleToFit";
 import Search from "../components/Search";
 import Sidebar from "../components/Sidebar";
 import SocialLinks from "../components/SocialLinks";
-import StickyUtilityBar, { HeroZoneEndSentinel } from "../components/StickyUtilityBar";
+import StickyUtilityBar from "../components/StickyUtilityBar";
 import TalkingBar from "../components/TalkingBar";
 import type { TalkSectionProps } from "../components/TalkSection";
 import TopBar from "../components/TopBar";
@@ -260,18 +260,11 @@ export default function Home() {
             </div>
 
             <div className="flex flex-col gap-[25px] pb-[40px]">
-              {/* Sticky like Top_bar/Sidebar/Talking_Bar, but its background
-                  can't be a flat always-on white: while the hero-associated
-                  zone (hero art, Form Bar, Hot Games) is still in view this
-                  row sits directly over vivid art, and an opaque fill cuts
-                  a hard white bar across it -- yet once that whole zone has
-                  scrolled away, transparent would let General Games/etc.
-                  bleed through instead of being hidden behind it. Rather
-                  than a continuous fade (which smears a washed-out
-                  translucent band across Form Bar/Hot Games' art for the
-                  whole transition), StickyUtilityBar flips instantly, with
-                  no transition, the moment the HeroZoneEndSentinel dropped
-                  after Hot Games below scrolls past it. */}
+              {/* Sticky like Top_bar/Sidebar/Talking_Bar, from scroll
+                  position 0 -- no background of its own and no
+                  scroll-triggered state (see StickyUtilityBar's own
+                  comment). Search/Language/Top_up each own their own
+                  look throughout. */}
               <StickyUtilityBar>
                 <div className="flex items-center gap-[20px]">
                   <Search />
@@ -306,8 +299,6 @@ export default function Home() {
               <FormBar games={formBarGames} />
 
               <HotGames games={hotGames} />
-
-              <HeroZoneEndSentinel />
 
               <GeneralGames games={generalGames} />
 
