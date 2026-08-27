@@ -5,9 +5,10 @@ import GameCard, { type GameCardProps } from "./GameCard";
 
 const FADE = 120; // matches Hot Games' own edge fade distance.
 
-function buildFadeMask(fadeRight: boolean) {
-  const rightColor = fadeRight ? "transparent" : "black";
-  return `linear-gradient(to right, black 0px, black calc(100% - ${FADE}px), ${rightColor} 100%)`;
+function buildFadeMask(canLeft: boolean, canRight: boolean) {
+  const leftColor = canLeft ? "transparent" : "black";
+  const rightColor = canRight ? "transparent" : "black";
+  return `linear-gradient(to right, ${leftColor} 0px, black ${FADE}px, black calc(100% - ${FADE}px), ${rightColor} 100%)`;
 }
 
 export type FormBarProps = {
@@ -24,61 +25,65 @@ export type FormBarProps = {
 // off -- without it this row can pick up its own independent vertical
 // scrollbar that hijacks the mouse wheel instead of it scrolling the page.
 //
-// Every card, including the last one, just grows to the right on hover via
-// plain CSS :hover -- the same as every other card in this row, no special
-// case. An earlier version tried to keep the last card's growth from ever
-// crossing the row's own nominal boundary by shifting the whole row left
-// to compensate (a `:has(:hover)` rule) plus a matching mask/overflow-
-// hidden setup on the left edge. That chased its own tail across several
-// rounds of fixes -- a shift that has to be measured (rest-state overflow
-// via ResizeObserver), synced to the exact same tick as the card's own
-// native-CSS growth, and then have the fade mask's own coordinates
-// corrected for how far the shift moved them -- three interdependent
-// moving parts, any one of which being slightly off (or off only at
-// certain viewport widths, timings, or load orders) reads as "still
-// cut," which is exactly what kept happening. Measured directly, the
-// grown last card already clears Talking_Bar with real margin to spare
-// at every width this project actually supports -- the shift was solving
-// a problem that didn't need solving, at the cost of a fragile mechanism
-// that kept finding new ways to be wrong. The row's own edge fade (shown
-// whenever any card's growth might push the row's real content past its
-// nominal width) is enough on its own.
+// Every card grows to the right on hover via plain CSS :hover, same as
+// every other card -- no special-cased width/position math. Hovering the
+// FIRST or LAST card additionally scrolls the row to that end (native
+// `scrollTo`, not a `transform`), so a grown edge card is guaranteed
+// fully visible via the browser's own scroll mechanics instead of a
+// hand-rolled shift that has to be measured and kept in sync with the
+// card's own growth. The fade mask reflects real scroll position
+// (`scroll` events), not hover state, so it can't get stuck showing a
+// fade after the mouse leaves -- an earlier version derived the fade
+// partly from a ResizeObserver on the row itself, which never actually
+// fires from a child's own width changing (only the row's own box
+// changing does), so the fade stayed on after hovering ended until
+// something else happened to trigger a recompute.
 export default function FormBar({ games }: FormBarProps) {
   const rowRef = useRef<HTMLDivElement>(null);
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [canScroll, setCanScroll] = useState({ left: false, right: false });
 
   useEffect(() => {
     const el = rowRef.current;
     if (!el) return;
     function measure() {
       if (!el) return;
-      setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 1);
+      setCanScroll({
+        left: el.scrollLeft > 0,
+        right: el.scrollLeft < el.scrollWidth - el.clientWidth - 1,
+      });
     }
     measure();
     el.addEventListener("scroll", measure);
-    const observer = new ResizeObserver(measure);
-    observer.observe(el);
+    window.addEventListener("resize", measure);
     return () => {
       el.removeEventListener("scroll", measure);
-      observer.disconnect();
+      window.removeEventListener("resize", measure);
     };
   }, [games]);
+
+  function scrollToEnd(edge: "start" | "end") {
+    const el = rowRef.current;
+    if (!el) return;
+    el.scrollTo({ left: edge === "start" ? 0 : el.scrollWidth, behavior: "smooth" });
+  }
 
   return (
     <div
       ref={rowRef}
       className="no-scrollbar flex h-[206.816px] items-end gap-[20px] overflow-x-auto overflow-y-hidden"
-      style={{ maskImage: buildFadeMask(hoveredIndex !== null || canScrollRight) }}
+      style={{ maskImage: buildFadeMask(canScroll.left, canScroll.right) }}
     >
-      {games.map((game, index) => (
-        <GameCard
-          key={game.mainText}
-          {...game}
-          onMouseEnter={() => setHoveredIndex(index)}
-          onMouseLeave={() => setHoveredIndex((current) => (current === index ? null : current))}
-        />
-      ))}
+      {games.map((game, index) => {
+        const isFirst = index === 0;
+        const isLast = index === games.length - 1;
+        return (
+          <GameCard
+            key={game.mainText}
+            {...game}
+            onMouseEnter={isFirst ? () => scrollToEnd("start") : isLast ? () => scrollToEnd("end") : undefined}
+          />
+        );
+      })}
     </div>
   );
 }
