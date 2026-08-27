@@ -31,16 +31,20 @@ export type FormBarProps = {
 // `scrollTo`, not a `transform`), so a grown edge card is guaranteed
 // fully visible via the browser's own scroll mechanics instead of a
 // hand-rolled shift that has to be measured and kept in sync with the
-// card's own growth. The fade mask reflects real scroll position
-// (`scroll` events), not hover state, so it can't get stuck showing a
-// fade after the mouse leaves -- an earlier version derived the fade
-// partly from a ResizeObserver on the row itself, which never actually
-// fires from a child's own width changing (only the row's own box
-// changing does), so the fade stayed on after hovering ended until
-// something else happened to trigger a recompute.
+// card's own growth.
+//
+// The fade mask reflects real scroll position (`scroll` events) for the
+// general case, but hovering the LAST card is a deliberate exception: per
+// spec that card should read as fully, cleanly revealed with no fade at
+// all while it's the thing being looked at, even though scrolling to
+// reveal it necessarily moves scrollLeft off 0 (which would otherwise
+// turn the left fade on, since there's now real content scrolled past
+// that edge). `isLastHovered` suppresses just that left fade for exactly
+// as long as the last card is being hovered.
 export default function FormBar({ games }: FormBarProps) {
   const rowRef = useRef<HTMLDivElement>(null);
   const [canScroll, setCanScroll] = useState({ left: false, right: false });
+  const [isLastHovered, setIsLastHovered] = useState(false);
 
   useEffect(() => {
     const el = rowRef.current;
@@ -71,7 +75,7 @@ export default function FormBar({ games }: FormBarProps) {
     <div
       ref={rowRef}
       className="no-scrollbar flex h-[206.816px] items-end gap-[20px] overflow-x-auto overflow-y-hidden"
-      style={{ maskImage: buildFadeMask(canScroll.left, canScroll.right) }}
+      style={{ maskImage: buildFadeMask(isLastHovered ? false : canScroll.left, canScroll.right) }}
     >
       {games.map((game, index) => {
         const isFirst = index === 0;
@@ -80,7 +84,17 @@ export default function FormBar({ games }: FormBarProps) {
           <GameCard
             key={game.mainText}
             {...game}
-            onMouseEnter={isFirst ? () => scrollToEnd("start") : isLast ? () => scrollToEnd("end") : undefined}
+            onMouseEnter={
+              isFirst
+                ? () => scrollToEnd("start")
+                : isLast
+                  ? () => {
+                      scrollToEnd("end");
+                      setIsLastHovered(true);
+                    }
+                  : undefined
+            }
+            onMouseLeave={isLast ? () => setIsLastHovered(false) : undefined}
           />
         );
       })}
