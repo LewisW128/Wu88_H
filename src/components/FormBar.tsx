@@ -43,20 +43,20 @@ export type FormBarProps = {
 // `scrollTo`, not a `transform`), so a grown edge card is guaranteed
 // fully visible via the browser's own scroll mechanics instead of a
 // hand-rolled shift that has to be measured and kept in sync with the
-// card's own growth.
-//
-// The fade mask reflects real scroll position (`scroll` events) for the
-// general case, but hovering the LAST card is a deliberate exception: per
-// spec that card should read as fully, cleanly revealed with no fade at
-// all while it's the thing being looked at, even though scrolling to
-// reveal it necessarily moves scrollLeft off 0 (which would otherwise
-// turn the left fade on, since there's now real content scrolled past
-// that edge). `isLastHovered` suppresses just that left fade for exactly
-// as long as the last card is being hovered.
+// card's own growth. The fade mask is a pure function of real scroll
+// position (`scroll` events) on both edges, no hover-based override --
+// scrolling to reveal the last card can genuinely carry the first card's
+// edge out of view, and the fade is what makes that a smooth visual
+// transition instead of a hard, abrupt clip by the scroll container's own
+// boundary. An earlier version suppressed the left fade specifically
+// while the last card was hovered (to read as "fully revealed"), but
+// that suppression made the actual clip look worse, not better: content
+// really was scrolled out of view, and turning the fade off just removed
+// the smoothing that made losing sight of it look intentional instead of
+// broken.
 export default function FormBar({ games }: FormBarProps) {
   const rowRef = useRef<HTMLDivElement>(null);
   const [canScroll, setCanScroll] = useState({ left: false, right: false });
-  const [isLastHovered, setIsLastHovered] = useState(false);
 
   useEffect(() => {
     const el = rowRef.current;
@@ -117,7 +117,7 @@ export default function FormBar({ games }: FormBarProps) {
     <div
       ref={rowRef}
       className="no-scrollbar flex h-[206.816px] items-end gap-[20px] overflow-x-auto overflow-y-hidden"
-      style={{ maskImage: buildFadeMask(isLastHovered ? false : canScroll.left, canScroll.right) }}
+      style={{ maskImage: buildFadeMask(canScroll.left, canScroll.right) }}
     >
       {games.map((game, index) => {
         const isFirst = index === 0;
@@ -126,36 +126,7 @@ export default function FormBar({ games }: FormBarProps) {
           <GameCard
             key={game.mainText}
             {...game}
-            onMouseEnter={
-              isFirst
-                ? () => scrollToEnd("start")
-                : isLast
-                  ? () => {
-                      scrollToEnd("end");
-                      setIsLastHovered(true);
-                    }
-                  : undefined
-            }
-            onMouseLeave={
-              isLast
-                ? () => {
-                    // Scrolling back to 0 here (not just clearing the
-                    // suppression flag) matters: without it, scrollLeft
-                    // stays wherever "end" left it, so the moment
-                    // isLastHovered flips off, the real scroll-position
-                    // fade logic sees that non-zero scrollLeft and turns
-                    // the left fade on immediately -- reading as "the
-                    // fade only starts once you leave," which is exactly
-                    // backwards from wanting no fade while interacting
-                    // with this row at all. Returning to the same
-                    // resting scroll position removes the need for the
-                    // suppression flag to still be doing anything by the
-                    // time it's cleared.
-                    scrollToEnd("start");
-                    setIsLastHovered(false);
-                  }
-                : undefined
-            }
+            onMouseEnter={isFirst ? () => scrollToEnd("start") : isLast ? () => scrollToEnd("end") : undefined}
           />
         );
       })}
