@@ -18,10 +18,19 @@ export type TopUpProps = {
 //
 // The pill's own bg-[#f4f4f4] and backdrop-blur are plain and permanent
 // in both Figma states -- not something that fades with scroll position.
+//
+// No `gap` on the outer flex: with 3 children where the middle one
+// collapses to a real 0px wide box (not just visually hidden), `gap`
+// still reserves its full width on BOTH sides of that box -- doubling
+// up into 76px of dead space at rest instead of the 38px Figma actually
+// specifies between the avatar and the bell. Margins on the two OUTER
+// children instead (38px at rest, 20px on hover, matching the two
+// states' own gap value) give exactly one gap's worth of space at rest,
+// since the collapsed middle child contributes nothing between them.
 export default function TopUp({ account }: TopUpProps) {
   return (
-    <div className="group flex h-[65px] items-center gap-[38px] rounded-[50px] bg-[#f4f4f4] p-[15px] backdrop-blur-[15px] transition-[gap] duration-300 hover:gap-[20px]">
-      <div className="flex shrink-0 items-center gap-[10px]">
+    <div className="group flex h-[65px] items-center rounded-[50px] bg-[#f4f4f4] p-[15px] backdrop-blur-[15px]">
+      <div className="mr-[38px] flex shrink-0 items-center gap-[10px] transition-[margin] duration-300 group-hover:mr-[20px]">
         <div className="relative size-[34px] shrink-0 overflow-hidden rounded-full border-2 border-[#3e4140] bg-white">
           <img
             alt=""
@@ -59,7 +68,11 @@ export default function TopUp({ account }: TopUpProps) {
         </div>
       </div>
 
-      <img alt="notifications" src={withBasePath("/assets/top-up/notify-icon.svg")} className="size-[25px] shrink-0" />
+      <img
+        alt="notifications"
+        src={withBasePath("/assets/top-up/notify-icon.svg")}
+        className="ml-0 size-[25px] shrink-0 transition-[margin] duration-300 group-hover:ml-[20px]"
+      />
     </div>
   );
 }
