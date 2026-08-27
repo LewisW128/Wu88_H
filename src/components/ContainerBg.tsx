@@ -1,4 +1,5 @@
 import { withBasePath } from "../lib/asset";
+import TwinklingDots from "./TwinklingDots";
 
 // Figma "Container_BG" component (Components Library node 755:9420,
 // style=01_Container01). A full-bleed page hero background: 1728x1078,
@@ -22,11 +23,7 @@ export default function ContainerBg() {
         className="pointer-events-none absolute inset-0 size-full object-cover"
       />
 
-      <img
-        alt=""
-        src={withBasePath("/assets/container-bg/digital-dots.svg")}
-        className="pointer-events-none absolute left-[calc(50%+238.27px)] top-[82px] h-[361px] w-[378.536px] -translate-x-1/2"
-      />
+      <TwinklingDots className="pointer-events-none absolute left-[calc(50%+238.27px)] top-[82px] h-[361px] w-[378.536px] -translate-x-1/2" />
 
       {/* Covers the FULL container (`inset-0`), not a shorter band pinned
           to some `top` offset -- an earlier version's bug: shifting `top`
