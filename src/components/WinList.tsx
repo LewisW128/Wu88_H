@@ -15,9 +15,24 @@ import Tag from "./Tag";
 // mirrors the original hand-authored path, which draws 1px inset from
 // the panel's true edges (a 1249-wide panel's rightmost coordinate is
 // 1248, not 1249).
+//
+// The bottom-right corner's curve is NOT copied verbatim from Figma's
+// own panel-bg.svg -- that asset's control points are
+// `C1226.06 422 1199 422 1199 422` (the second control point and the
+// endpoint collapsed onto the same point), which draws a visibly
+// flattened/chamfered corner instead of a round one: its sagitta (how
+// far the curve bulges from a straight chamfer) is 7.2px, about half of
+// a true 49px-radius quarter-circle's 14.35px. The panel's OTHER
+// corner (bottom-left, `C22.9895 422 1 400.06 1 373`) is a proper
+// circle-approximating bezier and matches that 14.35px sagitta almost
+// exactly, so this looks like a one-off authoring error in that
+// specific asset rather than an intentional shape. Rebuilt here using
+// the standard circle-bezier kappa constant (0.5523) against the same
+// corner box (49x49, from (right,373) to (right-49,422)) instead of
+// reproducing the flattened original.
 function panelBorderPath(panelWidth: number) {
   const right = panelWidth - 1;
-  return `M308.164 1H${right}V373C${right - 21.94} 422 ${right - 49} 422 ${right - 49} 422H50.1201C22.9895 422 1 400.06 1 373V113C1 85.9381 22.9381 64 50 64H245.164C263.113 64 277.664 49.4493 277.664 31.5C277.664 14.6555 291.32 1.00025 308.164 1Z`;
+  return `M308.164 1H${right}V373C${right} 400.06 ${right - 21.94} 422 ${right - 49} 422H50.1201C22.9895 422 1 400.06 1 373V113C1 85.9381 22.9381 64 50 64H245.164C263.113 64 277.664 49.4493 277.664 31.5C277.664 14.6555 291.32 1.00025 308.164 1Z`;
 }
 
 // The row list's own shape mask (was a static list-shape-mask.svg),
