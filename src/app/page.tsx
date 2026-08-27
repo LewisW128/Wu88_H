@@ -259,39 +259,7 @@ export default function Home() {
               <Sidebar />
             </div>
 
-            <div className="relative">
-              {/* Scrolling content in THIS column -- Container_BG, Form
-                  Bar, Hot Games -- used to hard-clip the instant it
-                  reached Top_bar's bottom edge (y=38): one frame fully
-                  visible, the next sliced off flat. This fades it out
-                  over 235px instead (long enough to fully cover what's
-                  left of Hot Games' row still peeking out at that
-                  scroll position, not just a thin sliver of it), white
-                  at the top fading to transparent. A sibling of the
-                  gap-managed flex column below, not a child of it --
-                  `h-0`/sticky still needs normal flow to stick
-                  correctly, but living inside that flex-col would make
-                  its own `gap-[25px]` add empty space around this too.
-                  Scoped to just this column's own width (`w-full` here
-                  means the fluid middle column, not the full page) --
-                  Sidebar and Talking_Bar are their own persistent sticky
-                  chrome, not scrolling content, so they don't need this
-                  treatment. Restores itself naturally: once scrolled
-                  back to the top there's nothing left in this band to
-                  fade.
-                  `z-0`, not above StickyUtilityBar's own `z-10`: this
-                  must only cover the scrolling content behind the
-                  row's pills, never the pills themselves -- Search/
-                  Language/Top_up need to stay fully visible and
-                  unfaded the entire time. */}
-              <div className="sticky top-[38px] left-0 z-0 h-0 w-full">
-                <div
-                  className="pointer-events-none h-[235px] w-full"
-                  style={{ background: "linear-gradient(to bottom, white, transparent)" }}
-                />
-              </div>
-
-              <div className="flex flex-col gap-[25px] pb-[40px]">
+            <div className="flex flex-col gap-[25px] pb-[40px]">
               {/* Sticky like Top_bar/Sidebar/Talking_Bar, from scroll
                   position 0 -- no background of its own and no
                   scroll-triggered state (see StickyUtilityBar's own
@@ -350,7 +318,6 @@ export default function Home() {
               </div>
 
               <Footer />
-              </div>
             </div>
 
             {/* top-[58px] = Top_bar's own 38px height + the original 20px
