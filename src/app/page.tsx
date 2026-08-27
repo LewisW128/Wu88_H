@@ -280,7 +280,22 @@ export default function Home() {
                 <TopUp account="123456" />
               </StickyUtilityBar>
 
-              <div className="flex flex-col gap-[30px] pt-[130px]">
+              {/* Figma (01_WU88-H-PC-Home-Page node 883:125520) puts Frame
+                  1241's headline at absolute y=299, 150px below where the
+                  utility row (Search/Language, itself ending at y≈124)
+                  actually sits -- not the 130px this used to have, which
+                  landed the headline 20px too high. The carousel dots sit
+                  another 123px below the headline block's own bottom
+                  (y=492 vs the headline group's y=369), not a plain 30px
+                  gap -- Figma's own composition gives the dots real
+                  breathing room below the text instead of hugging it. The
+                  trailing `pb-[15px]` makes up the rest of the gap down to
+                  Form Bar (y=532): the parent's own `gap-[25px]` between
+                  siblings already matches Figma everywhere else in this
+                  column (Form Bar to Hot Games, Hot Games to General
+                  Games, etc.), so the extra 15px belongs here, on this
+                  wrapper, rather than changing that shared gap. */}
+              <div className="flex flex-col gap-[123px] pb-[15px] pt-[150px]">
                 <HeroText />
                 <CarouselDots />
               </div>
