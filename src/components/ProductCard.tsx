@@ -56,7 +56,7 @@ export default function ProductCard({ image, title, category, views, wins, label
 
       <div className="absolute inset-0" style={maskStyle}>
         <div className="absolute bottom-0 left-0 h-[50px] w-full bg-gradient-to-b from-transparent to-black transition-[height] duration-300 ease-out group-hover:h-[266px]">
-          <div className="absolute bottom-[20px] left-[10px] flex flex-col items-start gap-[10px]">
+          <div className="absolute bottom-[20px] left-[20px] flex flex-col items-start gap-[10px]">
             <div className="flex items-center gap-[10px]">
               <p className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-white">{title}</p>
 
