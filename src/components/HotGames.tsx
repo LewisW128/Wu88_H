@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { withBasePath } from "../lib/asset";
+import { useEdgeScroll } from "../lib/useEdgeScroll";
 import LeftRight from "./LeftRight";
 import RankedProductCard, { type RankedProductCardProps } from "./RankedProductCard";
 import Tag from "./Tag";
@@ -25,35 +25,14 @@ export type HotGamesProps = {
 // horizontally scrolling row of ranked cards, edge-faded like every other
 // scrollable row in this project. A large decorative dot-scatter graphic
 // sits low behind the row's left edge, peeking out from under rank 01.
+//
+// The "更多"/nav side hides entirely when the row doesn't overflow its
+// container at all (e.g. a very wide screen showing every card at once)
+// -- see the comment on SectionHeader for why `canLeft || canRight` is
+// the right test for that.
 export default function HotGames({ games }: HotGamesProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [canScroll, setCanScroll] = useState({ left: false, right: false });
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-
-    function update() {
-      if (!el) return;
-      const { scrollLeft, scrollWidth, clientWidth } = el;
-      setCanScroll({
-        left: scrollLeft > 0,
-        right: scrollLeft < scrollWidth - clientWidth - 1,
-      });
-    }
-
-    update();
-    el.addEventListener("scroll", update);
-    window.addEventListener("resize", update);
-    return () => {
-      el.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
-    };
-  }, [games]);
-
-  function scrollBy(direction: "left" | "right") {
-    scrollRef.current?.scrollBy({ left: direction === "left" ? -SCROLL_STEP : SCROLL_STEP, behavior: "smooth" });
-  }
+  const { ref: scrollRef, canScroll, scrollByStep } = useEdgeScroll<HTMLDivElement>([games]);
+  const hasOverflow = canScroll.left || canScroll.right;
 
   return (
     <div className="flex w-full flex-col items-start gap-[15px]">
@@ -62,15 +41,17 @@ export default function HotGames({ games }: HotGamesProps) {
           <img alt="" src={withBasePath("/assets/section-header/icon-hot-games.svg")} className="size-[25px]" />
           <p className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#444242]">熱門遊戲</p>
         </div>
-        <div className="flex items-center gap-[20px]">
-          <Tag label="更多" active />
-          <LeftRight
-            canLeft={canScroll.left}
-            canRight={canScroll.right}
-            onLeft={() => scrollBy("left")}
-            onRight={() => scrollBy("right")}
-          />
-        </div>
+        {hasOverflow && (
+          <div className="flex items-center gap-[20px]">
+            <Tag label="更多" active />
+            <LeftRight
+              canLeft={canScroll.left}
+              canRight={canScroll.right}
+              onLeft={() => scrollByStep(-SCROLL_STEP)}
+              onRight={() => scrollByStep(SCROLL_STEP)}
+            />
+          </div>
+        )}
       </div>
 
       <div className="relative h-[292px] w-full">

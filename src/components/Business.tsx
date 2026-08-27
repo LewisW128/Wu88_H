@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { withBasePath } from "../lib/asset";
+import { useEdgeScroll } from "../lib/useEdgeScroll";
 import BusinessCard, { type BusinessCardProps } from "./BusinessCard";
 import Tag from "./Tag";
 
@@ -56,35 +56,13 @@ export type BusinessProps = {
 // and the right edge clears once you reach the last card. The nav buttons
 // scroll by one card-width and their own enabled/disabled look follows the
 // same scroll state.
+//
+// The "更多"/nav side hides entirely once the row no longer overflows its
+// container -- see the comment on SectionHeader for why
+// `canLeft || canRight` is the right test for that.
 export default function Business({ cards }: BusinessProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [canScroll, setCanScroll] = useState({ left: false, right: false });
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-
-    function update() {
-      if (!el) return;
-      const { scrollLeft, scrollWidth, clientWidth } = el;
-      setCanScroll({
-        left: scrollLeft > 0,
-        right: scrollLeft < scrollWidth - clientWidth - 1,
-      });
-    }
-
-    update();
-    el.addEventListener("scroll", update);
-    window.addEventListener("resize", update);
-    return () => {
-      el.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
-    };
-  }, [cards]);
-
-  function scrollBy(direction: "left" | "right") {
-    scrollRef.current?.scrollBy({ left: direction === "left" ? -SCROLL_STEP : SCROLL_STEP, behavior: "smooth" });
-  }
+  const { ref: scrollRef, canScroll, scrollByStep } = useEdgeScroll<HTMLDivElement>([cards]);
+  const hasOverflow = canScroll.left || canScroll.right;
 
   return (
     <div className="flex w-full flex-col items-start gap-[15px]">
@@ -94,13 +72,15 @@ export default function Business({ cards }: BusinessProps) {
           <p className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#444242]">頂級合作廠商</p>
         </div>
 
-        <div className="absolute right-0 flex items-center gap-[20px]">
-          <Tag label="更多" active />
-          <div className="flex items-center gap-[5px]">
-            <NavButton direction="left" disabled={!canScroll.left} onClick={() => scrollBy("left")} />
-            <NavButton direction="right" disabled={!canScroll.right} onClick={() => scrollBy("right")} />
+        {hasOverflow && (
+          <div className="absolute right-0 flex items-center gap-[20px]">
+            <Tag label="更多" active />
+            <div className="flex items-center gap-[5px]">
+              <NavButton direction="left" disabled={!canScroll.left} onClick={() => scrollByStep(-SCROLL_STEP)} />
+              <NavButton direction="right" disabled={!canScroll.right} onClick={() => scrollByStep(SCROLL_STEP)} />
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <div

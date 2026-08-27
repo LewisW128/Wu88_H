@@ -84,12 +84,21 @@ export type WinListProps = {
 };
 
 const TRACK_HEIGHT = 252;
-const FADE = 40;
+const FADE_TOP = 40;
+// Bigger than the top fade on purpose: rows are 69px tall (49px row +
+// 20px gap) and the last fully-visible one sits flush against the
+// bottom edge, right where the panel's own shape mask starts rounding
+// its bottom-right corner (see `rowMaskPath` above) -- a 40px fade only
+// caught the bottom sliver of that row, leaving most of it (including
+// the corner mask cutting across its game thumbnail) still hard-edged
+// and visible. 80px reaches past that whole last row, so it fades away
+// as a unit before either edge becomes visible.
+const FADE_BOTTOM = 80;
 
 function buildFadeMask(canScrollUp: boolean, canScrollDown: boolean) {
   const topColor = canScrollUp ? "transparent" : "black";
   const bottomColor = canScrollDown ? "transparent" : "black";
-  return `linear-gradient(to bottom, ${topColor} 0px, black ${FADE}px, black calc(100% - ${FADE}px), ${bottomColor} 100%)`;
+  return `linear-gradient(to bottom, ${topColor} 0px, black ${FADE_TOP}px, black calc(100% - ${FADE_BOTTOM}px), ${bottomColor} 100%)`;
 }
 
 // "+ 10,000,000" -> 10000000, so 富豪榜 can rank by actual win amount.
@@ -223,7 +232,7 @@ export default function WinList({ rows }: WinListProps) {
           ref={scrollRef}
           className="no-scrollbar absolute left-[20px] right-[23px] top-[88px] flex h-[335px] flex-col items-start gap-[20px] overflow-y-auto"
           style={{
-            paddingBottom: FADE,
+            paddingBottom: FADE_BOTTOM,
             maskImage: `${rowMaskDataUri(panelWidth)}, ${buildFadeMask(fade.up, fade.down)}`,
             maskSize: `${panelWidth}px 423px, 100% 100%`,
             maskPosition: "-20px -88px, 0 0",

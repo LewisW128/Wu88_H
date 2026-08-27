@@ -4,15 +4,16 @@ import ContainerBg from "../components/ContainerBg";
 import Footer from "../components/Footer";
 import { type GameCardProps } from "../components/GameCard";
 import FormBar from "../components/FormBar";
+import GeneralGames from "../components/GeneralGames";
 import HotGames from "../components/HotGames";
 import Language from "../components/Language";
-import ProductCard, { type ProductCardProps } from "../components/ProductCard";
-import PromotionCard, { type PromotionCardProps } from "../components/PromotionCard";
+import { type ProductCardProps } from "../components/ProductCard";
+import { type PromotionCardProps } from "../components/PromotionCard";
+import Promotions from "../components/Promotions";
 import QuickLinks from "../components/QuickLinks";
 import type { RankedProductCardProps } from "../components/RankedProductCard";
 import ScaleToFit from "../components/ScaleToFit";
 import Search from "../components/Search";
-import SectionHeader from "../components/SectionHeader";
 import Sidebar from "../components/Sidebar";
 import SocialLinks from "../components/SocialLinks";
 import StickyUtilityBar, { HeroZoneEndSentinel } from "../components/StickyUtilityBar";
@@ -293,25 +294,11 @@ export default function Home() {
 
               <HeroZoneEndSentinel />
 
-              <div className="flex flex-col gap-[15px]">
-                <SectionHeader icon="/assets/section-header/icon-general-games.svg" title="推薦遊戲" />
-                <div className="no-scrollbar flex items-center gap-[20px] overflow-x-auto overflow-y-hidden">
-                  {generalGames.map((game) => (
-                    <ProductCard key={game.title} {...game} />
-                  ))}
-                </div>
-              </div>
+              <GeneralGames games={generalGames} />
 
               <WinList rows={winListRows} />
 
-              <div className="flex flex-col gap-[15px]">
-                <SectionHeader icon="/assets/section-header/icon-promotions.svg" title="優惠活動" />
-                <div className="no-scrollbar flex items-center gap-[20px] overflow-x-auto overflow-y-hidden">
-                  {promotions.map(({ key, ...promo }) => (
-                    <PromotionCard key={key} {...promo} />
-                  ))}
-                </div>
-              </div>
+              <Promotions promotions={promotions} />
 
               <Business cards={businessCards} />
 
