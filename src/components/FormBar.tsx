@@ -57,23 +57,44 @@ export type FormBarProps = {
 export default function FormBar({ games }: FormBarProps) {
   const rowRef = useRef<HTMLDivElement>(null);
   const [canScroll, setCanScroll] = useState({ left: false, right: false });
+  // The row's own resting content (7 cards at their normal width) is a few
+  // px wider than its container even with nothing hovered -- a pre-
+  // existing sub-pixel rounding slop, not anything a card's growth
+  // caused. Comparing raw scrollWidth/clientWidth to decide the right
+  // fade would read that slop as "there's more to see" and show a fade
+  // with nothing actually hovered, which is exactly the ambient effect
+  // that shouldn't be there at rest. Recording that resting scrollWidth
+  // once and only counting genuine overflow BEYOND it keeps the right
+  // fade tied to an actual card having grown, the same way the left fade
+  // is already tied to having actually scrolled -- rather than reacting
+  // to layout slop that was always there.
+  const restScrollWidthRef = useRef<number | null>(null);
 
   useEffect(() => {
     const el = rowRef.current;
     if (!el) return;
+    if (restScrollWidthRef.current === null) {
+      restScrollWidthRef.current = el.scrollWidth;
+    }
     function measure() {
       if (!el) return;
+      const restWidth = restScrollWidthRef.current ?? el.scrollWidth;
       setCanScroll({
         left: el.scrollLeft > 0,
-        right: el.scrollLeft < el.scrollWidth - el.clientWidth - 1,
+        right: el.scrollWidth > restWidth + 1 && el.scrollLeft < el.scrollWidth - el.clientWidth - 1,
       });
+    }
+    function onResize() {
+      if (!el) return;
+      restScrollWidthRef.current = el.scrollWidth;
+      measure();
     }
     measure();
     el.addEventListener("scroll", measure);
-    window.addEventListener("resize", measure);
+    window.addEventListener("resize", onResize);
     return () => {
       el.removeEventListener("scroll", measure);
-      window.removeEventListener("resize", measure);
+      window.removeEventListener("resize", onResize);
     };
   }, [games]);
 
