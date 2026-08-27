@@ -12,12 +12,21 @@ export type MainSelectionsProps = {
 // and no underline. Both states -- glow blur, drop-shadow underline, and
 // icon -- are pre-composited in the exported SVGs since they rely on
 // Gaussian-blur filters that aren't worth hand-reproducing in CSS.
+// Figma "Footbar_btn" (node 894:215150): a dark pill tooltip showing the
+// icon's label, appearing 13.5px right of the icon and vertically
+// centered on it. Every sidebar icon gets one on hover -- see the
+// matching span in Sidebar.tsx's own NavIcon.
 export default function MainSelections({ active = false }: MainSelectionsProps) {
   return (
-    <img
-      alt="首頁"
-      src={withBasePath(active ? "/assets/main-selections/state-on.svg" : "/assets/main-selections/state-off.svg")}
-      className="h-[89px] w-[93px]"
-    />
+    <div className="group relative flex h-[89px] w-[93px] shrink-0 items-center justify-center">
+      <img
+        alt="首頁"
+        src={withBasePath(active ? "/assets/main-selections/state-on.svg" : "/assets/main-selections/state-off.svg")}
+        className="h-[89px] w-[93px]"
+      />
+      <span className="pointer-events-none absolute left-full top-1/2 ml-[13.5px] -translate-y-1/2 whitespace-nowrap rounded-[15px] bg-[#3e4140] px-[11px] py-[9px] text-[14px] font-medium leading-[20px] tracking-[0.15px] text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+        首頁
+      </span>
+    </div>
   );
 }

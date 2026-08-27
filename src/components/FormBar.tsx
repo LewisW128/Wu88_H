@@ -54,6 +54,15 @@ export type FormBarProps = {
 // really was scrolled out of view, and turning the fade off just removed
 // the smoothing that made losing sight of it look intentional instead of
 // broken.
+//
+// `justify-between` alongside the fixed `gap-[20px]`: on a wide screen
+// where all 7 cards already fit with room to spare, this distributes
+// that leftover width as extra space between them instead of leaving
+// it bunched up as dead space on the right -- the same "grow every gap
+// equally" look Win List's columns use. It's a no-op the moment the
+// row actually overflows (nothing left to distribute once the natural
+// content width exceeds the container), so the scrollable case above
+// is completely unaffected.
 export default function FormBar({ games }: FormBarProps) {
   const rowRef = useRef<HTMLDivElement>(null);
   const [canScroll, setCanScroll] = useState({ left: false, right: false });
@@ -166,7 +175,7 @@ export default function FormBar({ games }: FormBarProps) {
   return (
     <div
       ref={rowRef}
-      className="no-scrollbar flex h-[206.816px] items-end gap-[20px] overflow-x-auto overflow-y-hidden"
+      className="no-scrollbar flex h-[206.816px] items-end justify-between gap-[20px] overflow-x-auto overflow-y-hidden"
       style={{ maskImage: buildFadeMask(canScroll.left, canScroll.right) }}
     >
       {games.map((game, index) => {
