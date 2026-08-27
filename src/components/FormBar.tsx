@@ -139,6 +139,11 @@ export default function FormBar({ games }: FormBarProps) {
       ref={rowRef}
       className="no-scrollbar flex h-[206.816px] items-end gap-[20px] overflow-x-auto overflow-y-hidden"
       style={{ maskImage: buildFadeMask(canScroll.left, canScroll.right) }}
+      // Restores the row to exactly where it started once the mouse
+      // leaves it entirely -- not per-card, so moving between cards
+      // within the row doesn't trigger this, only actually finishing
+      // with the row as a whole.
+      onMouseLeave={() => scrollToEnd("start")}
     >
       {games.map((game, index) => {
         const isFirst = index === 0;
