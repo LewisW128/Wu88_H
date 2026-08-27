@@ -237,8 +237,19 @@ export default function WinList({ rows }: WinListProps) {
             maskSize: `${panelWidth}px 423px, 100% 100%`,
             maskPosition: "-20px -88px, 0 0",
             maskRepeat: "no-repeat, no-repeat",
+            // `intersect` multiplies this layer's alpha with the fade
+            // gradient's, so the fade actually dims the row wherever the
+            // shape mask is opaque (nearly everywhere) instead of the two
+            // masks fighting over the same pixels. The old paired
+            // `-webkit-mask-composite: source-in, source-in` looked like
+            // the vendor-prefixed equivalent but isn't -- `source-in` is a
+            // legacy Safari-only keyword, not one of the standard
+            // add/subtract/intersect/exclude values, and setting it
+            // alongside the standard property let it silently win over
+            // `intersect` in this browser, which is why the fade barely
+            // showed and the corner clip looked wrong: the two masks were
+            // effectively being unioned instead of multiplied.
             maskComposite: "intersect",
-            WebkitMaskComposite: "source-in, source-in",
           }}
         >
           {displayRows.map((row) => (
