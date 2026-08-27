@@ -87,7 +87,7 @@ export default function Business({ cards }: BusinessProps) {
   }
 
   return (
-    <div className="flex w-[1249px] flex-col items-start gap-[15px]">
+    <div className="flex w-full flex-col items-start gap-[15px]">
       <div className="relative flex h-[44px] w-full items-center">
         <div className="flex items-center gap-[10px]">
           <img alt="" src={withBasePath("/assets/business/title-icon.svg")} className="size-[25px]" />

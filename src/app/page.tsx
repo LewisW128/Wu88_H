@@ -221,7 +221,23 @@ export default function Home() {
             <ContainerBg />
           </div>
 
-          <div className="relative z-10 grid" style={{ gridTemplateColumns: "164px 1249px 295px" }}>
+          {/* The middle column is fluid (not a fixed 1249px) so this grid
+              actually uses whatever extra width a wide screen gives it --
+              ScaleToFit's own wrapper only lets that extra width reach
+              here at all once scale is pinned at 1 (see ScaleToFit.tsx).
+              Every horizontal-scroll row in this column (Hot Games,
+              General Games, Form Bar, Promotions, Business) is already
+              a plain flex row with no fixed width of its own, so a wider
+              column just lets the browser's normal flex-wrap-before-
+              overflow behavior show more cards before the row needs
+              scrolling -- no per-row "how many fit" logic needed.
+              `minmax(0,1fr)`, not a bare `1fr`: a plain `1fr` track can't
+              shrink below its content's own natural min-width, so a
+              horizontal-scroll row's full unscrolled content width would
+              force the whole grid wider than intended at narrow sizes;
+              `minmax(0, ...)` explicitly allows the track to go to 0,
+              letting overflow-x-auto do its normal job instead. */}
+          <div className="relative z-10 grid" style={{ gridTemplateColumns: "164px minmax(0, 1fr) 295px" }}>
             {/* top-[79px] = Top_bar's own 38px height + the original 41px
                 gap below it, now that Top_bar is persistently pinned too
                 instead of only ever appearing once at the true page top. */}

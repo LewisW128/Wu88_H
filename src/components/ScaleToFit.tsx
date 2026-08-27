@@ -48,8 +48,22 @@ export default function ScaleToFit({ children }: { children: React.ReactNode }) 
     return () => window.removeEventListener("resize", update);
   }, []);
 
+  // Below the design width, this stays a fixed DESIGN_WIDTH box that zoom
+  // shrinks to fit -- unchanged from before. At or above it, scale is
+  // pinned at exactly 1 (never scales up), so this box would otherwise
+  // render at a hard 1728px and just sit centered with gray margins on
+  // either side no matter how much wider the real window is -- the
+  // layout inside never actually saw that extra space to do anything
+  // with it. Switching to a fluid 100% width in that case (zoom:1 has no
+  // scaling effect either way, so this changes nothing about the zoomed-
+  // shrink behavior) lets the grid's own fluid middle column actually
+  // grow with the real viewport, which is what lets rows like Hot Games
+  // reveal more cards on a wide screen instead of just sitting in a
+  // fixed-size box with empty space around it.
+  const isFluid = scale >= 1;
+
   return (
-    <div style={{ width: DESIGN_WIDTH, zoom: scale } as React.CSSProperties}>
+    <div style={{ width: isFluid ? "100%" : DESIGN_WIDTH, zoom: scale } as React.CSSProperties}>
       <ScaleContext.Provider value={scale}>{children}</ScaleContext.Provider>
     </div>
   );
