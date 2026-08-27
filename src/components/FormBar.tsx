@@ -1,25 +1,13 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import GameCard, { type GameCardProps } from "./GameCard";
 
 const FADE = 120; // matches Hot Games' own edge fade distance.
 
-// `leftShiftBy` is the row's own current translateX distance (0 when not
-// shifted). The mask's coordinates live in the ROW's own space, but the
-// row is what actually moves -- shifting it left by N carries the
-// gradient's "transparent at 0px" point N px left of the wrapper's real
-// (stationary) clip edge along with it. Without correcting for that, the
-// content actually sitting at the wrapper's visible boundary is only
-// partway through the fade (not yet transparent) when `overflow-hidden`
-// hard-cuts it, showing a visible seam right where a card is still
-// partially opaque. Offsetting the gradient's stops by `leftShiftBy`
-// keeps "fully transparent" pinned to the wrapper's real edge regardless
-// of how far the row itself has shifted.
-function buildFadeMask(leftShiftBy: number, fadeRight: boolean) {
-  const leftStop = leftShiftBy > 0 ? `transparent ${-leftShiftBy}px, black ${FADE - leftShiftBy}px` : "black 0px";
+function buildFadeMask(fadeRight: boolean) {
   const rightColor = fadeRight ? "transparent" : "black";
-  return `linear-gradient(to right, ${leftStop}, black calc(100% - ${FADE}px), ${rightColor} 100%)`;
+  return `linear-gradient(to right, black 0px, black calc(100% - ${FADE}px), ${rightColor} 100%)`;
 }
 
 export type FormBarProps = {
@@ -36,112 +24,61 @@ export type FormBarProps = {
 // off -- without it this row can pick up its own independent vertical
 // scrollbar that hijacks the mouse wheel instead of it scrolling the page.
 //
-// The edge fade is tied to hover state, not scroll position: at rest the
-// row's own content already fits, so there's nothing to hint at and no
-// fade shows. Hovering any card OTHER than the last one grows it via
-// normal flex reflow, pushing every later card (including the last one)
-// to the right -- that's when the right edge fades, to signal there's more
-// past it. Hovering the LAST card is the one case that can't just grow
-// right (it's already flush with the row's own edge, and growing further
-// would run it into Talking_Bar), so it instead shifts the whole row left
-// far enough to make room -- see `lastCardShift` below. That shift is a
-// `transform` on the scroll container itself, not a scroll of its content,
-// so it carries the row's own left edge past its normal position and would
-// otherwise bleed the first card's leading edge into the Sidebar column
-// next door -- `overflow-hidden` on the wrapper clips that bleed at the
-// row's true boundary, and the mask's left edge fades that same card out
-// right at that boundary instead of just hard-cutting it.
-//
-// The shift itself is driven by a real `:has(:hover)` CSS rule (in the
-// injected <style> below), not by React state + an inline `transform`.
-// The last card's own width growth is native `:hover` (instant, no JS
-// round-trip); a React state update always takes at least one extra
-// render to reach the DOM. Driving the shift from state meant it
-// consistently started a frame or more behind the card's own growth for
-// the ENTIRE 300ms of the transition, not just a one-off flash -- long
-// enough that the card's right edge was visibly past the (React-state-
-// driven) shifted boundary and getting hard-clipped by `overflow-hidden`
-// the whole time you hovered it, correcting only once the transition
-// settled. A `:has()` rule reacts to the same native `:hover` change the
-// card's own width does, so both start on the same tick. React state
-// still drives the fade mask below (hoveredIndex) -- a fade lagging by a
-// frame is imperceptible in a way a hard clip lagging by a frame is not.
-const LAST_CARD_GROWTH_DELTA = 19.964; // 180.964 - 161
-
+// Every card, including the last one, just grows to the right on hover via
+// plain CSS :hover -- the same as every other card in this row, no special
+// case. An earlier version tried to keep the last card's growth from ever
+// crossing the row's own nominal boundary by shifting the whole row left
+// to compensate (a `:has(:hover)` rule) plus a matching mask/overflow-
+// hidden setup on the left edge. That chased its own tail across several
+// rounds of fixes -- a shift that has to be measured (rest-state overflow
+// via ResizeObserver), synced to the exact same tick as the card's own
+// native-CSS growth, and then have the fade mask's own coordinates
+// corrected for how far the shift moved them -- three interdependent
+// moving parts, any one of which being slightly off (or off only at
+// certain viewport widths, timings, or load orders) reads as "still
+// cut," which is exactly what kept happening. Measured directly, the
+// grown last card already clears Talking_Bar with real margin to spare
+// at every width this project actually supports -- the shift was solving
+// a problem that didn't need solving, at the cost of a fragile mechanism
+// that kept finding new ways to be wrong. The row's own edge fade (shown
+// whenever any card's growth might push the row's real content past its
+// nominal width) is enough on its own.
 export default function FormBar({ games }: FormBarProps) {
   const rowRef = useRef<HTMLDivElement>(null);
-  const rawId = useId();
-  const rowId = `form-bar-row-${rawId.replace(/:/g, "")}`;
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  // How far the row needs to shift left so the grown last card's own right
-  // edge lands exactly on the row's real right edge. Naively this is just
-  // LAST_CARD_GROWTH_DELTA (the card's own growth), but that assumes the
-  // row's resting content exactly fills its container with zero slack --
-  // any pre-existing sub-pixel rounding slop in the row's own layout adds
-  // straight onto how far right the grown card would otherwise overflow.
-  // Measuring the row's actual rest-state overflow and folding it into the
-  // shift keeps the right edge flush regardless of that slop, instead of
-  // just hoping the fixed constant happens to be exact. `scrollWidth` and
-  // `clientWidth` are already in this element's own authored (design-
-  // space) pixels despite living inside ScaleToFit's zoomed canvas --
-  // unlike `getBoundingClientRect()`, they don't reflect the zoom factor --
-  // so no conversion against `scale` is needed here.
-  const [extraShift, setExtraShift] = useState(0);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
-  // A one-time measurement (plus a window-resize listener) raced against
-  // this row's own asset loading: fonts and the category videos can still
-  // be settling their intrinsic size after mount, so a measurement taken
-  // right away could lock in a stale scrollWidth from before that settled
-  // -- too small on one load, too generous on another -- with nothing to
-  // ever correct it afterwards, since neither event fires again on its
-  // own. That inconsistency is what showed up as the shift sometimes
-  // undershooting (right edge clipped) and sometimes overshooting (first
-  // card faded further than it needed to). A ResizeObserver instead
-  // re-measures every time the row's own box actually changes size, for
-  // any reason, so a late-settling layout keeps this correct instead of
-  // needing the stars to align at mount time.
   useEffect(() => {
     const el = rowRef.current;
     if (!el) return;
     function measure() {
       if (!el) return;
-      setExtraShift(Math.max(0, el.scrollWidth - el.clientWidth));
+      setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 1);
     }
     measure();
+    el.addEventListener("scroll", measure);
     const observer = new ResizeObserver(measure);
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => {
+      el.removeEventListener("scroll", measure);
+      observer.disconnect();
+    };
   }, [games]);
 
-  const lastIndex = games.length - 1;
-  const isLastHovered = hoveredIndex === lastIndex;
-  const isOtherHovered = hoveredIndex !== null && !isLastHovered;
-  // A few extra px on top of the measured minimum: a right edge clipped
-  // by even one stray pixel of rounding is a visible, hard-edged defect,
-  // while a shift that's a few px more generous than strictly necessary
-  // just moves the fade's own start point slightly earlier -- an
-  // unnoticeable trade the wrong direction to be cautious about.
-  const SAFETY_MARGIN = 5;
-  const lastCardShift = LAST_CARD_GROWTH_DELTA + extraShift + SAFETY_MARGIN;
-
   return (
-    <div className="overflow-hidden">
-      <style>{`#${rowId}:has(> div:last-child:hover) { transform: translateX(-${lastCardShift}px); }`}</style>
-      <div
-        ref={rowRef}
-        id={rowId}
-        className="no-scrollbar flex h-[206.816px] items-end gap-[20px] overflow-x-auto overflow-y-hidden transition-transform duration-300 ease-out"
-        style={{ maskImage: buildFadeMask(isLastHovered ? lastCardShift : 0, isOtherHovered) }}
-      >
-        {games.map((game, index) => (
-          <GameCard
-            key={game.mainText}
-            {...game}
-            onMouseEnter={() => setHoveredIndex(index)}
-            onMouseLeave={() => setHoveredIndex((current) => (current === index ? null : current))}
-          />
-        ))}
-      </div>
+    <div
+      ref={rowRef}
+      className="no-scrollbar flex h-[206.816px] items-end gap-[20px] overflow-x-auto overflow-y-hidden"
+      style={{ maskImage: buildFadeMask(hoveredIndex !== null || canScrollRight) }}
+    >
+      {games.map((game, index) => (
+        <GameCard
+          key={game.mainText}
+          {...game}
+          onMouseEnter={() => setHoveredIndex(index)}
+          onMouseLeave={() => setHoveredIndex((current) => (current === index ? null : current))}
+        />
+      ))}
     </div>
   );
 }
