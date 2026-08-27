@@ -134,16 +134,40 @@ export default function FormBar({ games }: FormBarProps) {
     el.scrollTo({ left: totalGrownWidth - el.clientWidth + END_SCROLL_MARGIN, behavior: "instant" });
   }
 
+  // Tracks whether ANY card in the row is currently hovered, independent
+  // of the row's own onMouseLeave. That single row-level listener turned
+  // out not to be reliable enough on its own in practice -- exactly which
+  // browser/OS quirk skipped it isn't confirmed, but relying on one
+  // element's own boundary-crossing event as the sole trigger for
+  // restoring scroll position left real cases where it silently never
+  // fired, leaving the row stuck scrolled until manually dragged back.
+  // Instead, every card's own onMouseEnter/onMouseLeave -- already firing
+  // reliably, since that's what drives each card's own video play/pause
+  // -- marks itself as "this one" or "not this one" hovered. Leaving a
+  // card schedules a reset on the next tick; if some OTHER card's
+  // onMouseEnter fires first (moving directly between two cards), that
+  // pending reset is cancelled, so only genuinely leaving the whole row
+  // (no other card claims hover within that same tick) triggers it.
+  const hoveredCountRef = useRef(0);
+
+  function handleCardEnter() {
+    hoveredCountRef.current += 1;
+  }
+
+  function handleCardLeave() {
+    hoveredCountRef.current -= 1;
+    setTimeout(() => {
+      if (hoveredCountRef.current <= 0) {
+        scrollToEnd("start");
+      }
+    }, 0);
+  }
+
   return (
     <div
       ref={rowRef}
       className="no-scrollbar flex h-[206.816px] items-end gap-[20px] overflow-x-auto overflow-y-hidden"
       style={{ maskImage: buildFadeMask(canScroll.left, canScroll.right) }}
-      // Restores the row to exactly where it started once the mouse
-      // leaves it entirely -- not per-card, so moving between cards
-      // within the row doesn't trigger this, only actually finishing
-      // with the row as a whole.
-      onMouseLeave={() => scrollToEnd("start")}
     >
       {games.map((game, index) => {
         const isFirst = index === 0;
@@ -152,7 +176,12 @@ export default function FormBar({ games }: FormBarProps) {
           <GameCard
             key={game.mainText}
             {...game}
-            onMouseEnter={isFirst ? () => scrollToEnd("start") : isLast ? () => scrollToEnd("end") : undefined}
+            onMouseEnter={() => {
+              handleCardEnter();
+              if (isFirst) scrollToEnd("start");
+              else if (isLast) scrollToEnd("end");
+            }}
+            onMouseLeave={handleCardLeave}
           />
         );
       })}
