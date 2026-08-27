@@ -29,7 +29,7 @@ export default function ContainerBg() {
       />
 
       <div
-        className="pointer-events-none absolute left-0 top-[243px] h-[835px] w-full"
+        className="pointer-events-none absolute left-0 top-[150px] h-[835px] w-full"
         style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0) 17.529%, white 81.023%)" }}
       />
     </div>
