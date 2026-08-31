@@ -34,7 +34,16 @@ export default function SportBtn({ provider, image, windowStyle, imageStyle }: S
     // own outer bound, not by their own component boundaries. Dropping
     // this leaves the athlete photo and dots bleeding into whatever real
     // page content sits above/below/beside this button.
-    <div className="group relative h-[169px] w-[346px] overflow-hidden">
+    //
+    // `shrink-0`: standalone this button always got its full 346px, so the
+    // scratch preview it was first verified in never exercised this -- only
+    // surfaced once these sit in SportsForm's real flex row, where the row
+    // has less total width than 5 buttons need and a flex item shrinks by
+    // default. Every internal piece here is absolutely positioned against
+    // the authored 346px, so a shrunk card doesn't scale them down with it;
+    // it just clips the same fixed-position photo/text/button against a
+    // narrower box, reading as a squashed, overlapping mess.
+    <div className="group relative h-[169px] w-[346px] shrink-0 overflow-hidden">
       {/* Hover swaps the gray border for teal and layers a soft radial
           teal glow over the flat gray fill. Figma's own hover version is
           an inline SVG radialGradient with a gradientTransform (matrix
