@@ -2,7 +2,9 @@ import { DEFAULT_RING_COLOR } from "../../components/Avatar";
 import ContainerBg from "../../components/ContainerBg";
 import Footer from "../../components/Footer";
 import Language from "../../components/Language";
+import type { MatchAnalysisCardProps } from "../../components/MatchAnalysisCard";
 import MinPanelHeight from "../../components/MinPanelHeight";
+import type { NewsBannerProps } from "../../components/NewsBanner";
 import QuickLinks from "../../components/QuickLinks";
 import ScaleToFit from "../../components/ScaleToFit";
 import Search from "../../components/Search";
@@ -12,6 +14,8 @@ import type { SportBtnProps } from "../../components/SportBtn";
 import type { SportGameBoardProps } from "../../components/SportGameBoard";
 import SportsForm from "../../components/SportsForm";
 import SportsLive from "../../components/SportsLive";
+import SportsMachAnalysis from "../../components/SportsMachAnalysis";
+import SportsNews from "../../components/SportsNews";
 import StickyUtilityBar from "../../components/StickyUtilityBar";
 import TalkingBar from "../../components/TalkingBar";
 import type { TalkSectionProps } from "../../components/TalkSection";
@@ -198,6 +202,80 @@ const sportsFormButtons: SportBtnProps[] = [
   },
 ];
 
+// Figma "Sports_News" (node 66:59470): 5 News Banner cards. The 2nd card's
+// own caption in Figma is literally identical to the 1st's (never got
+// customized past the default placeholder) -- kept as-is rather than
+// inventing a different headline that isn't in the design.
+const sportsNewsBanners: NewsBannerProps[] = [
+  { image: "/assets/sports-news/argentina-1.jpg", caption: "不想待在英超了嗎？阿根廷晉級決賽功臣發文嘲笑英格蘭惹怒球迷" },
+  { image: "/assets/sports-news/argentina-2.jpg", caption: "不想待在英超了嗎？阿根廷晉級決賽功臣發文嘲笑英格蘭惹怒球迷" },
+  { image: "/assets/sports-news/messi.jpg", caption: "世足》梅西不只會西班牙語 自曝「我會講英語但不喜歡」" },
+  { image: "/assets/sports-news/mlb-lee.jpg", caption: "MLB》美媒盛讚李灝宇值得待在大聯盟！老虎隨隊記者點出待進步之處" },
+  { image: "/assets/sports-news/mlb-rankings.jpg", caption: "MLB》最新打擊實力榜出爐！大谷翔平狂轟猛炸排名回升 卻仍輸PCA" },
+];
+
+// Figma "Sports Mach analysis" (node 66:20574): 8 Match analysis cards.
+// The 4th card reuses the 1st's photo+headline in Figma too (same "not yet
+// customized" placeholder pattern as News Banner above).
+const sportsMachArticles: MatchAnalysisCardProps[] = [
+  {
+    image: "/assets/sports-match/bellingham.jpg",
+    title: "世足/阿根廷慶功他不爽！貝林漢拍對手後腦恐遭禁賽",
+    date: "2026年7月17日週五 上午10:41",
+    excerpt:
+      "英格蘭今在世界盃4強賽以1比2不敵阿根廷，比賽結束英格蘭中場貝林漢（Jude Bellingham）淚謝球迷後，被鏡頭拍到打阿根廷替補球員巴柯（Valentin Barco）的後腦引發軒然大波，恐面臨國際足總追加禁賽處罰。雙方此役火藥味十足，全場共出現26次犯規，英格蘭在第55分鐘破門以1比0領先，眼看就要拿到自1966年以來首張世界盃決賽門票，沒想到第85分鐘與傷停補時階段被阿根廷逆轉。",
+  },
+  {
+    image: "/assets/sports-match/argentina.jpg",
+    title: "不想待在英超了嗎？阿根廷晉級決賽功臣發文嘲笑英格蘭惹怒球迷",
+    date: "2026年7月17日週五 上午10:41",
+    excerpt:
+      "阿根廷能在四強賽2:1擊敗英格蘭，25歲中場大將費南德斯功不可沒，他在第85分鐘以一記精彩長射破網，讓阿根廷追成1:1平手，這位效力英超藍軍切爾西的好手，似乎是鐵了心要離開了，在自己的IG上發文嘲笑英格蘭，也讓英格蘭球迷對他更感冒。",
+  },
+  {
+    image: "/assets/sports-match/heat.jpg",
+    title: "NBA》熱火昔日兄弟撕破臉！Adebayo爆揍Herro內幕曝光 NBA官方決定不罰了",
+    date: "2026年7月17日週五 上午10:41",
+    excerpt:
+      "邁阿密熱火昔日兩大主力Bam Adebayo與Tyler Herro，日前在拉斯維加斯爆發肢體衝突，不過，這場風波似乎將高高舉起、輕輕放下。根據《ESPN》權威記者Shams Charania報導，聯盟發言人證實，在與兩位球員及球員工會溝通後，各方都希望盡快息事寧人，因此官方決定不對動手的Adebayo進行任何處罰。",
+  },
+  {
+    image: "/assets/sports-match/bellingham.jpg",
+    title: "世足/阿根廷慶功他不爽！貝林漢拍對手後腦恐遭禁賽",
+    date: "2026年7月17日週五 上午10:41",
+    excerpt:
+      "英格蘭今在世界盃4強賽以1比2不敵阿根廷，比賽結束英格蘭中場貝林漢（Jude Bellingham）淚謝球迷後，被鏡頭拍到打阿根廷替補球員巴柯（Valentin Barco）的後腦引發軒然大波，恐面臨國際足總追加禁賽處罰。",
+  },
+  {
+    image: "/assets/sports-match/sasaki.jpg",
+    title: "佐佐木朗希6局「斷崖式下滑」原因曝光！羅伯斯揭真相　再捎大谷回歸好消息",
+    date: "2026年7月17日週五 上午10:41",
+    excerpt:
+      "道奇日籍投手佐佐木朗希今（31日）先發對戰水手，主投5又1/3局失2分，收下本季第5勝，也是近期2連勝。不過他在前5局無失分的情況下，第6局卻突然球速、控球同步下滑。賽後總教練羅伯斯（Dave Roberts）透露，主因是右小腿抽筋，並大讚佐佐木下半季展現出更強烈的自信心。",
+  },
+  {
+    image: "/assets/sports-match/scooter.jpg",
+    title: "MLB／騎滑板車撞消防車　巨人隊貝德離譜事蹟+1！左腳骨折宣告本季報銷",
+    date: "2026年7月17日週五 上午10:41",
+    excerpt:
+      "近來名古屋亞運棒球中華隊球員徵召爭議，出現富邦悍將、台鋼雄鷹去跟棒協「協調」後，沒有支援球員，以及有高達8位旅外球員徵召，包括受傷開刀的徐若熙、大聯盟球員鄭宗哲，筆者認為，球團、棒協及運動部應該坐下來針對補充役球員的徵召進行討論、協商。",
+  },
+  {
+    image: "/assets/sports-match/fifa-president.jpg",
+    title: "FIFA主席偷賣世界盃股權！UEFA怒聯手55國封殺所有賽事　痛批：非可交易商品",
+    date: "2026年7月17日週五 上午10:41",
+    excerpt:
+      "歐洲足球總會（UEFA）昨（30）日召開緊急會議，旗下55個會員協會一致通過決議，將全面杯葛國際足球總會（FIFA）主辦的所有賽事，以反對FIFA主席因凡提諾（Gianni Infantino）提出出售世界盃部分股權予私人投資者的計畫。歐足總強調，世界盃屬於全球足球共同資產，絕非可供交易的商業商品。",
+  },
+  {
+    image: "/assets/sports-match/lakers.jpg",
+    title: "湖人醞釀重磅交易？傳將全力挖角Jokic　盼與Doncic組歐洲雙星",
+    date: "2026年7月17日週五 上午10:41",
+    excerpt:
+      "洛杉磯湖人隊正醞釀一筆可能撼動 NBA 版圖的超級重磅交易。隨著丹佛金塊隊為規避豪華稅，將前鋒 Peyton Watson 交易至克里夫蘭騎士隊，球隊內部動盪引發外界關注。據湖人內部消息人士 Anthony F. Irwin 透露，待湖人球團所有權問題塵埃落定後，球隊將下定決心全力網羅三屆最有價值球員 Nikola Jokic，期盼讓他與當家球星 Luka Doncic 聯手。",
+  },
+];
+
 // Figma "Frame 1242": a small decorative 6x6 grid of tiny dots, a page-level
 // sibling of Container_BG (not part of it) sitting near the bottom-left of
 // the hero, overlapping Sidebar's own column -- same position as the
@@ -270,12 +348,20 @@ export default function SportsPage() {
                 <SportsForm buttons={sportsFormButtons} />
               </div>
 
-              {/* Figma has two more sections here (Sports_News, Sports
-                  Match analysis) that haven't been built yet -- see the
-                  user's own incremental-module workflow for this page.
-                  SocialLinks/QuickLinks and Footer follow directly on the
-                  shared gap-25 for now rather than faking the gap those
-                  missing sections would otherwise take up. */}
+              {/* Sports_News sits a plain 40px below Sports form (1212 vs
+                  944+228) -- 15 once the shared gap-25 is subtracted. */}
+              <div className="mt-[15px]">
+                <SportsNews banners={sportsNewsBanners} />
+              </div>
+
+              {/* Sports Mach analysis sits a plain 40px below Sports_News
+                  (1594 vs 1212+341.945) -- 15 once the shared gap-25 is
+                  subtracted, same repeating 40px rhythm as every section
+                  gap on this page. */}
+              <div className="mt-[15px]">
+                <SportsMachAnalysis articles={sportsMachArticles} />
+              </div>
+
               <div className="flex items-center justify-between">
                 <SocialLinks />
                 <QuickLinks />
