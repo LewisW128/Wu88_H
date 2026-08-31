@@ -12,33 +12,44 @@ export type ProductCardProps = {
   wins: string;
   labels?: ProductLabelType[];
   like?: boolean;
+  // "L" (225px, Casino page's grid) vs "S" (200px, homepage's 推薦遊戲 row) --
+  // Figma exports these as two separate mask assets (photo-mask-l.svg /
+  // photo-mask.svg) rather than one shape that scales, since the notch's
+  // curve radii don't scale linearly with width.
+  size?: "S" | "L";
 };
 
 // Figma "Products" component (Components Library node 1:491, hover state
-// node 631:5929). Same family as GameCard (dots decoration, Play button
-// poking into a curved notch) but portrait-oriented (200x266), the notch
-// sits bottom-right instead of top-right, and the photo is a real image
-// rather than looping video. Figma's own generated code keeps the 3 plain
-// corners as simple `rounded-*` classes on the container and only masks the
-// photo/gradient/dots layers for the notch (photo-mask.svg) -- no custom
-// clip-path math needed since the Play button's circle already lines up
-// with the container's own bottom-right radius.
+// node 631:5929, "L" 225px variant seen on 02_WU88-H-PC-Casino node
+// 122:6664). Same family as GameCard (dots decoration, Play button poking
+// into a curved notch) but portrait-oriented, the notch sits bottom-right
+// instead of top-right, and the photo is a real image rather than looping
+// video. Figma's own generated code keeps the 3 plain corners as simple
+// `rounded-*` classes on the container and only masks the photo/gradient/
+// dots layers for the notch (photo-mask.svg) -- no custom clip-path math
+// needed since the Play button's circle already lines up with the
+// container's own bottom-right radius.
 //
 // Hover swaps in: the darkening gradient grows from a 50px strip to cover
 // the full card, revealing a category tag + view/win counts under the
 // title; the Play button inverts (dark fill + light ring, teal arrow); and
 // a second icon button appears below the like button.
-export default function ProductCard({ image, title, category, views, wins, labels = ["HOT"], like = false }: ProductCardProps) {
+export default function ProductCard({ image, title, category, views, wins, labels = ["HOT"], like = false, size = "S" }: ProductCardProps) {
   const [liked, setLiked] = useState(false);
 
+  const width = size === "L" ? 225 : 200;
+  const maskAsset = size === "L" ? "photo-mask-l.svg" : "photo-mask.svg";
   const maskStyle = {
-    maskImage: `url("${withBasePath("/assets/product-card/photo-mask.svg")}")`,
-    maskSize: "200px 266px",
+    maskImage: `url("${withBasePath(`/assets/product-card/${maskAsset}`)}")`,
+    maskSize: `${width}px 266px`,
     maskRepeat: "no-repeat",
   };
 
   return (
-    <div className="group relative h-[266px] w-[200px] shrink-0 overflow-clip rounded-bl-[25px] rounded-br-[25px] rounded-tr-[25px]">
+    <div
+      className="group relative h-[266px] shrink-0 overflow-clip rounded-bl-[25px] rounded-br-[25px] rounded-tr-[25px]"
+      style={{ width: `${width}px` }}
+    >
       <img alt="" src={image} className="pointer-events-none absolute inset-0 size-full object-cover" style={maskStyle} />
 
       <img

@@ -2,10 +2,12 @@ import { withBasePath } from "../lib/asset";
 import MainSelections from "./MainSelections";
 
 const NAV_ICONS = [
-  { icon: "/assets/sidebar/nav-casino.svg", label: "賭場" },
-  { icon: "/assets/sidebar/nav-sports.svg", label: "體育" },
-  { icon: "/assets/sidebar/nav-promo.svg", label: "優惠活動" },
-];
+  { page: "casino", icon: "/assets/sidebar/nav-casino.svg", activeIcon: "/assets/sidebar/nav-casino-active.svg", label: "賭場" },
+  { page: "sports", icon: "/assets/sidebar/nav-sports.svg", label: "體育" },
+  { page: "promo", icon: "/assets/sidebar/nav-promo.svg", label: "優惠活動" },
+] as const;
+
+export type SidebarPage = "home" | (typeof NAV_ICONS)[number]["page"];
 
 function Divider() {
   return <div className="h-px w-[36px] shrink-0 bg-[#f4f4f4]" />;
@@ -26,21 +28,33 @@ function NavIcon({ icon, label }: { icon: string; label: string }) {
   );
 }
 
-// Figma "Frame 1257": the page's left rail -- logo, the active "首頁" state,
-// three more nav icons (each its own pre-composited Figma export, unlike
+export type SidebarProps = {
+  // Which page this Sidebar instance renders on, so it can highlight the
+  // matching nav icon. All six icon slots are actually the same Figma
+  // "Main Selections" component (on/off variant) reused per page -- see
+  // 02_WU88-H-PC-Casino node 122:6692's "Frame 1257", where the 賭場 slot
+  // is the active variant instead of 首頁. Only 賭場 has a downloaded
+  // active-state asset so far (this is the only page that needed one);
+  // 體育/優惠活動 fall back to their plain icon until their own pages ask
+  // for it, same as MainSelections did before any page but home existed.
+  page?: SidebarPage;
+};
+
+// Figma "Frame 1257": the page's left rail -- logo, the "首頁" state, three
+// more nav icons (each its own pre-composited Figma export, unlike
 // MainSelections which only models the home icon's on/off pair), a divider,
 // then two trailing icons (contact support + download app).
-export default function Sidebar() {
+export default function Sidebar({ page = "home" }: SidebarProps) {
   return (
     <div className="flex w-[94px] flex-col items-center gap-[40px]">
       <img alt="WU88.ONE" src={withBasePath("/assets/sidebar/logo-mark.svg")} className="h-[29px] w-[91px] self-start" />
 
       <div className="flex w-full flex-col items-center gap-[30px]">
-        <MainSelections active />
+        <MainSelections active={page === "home"} />
         <Divider />
         <div className="flex w-full flex-col items-start gap-[20px]">
           {NAV_ICONS.map((item) => (
-            <NavIcon key={item.label} {...item} />
+            <NavIcon key={item.label} icon={page === item.page && "activeIcon" in item ? item.activeIcon : item.icon} label={item.label} />
           ))}
         </div>
         <Divider />
