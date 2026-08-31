@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { withBasePath } from "../lib/asset";
 
 export type MainSelectionsProps = {
@@ -16,17 +17,21 @@ export type MainSelectionsProps = {
 // icon's label, appearing 13.5px right of the icon and vertically
 // centered on it. Every sidebar icon gets one on hover -- see the
 // matching span in Sidebar.tsx's own NavIcon.
+//
+// This is a real Link to "/" (previously a plain non-interactive div --
+// there was no way back to the homepage once another page like /casino
+// existed).
 export default function MainSelections({ active = false }: MainSelectionsProps) {
   return (
-    <div className="group relative flex h-[89px] w-[93px] shrink-0 items-center justify-center">
+    <Link href="/" aria-label="首頁" className="group relative flex h-[89px] w-[93px] shrink-0 items-center justify-center">
       <img
-        alt="首頁"
+        alt=""
         src={withBasePath(active ? "/assets/main-selections/state-on.svg" : "/assets/main-selections/state-off.svg")}
         className="h-[89px] w-[93px]"
       />
       <span className="pointer-events-none absolute left-full top-1/2 ml-[13.5px] -translate-y-1/2 whitespace-nowrap rounded-[15px] bg-[#3e4140] px-[11px] py-[9px] text-[14px] font-medium leading-[20px] tracking-[0.15px] text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100">
         首頁
       </span>
-    </div>
+    </Link>
   );
 }

@@ -1,8 +1,12 @@
+import Link from "next/link";
 import { withBasePath } from "../lib/asset";
 import MainSelections from "./MainSelections";
 
+// Only 賭場 has a real route (/casino) so far -- 體育/優惠活動 stay plain
+// (non-navigating) buttons, same as 聯繫客服/下載APP below, until those
+// pages exist.
 const NAV_ICONS = [
-  { page: "casino", icon: "/assets/sidebar/nav-casino.svg", activeIcon: "/assets/sidebar/nav-casino-active.svg", label: "賭場" },
+  { page: "casino", href: "/casino", icon: "/assets/sidebar/nav-casino.svg", activeIcon: "/assets/sidebar/nav-casino-active.svg", label: "賭場" },
   { page: "sports", icon: "/assets/sidebar/nav-sports.svg", label: "體育" },
   { page: "promo", icon: "/assets/sidebar/nav-promo.svg", label: "優惠活動" },
 ] as const;
@@ -16,14 +20,28 @@ function Divider() {
 // Figma "Footbar_btn" (node 894:215150): a dark pill tooltip showing the
 // icon's label, appearing 13.5px right of the icon and vertically
 // centered on it -- shown on hover, matching the same tooltip on
-// MainSelections' own home icon.
-function NavIcon({ icon, label }: { icon: string; label: string }) {
-  return (
-    <button type="button" aria-label={label} className="group relative flex h-[89px] w-[93px] shrink-0 items-center justify-center">
+// MainSelections' own home icon. `href` makes this a real Next.js Link
+// (clicking 賭場 previously did nothing, including from the Casino page
+// back to itself/elsewhere -- Sidebar's icons were never actually wired
+// to navigate); omitted for icons whose page doesn't exist yet.
+function NavIcon({ icon, label, href }: { icon: string; label: string; href?: string }) {
+  const content = (
+    <>
       <img alt="" src={withBasePath(icon)} className="h-[89px] w-[93px]" />
       <span className="pointer-events-none absolute left-full top-1/2 ml-[13.5px] -translate-y-1/2 whitespace-nowrap rounded-[15px] bg-[#3e4140] px-[11px] py-[9px] text-[14px] font-medium leading-[20px] tracking-[0.15px] text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100">
         {label}
       </span>
+    </>
+  );
+  const className = "group relative flex h-[89px] w-[93px] shrink-0 items-center justify-center";
+
+  return href ? (
+    <Link href={href} aria-label={label} className={className}>
+      {content}
+    </Link>
+  ) : (
+    <button type="button" aria-label={label} className={className}>
+      {content}
     </button>
   );
 }
@@ -54,7 +72,12 @@ export default function Sidebar({ page = "home" }: SidebarProps) {
         <Divider />
         <div className="flex w-full flex-col items-start gap-[20px]">
           {NAV_ICONS.map((item) => (
-            <NavIcon key={item.label} icon={page === item.page && "activeIcon" in item ? item.activeIcon : item.icon} label={item.label} />
+            <NavIcon
+              key={item.label}
+              icon={page === item.page && "activeIcon" in item ? item.activeIcon : item.icon}
+              label={item.label}
+              href={"href" in item ? item.href : undefined}
+            />
           ))}
         </div>
         <Divider />
