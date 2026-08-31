@@ -14,13 +14,15 @@ export type SportBtnProps = {
 };
 
 // Figma "Sport BTN" (Components Library node 816:11504-11508, one instance
-// per betting provider: SUPER/WG/AP/熊貓/LIVE). A light-gray, bordered pill
-// (346x119) with a real athlete cutout photo overlapping its top edge, the
-// project's digital-dots decoration behind it, and a provider label + dark
-// Play button on the right. All 5 reference instances render the Play
-// button in its dark "hover" look permanently (there's no lighter rest
-// state among them), so that's just this component's one look rather than
-// a hover toggle -- add one later if a rest-state design shows up.
+// per betting provider: SUPER/WG/AP/熊貓/LIVE) plus its hover state seen in
+// context on 03_WU88-H-PC-Sport node 66:65131 (the WG instance there,
+// 816:11986, is mid-hover). A light-gray, bordered pill (346x119) with a
+// real athlete cutout photo overlapping its top edge, the project's
+// digital-dots decoration behind it, and a provider label + dark Play
+// button on the right. All 5 reference instances render the Play button
+// in its dark "hover" look permanently (there's no lighter rest state
+// among them), so that's just this component's one look rather than a
+// hover toggle -- add one later if a rest-state design shows up.
 export default function SportBtn({ provider, image, windowStyle, imageStyle }: SportBtnProps) {
   return (
     // `overflow-hidden` here isn't optional -- Figma's own outer container
@@ -32,8 +34,23 @@ export default function SportBtn({ provider, image, windowStyle, imageStyle }: S
     // own outer bound, not by their own component boundaries. Dropping
     // this leaves the athlete photo and dots bleeding into whatever real
     // page content sits above/below/beside this button.
-    <div className="relative h-[169px] w-[346px] overflow-hidden">
-      <div className="absolute bottom-0 h-[119px] w-[346px] rounded-[25px] border border-[#a2a2a2] bg-[#f4f4f4]" />
+    <div className="group relative h-[169px] w-[346px] overflow-hidden">
+      {/* Hover swaps the gray border for teal and layers a soft radial
+          teal glow over the flat gray fill. Figma's own hover version is
+          an inline SVG radialGradient with a gradientTransform (matrix
+          ≈[0,14.45,-42.014,0,173,59.5]) that maps a nominal r=10 circle
+          into an ellipse centered on the pill (346/2, 119/2) with a
+          144.5px vertical / 420px horizontal radius -- reproduced here as
+          a plain CSS radial-gradient of that same derived ellipse size
+          instead of embedding the raw SVG data URI, since the two render
+          identically and this is far easier to read/maintain. The
+          gradient is *layered over* the flat `bg-[#f4f4f4]` (background-
+          image over background-color) rather than replacing it, so the
+          transparent center of the glow still reads as the pill's own
+          fill instead of flashing to bare white. */}
+      <div
+        className="absolute bottom-0 h-[119px] w-[346px] rounded-[25px] border border-[#a2a2a2] bg-[#f4f4f4] transition-[background-image,border-color,backdrop-filter] duration-300 group-hover:border-[#23f3d5] group-hover:backdrop-blur-[10px] group-hover:bg-[radial-gradient(ellipse_840px_289px_at_center,transparent_0%,rgba(145,249,234,0.5)_50%,rgba(90,246,223,0.75)_75%,rgba(62,244,218,0.875)_87.5%,#23f3d5_100%)]"
+      />
 
       <div className="absolute overflow-clip" style={windowStyle}>
         {/* `max-w-none`: Tailwind's Preflight resets every `img` to
