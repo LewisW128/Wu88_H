@@ -36,7 +36,15 @@ export default function SportBtn({ provider, image, windowStyle, imageStyle }: S
       <div className="absolute bottom-0 h-[119px] w-[346px] rounded-[25px] border border-[#a2a2a2] bg-[#f4f4f4]" />
 
       <div className="absolute overflow-clip" style={windowStyle}>
-        <img alt={provider} src={image} className="pointer-events-none absolute object-cover" style={imageStyle} />
+        {/* `max-w-none`: Tailwind's Preflight resets every `img` to
+            `max-width: 100%`, which caps this photo at its *window's* own
+            width (172px) regardless of the explicit, larger `width` this
+            takes per-instance (SUPER's needs 337px so enough of the photo
+            is visible before the window clips it) -- `max-width` composes
+            with `width` rather than being overridden by it, inline style
+            or not, so the photo silently rendered shrunk-to-fit and
+            mispositioned without this. */}
+        <img alt={provider} src={image} className="pointer-events-none absolute max-w-none object-cover" style={imageStyle} />
       </div>
 
       <img
