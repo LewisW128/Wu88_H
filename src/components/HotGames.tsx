@@ -54,7 +54,18 @@ export default function HotGames({ games }: HotGamesProps) {
         )}
       </div>
 
-      <div className="relative h-[292px] w-full">
+      {/* `overflow-hidden` here isn't decorative -- Figma's own node
+          (189:31151) applies a `mask-size-[1541px_292px]` mask to this
+          same dots graphic specifically so its real 361px height gets
+          clipped to this row's 292px. Without it, the extra 69px of the
+          decoration bleeds out the bottom of Hot Games into whatever
+          content follows -- invisible on the homepage where General
+          Games' own opaque cards happen to sit right under it, but a
+          visible stray dot landing on the Casino page's category tabs
+          just below (this row is one of the last things a user pointed
+          at as "a white dot on the 電子遊戲 tab" before this was traced
+          back here). */}
+      <div className="relative h-[292px] w-full overflow-hidden">
         <img
           alt=""
           src={withBasePath("/assets/hot-games/digital-dots-large.svg")}
