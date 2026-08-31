@@ -2,6 +2,10 @@ import { withBasePath } from "../lib/asset";
 
 export type GameSelectionsProps = {
   icon: string;
+  // Shown instead of `icon` when `active` -- see the corner-badge comment
+  // below for why this needs to be a distinct asset, not just `icon`
+  // reused on a different background.
+  activeIcon?: string;
   label?: string;
   active?: boolean;
   onClick?: () => void;
@@ -17,7 +21,17 @@ export type GameSelectionsProps = {
 // glyph (the "所有遊戲" default), so these were pulled instead via
 // download_assets' real rendered export of each instance and re-keyed to a
 // transparent PNG, one per category.
-export default function GameSelections({ icon, label, active = false, onClick }: GameSelectionsProps) {
+//
+// Two icon assets per category, not one: every icon has a shared
+// bottom-right accent-dot badge that Figma composites at partial opacity
+// over whatever sits behind it, so the exported pixel is a flat bake of
+// "badge blended with THAT render's own background" -- reusing the
+// gray-background bake on the teal active pill (or vice versa) leaves a
+// visibly wrong-colored dot, since there's no real alpha left to
+// recomposite against a different color. Capturing one export per state
+// (matching each state's own bg) instead of trying to key/clip the badge
+// out of a single export is what actually fixes it.
+export default function GameSelections({ icon, activeIcon, label, active = false, onClick }: GameSelectionsProps) {
   return (
     <button
       type="button"
@@ -28,7 +42,7 @@ export default function GameSelections({ icon, label, active = false, onClick }:
         active ? "rounded-bl-[20px] rounded-br-[20px] rounded-tr-[20px] bg-[#23f3d5]" : "rounded-[20px] bg-[#f4f4f4]"
       }`}
     >
-      <img alt="" src={withBasePath(icon)} className="size-[25px]" />
+      <img alt="" src={withBasePath(active && activeIcon ? activeIcon : icon)} className="size-[25px]" />
       {label && <p className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#3e4140]">{label}</p>}
     </button>
   );

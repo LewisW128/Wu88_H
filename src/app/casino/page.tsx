@@ -161,13 +161,13 @@ const esportsGames: ProductCardProps[] = [
 ];
 
 const CASINO_CATEGORIES: CasinoCategory[] = [
-  { key: "all", icon: "/icon/game-all.png", label: "所有遊戲", games: casinoGames },
-  { key: "slot", icon: "/icon/game-slot.png", label: "電子遊戲", games: slotGames },
-  { key: "live", icon: "/icon/game-live.png", label: "真人娛樂", games: liveGames },
-  { key: "lottery", icon: "/icon/game-lottery.png", label: "彩票遊戲", games: lotteryGames },
-  { key: "cards", icon: "/icon/game-cards.png", label: "棋牌遊戲", games: cardsGames },
-  { key: "fishing", icon: "/icon/game-fishing.png", label: "捕魚遊戲", games: fishingGames },
-  { key: "esports", icon: "/icon/game-esports.png", label: "電競遊戲", games: esportsGames },
+  { key: "all", icon: "/icon/game-all.png", activeIcon: "/icon/game-all-active.png", label: "所有遊戲", games: casinoGames },
+  { key: "slot", icon: "/icon/game-slot.png", activeIcon: "/icon/game-slot-active.png", label: "電子遊戲", games: slotGames },
+  { key: "live", icon: "/icon/game-live.png", activeIcon: "/icon/game-live-active.png", label: "真人娛樂", games: liveGames },
+  { key: "lottery", icon: "/icon/game-lottery.png", activeIcon: "/icon/game-lottery-active.png", label: "彩票遊戲", games: lotteryGames },
+  { key: "cards", icon: "/icon/game-cards.png", activeIcon: "/icon/game-cards-active.png", label: "棋牌遊戲", games: cardsGames },
+  { key: "fishing", icon: "/icon/game-fishing.png", activeIcon: "/icon/game-fishing-active.png", label: "捕魚遊戲", games: fishingGames },
+  { key: "esports", icon: "/icon/game-esports.png", activeIcon: "/icon/game-esports-active.png", label: "電競遊戲", games: esportsGames },
 ];
 
 // Figma "Frame 1242": a small decorative 6x6 grid of tiny dots, a page-level

@@ -7,6 +7,7 @@ import ProductCard, { type ProductCardProps } from "./ProductCard";
 export type CasinoCategory = {
   key: string;
   icon: string;
+  activeIcon: string;
   label: string;
   games: ProductCardProps[];
 };
@@ -29,7 +30,14 @@ export default function CasinoGameGrid({ categories }: CasinoGameGridProps) {
     <div className="flex flex-col gap-[20px]">
       <div className="flex items-center gap-[10px]">
         {categories.map((cat) => (
-          <GameSelections key={cat.key} icon={cat.icon} label={cat.label} active={cat.key === active} onClick={() => setActive(cat.key)} />
+          <GameSelections
+            key={cat.key}
+            icon={cat.icon}
+            activeIcon={cat.activeIcon}
+            label={cat.label}
+            active={cat.key === active}
+            onClick={() => setActive(cat.key)}
+          />
         ))}
         <GameSelections icon="/icon/list-toggle.png" />
       </div>
