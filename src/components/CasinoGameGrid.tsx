@@ -39,7 +39,10 @@ export default function CasinoGameGrid({ categories }: CasinoGameGridProps) {
             onClick={() => setActive(cat.key)}
           />
         ))}
-        <GameSelections icon="/icon/list-toggle.png" />
+        {/* The trailing icon-only button (Figma's last "Game_selections"
+            instance, no label) is hidden for now -- its behavior hasn't
+            been decided yet, per the user. Re-add with an onClick once
+            that's settled. */}
       </div>
 
       <div className="grid grid-cols-5 gap-[20px]">
