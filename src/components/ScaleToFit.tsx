@@ -13,6 +13,36 @@ export function useScale() {
   return useContext(ScaleContext);
 }
 
+// The design-space height a container needs so that a `sticky` child
+// wanting to reach `bottomGap` screen-px above the real viewport bottom
+// (Talking_Bar's own target -- see its VIEWPORT_BOTTOM_GAP) actually has
+// room to. `position: sticky` can never push an element past its own
+// containing block's edge: on a page whose real content (e.g. a Casino
+// category with only 1-2 rows of cards) is shorter than Talking_Bar's
+// own viewport-driven height, Talking_Bar itself ends up as the tallest
+// grid item, which sizes its own containing block to exactly its own
+// height -- leaving zero slack for the `top-[58px]` sticky offset to
+// apply, so it renders flush under Top_bar instead of with the intended
+// gap. Applying this as a `minHeight` on that containing block keeps it
+// at least as tall as Talking_Bar's own target bottom edge regardless of
+// how little real content the page has, restoring the gap.
+export function useMinPanelHeight(bottomGap = 20) {
+  const scale = useScale();
+  const [minHeight, setMinHeight] = useState(0);
+
+  useEffect(() => {
+    function update() {
+      if (!scale) return;
+      setMinHeight((window.innerHeight - bottomGap) / scale);
+    }
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [scale, bottomGap]);
+
+  return minHeight;
+}
+
 // This page's whole component library is hand-built at a fixed 1728px
 // canvas (every section hardcodes its own pixel widths, matching the
 // Figma "MacBook Pro 16"" frame). At any narrower real browser width --

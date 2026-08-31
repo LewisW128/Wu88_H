@@ -4,6 +4,7 @@ import ContainerBg from "../../components/ContainerBg";
 import Footer from "../../components/Footer";
 import HotGames from "../../components/HotGames";
 import Language from "../../components/Language";
+import MinPanelHeight from "../../components/MinPanelHeight";
 import { type ProductCardProps } from "../../components/ProductCard";
 import QuickLinks from "../../components/QuickLinks";
 import type { RankedProductCardProps } from "../../components/RankedProductCard";
@@ -21,6 +22,10 @@ const winListRows = [
   { name: "@Jessica", win: "+ 10,000,000" },
   { name: "@Jackson", win: "+ 9,000,000" },
   { name: "@Alex", win: "+ 800,000" },
+  { name: "@Jannie", win: "+ 5,020,000" },
+  { name: "@Jessica", win: "+ 18,200,050" },
+  { name: "@Jannifer", win: "+ 15,600,000" },
+  { name: "@Russell", win: "+ 20,100,000" },
 ];
 
 const topBarAnnouncements = winListRows.map((row) => ({
@@ -28,20 +33,49 @@ const topBarAnnouncements = winListRows.map((row) => ({
   amount: `USDT${row.win.replace(/^\+\s*/, "")}`,
 }));
 
+// Same group chat / private thread / live-drip data as the homepage's own
+// TalkingBar -- not a trimmed-down version. There's only one chat, not a
+// separate one per page.
 const talkingBarMessages: TalkSectionProps[] = [
   { avatar: "/assets/talk-section/avatar-jessica.png", name: "@ Jessica", timestamp: "3 分鐘前", text: "嗨～！剛剛進來玩", variant: "myself" },
+  { avatar: "/assets/talk-section/avatar-jessica.png", name: "@ Jessica", timestamp: "3 分鐘前", text: "有什麼好玩的呢？有誰可以推薦嗎？", variant: "myself" },
   {
     avatar: "/assets/talk-section/avatar-jackson.png",
     name: "@ Jackson",
     levelLabel: "Lv.100",
     levelBackground: DEFAULT_RING_COLOR,
     timestamp: "3 分鐘前",
-    text: "手氣不錯喔，繼續加油",
+    text: "我剛剛才中了時二十萬出來",
     variant: "other",
+    replyTo: { name: "Jessica", text: "有什麼好玩的呢？有誰可以推薦嗎？" },
   },
-  { avatar: "/assets/talk-section/avatar-johnny.png", name: "@ Johnny", levelLabel: "Lv.79", levelBackground: "#79d4a2", timestamp: "3 分鐘前", text: "有推薦的電子遊戲嗎？", variant: "other" },
-  { avatar: "/assets/talk-section/avatar-jessica.png", name: "@ Jessica", timestamp: "3 分鐘前", text: "我都玩殭屍大戰，蠻好玩的", variant: "myself" },
-  { avatar: "/assets/talk-section/avatar-arick.png", name: "@ Arick", levelLabel: "Lv.53", levelBackground: "#ffcf00", timestamp: "3 分鐘前", text: "我去試試看", variant: "other" },
+  { avatar: "/assets/talk-section/avatar-jessica.png", name: "@ Jessica", timestamp: "3 分鐘前", text: "真的假的，這麼容易嗎？", variant: "myself" },
+  { avatar: "/assets/talk-section/avatar-jackson.png", name: "@ Jackson", levelLabel: "Lv.100", levelBackground: DEFAULT_RING_COLOR, timestamp: "3 分鐘前", text: "真的啊～趕快去試試！", variant: "other" },
+  { avatar: "/assets/talk-section/avatar-jessica.png", name: "@ Jessica", timestamp: "3 分鐘前", text: "你玩哪個遊戲？", variant: "myself" },
+  { avatar: "/assets/talk-section/avatar-johnny.png", name: "@ Johnny", levelLabel: "Lv.79", levelBackground: "#79d4a2", timestamp: "3 分鐘前", text: "XXX電子 射龍門", variant: "other" },
+  { avatar: "/assets/talk-section/avatar-arick.png", name: "@ Arick", levelLabel: "Lv.53", levelBackground: "#ffcf00", timestamp: "3 分鐘前", text: "剛剛輸慘了 IOI", variant: "other" },
+  { avatar: "/assets/talk-section/avatar-jackson.png", name: "@ Jackson", levelLabel: "Lv.100", levelBackground: DEFAULT_RING_COLOR, timestamp: "3 分鐘前", text: "你玩什麼？", variant: "other" },
+  { avatar: "/assets/talk-section/avatar-arick.png", name: "@ Arick", levelLabel: "Lv.53", levelBackground: "#ffcf00", timestamp: "3 分鐘前", text: "XXX 真人", variant: "other" },
+  { avatar: "/assets/talk-section/avatar-jackson.png", name: "@ Jackson", levelLabel: "Lv.100", levelBackground: DEFAULT_RING_COLOR, timestamp: "3 分鐘前", text: "拍拍 多下幾注就會贏回來了", variant: "other" },
+];
+
+// Cycled into the group chat one at a time so it reads as a live, ongoing
+// conversation instead of a finished transcript.
+const talkingBarSimulatedMessages: TalkSectionProps[] = [
+  { avatar: "/assets/talk-section/avatar-johnny.png", name: "@ Johnny", levelLabel: "Lv.79", levelBackground: "#79d4a2", timestamp: "剛剛", text: "有沒有人在玩百家樂的？", variant: "other" },
+  { avatar: "/assets/talk-section/avatar-jessica.png", name: "@ Jessica", timestamp: "剛剛", text: "我在，怎麼了？", variant: "myself" },
+  { avatar: "/assets/talk-section/avatar-arick.png", name: "@ Arick", levelLabel: "Lv.53", levelBackground: "#ffcf00", timestamp: "剛剛", text: "剛剛連續開三把大，太扯了", variant: "other" },
+  { avatar: "/assets/talk-section/avatar-jackson.png", name: "@ Jackson", levelLabel: "Lv.100", levelBackground: DEFAULT_RING_COLOR, timestamp: "剛剛", text: "手氣不錯喔，繼續加油", variant: "other" },
+  { avatar: "/assets/talk-section/avatar-johnny.png", name: "@ Johnny", levelLabel: "Lv.79", levelBackground: "#79d4a2", timestamp: "剛剛", text: "有推薦的電子遊戲嗎？", variant: "other" },
+  { avatar: "/assets/talk-section/avatar-jessica.png", name: "@ Jessica", timestamp: "剛剛", text: "我都玩殭屍大戰，蠻好玩的", variant: "myself" },
+  { avatar: "/assets/talk-section/avatar-arick.png", name: "@ Arick", levelLabel: "Lv.53", levelBackground: "#ffcf00", timestamp: "剛剛", text: "我去試試看", variant: "other" },
+];
+
+// A private 1-on-1 thread with Jackson, separate from the group chat above.
+const talkingBarPrivateMessages: TalkSectionProps[] = [
+  { avatar: "/assets/talk-section/avatar-jackson.png", name: "@ Jackson", levelLabel: "Lv.100", levelBackground: DEFAULT_RING_COLOR, timestamp: "5 分鐘前", text: "嗨，方便私訊聊嗎？", variant: "other" },
+  { avatar: "/assets/talk-section/avatar-jessica.png", name: "@ Jessica", timestamp: "4 分鐘前", text: "可以啊，怎麼了？", variant: "myself" },
+  { avatar: "/assets/talk-section/avatar-jackson.png", name: "@ Jackson", levelLabel: "Lv.100", levelBackground: DEFAULT_RING_COLOR, timestamp: "3 分鐘前", text: "剛剛那個遊戲的連結可以給我嗎？", variant: "other" },
 ];
 
 // Figma "Hot Games" reuses the exact same 10 ranked entries as the
@@ -211,7 +245,16 @@ export default function CasinoPage() {
 
           <MicroDotGrid />
 
-          <div className="relative z-10 grid" style={{ gridTemplateColumns: "164px minmax(0, 1fr) 295px" }}>
+          {/* `MinPanelHeight` (not a plain div): on a category with only a
+              row or two of cards, this grid's real content is shorter than
+              Talking_Bar's own viewport-driven height, which makes
+              Talking_Bar the tallest grid item and its own containing
+              block exactly its own size -- leaving no room for its
+              `sticky top-[58px]` offset to apply (sticky can never push an
+              element past its containing block's edge), so it rendered
+              flush under Top_bar instead of with the intended gap. See
+              `useMinPanelHeight`'s own comment. */}
+          <MinPanelHeight className="relative z-10 grid" style={{ gridTemplateColumns: "164px minmax(0, 1fr) 295px" }}>
             <div className="sticky top-[79px] z-10 self-start justify-self-start pl-[30px]">
               <Sidebar page="casino" />
             </div>
@@ -247,9 +290,13 @@ export default function CasinoPage() {
             </div>
 
             <div className="sticky top-[58px] z-10 ml-[20px] self-start">
-              <TalkingBar messages={talkingBarMessages} privateMessages={[]} simulatedMessages={[]} />
+              <TalkingBar
+                messages={talkingBarMessages}
+                privateMessages={talkingBarPrivateMessages}
+                simulatedMessages={talkingBarSimulatedMessages}
+              />
             </div>
-          </div>
+          </MinPanelHeight>
         </div>
       </ScaleToFit>
     </div>
