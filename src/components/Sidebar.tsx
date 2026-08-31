@@ -2,12 +2,12 @@ import Link from "next/link";
 import { withBasePath } from "../lib/asset";
 import MainSelections from "./MainSelections";
 
-// Only 賭場 has a real route (/casino) so far -- 體育/優惠活動 stay plain
-// (non-navigating) buttons, same as 聯繫客服/下載APP below, until those
-// pages exist.
+// 賭場/體育 have real routes now (/casino, /sports) -- 優惠活動 stays a
+// plain (non-navigating) button, same as 聯繫客服/下載APP below, until
+// that page exists.
 const NAV_ICONS = [
   { page: "casino", href: "/casino", icon: "/assets/sidebar/nav-casino.svg", activeIcon: "/assets/sidebar/nav-casino-active.svg", label: "賭場" },
-  { page: "sports", icon: "/assets/sidebar/nav-sports.svg", label: "體育" },
+  { page: "sports", href: "/sports", icon: "/assets/sidebar/nav-sports.svg", activeIcon: "/assets/sidebar/nav-sports-active.png", label: "體育" },
   { page: "promo", icon: "/assets/sidebar/nav-promo.svg", label: "優惠活動" },
 ] as const;
 
