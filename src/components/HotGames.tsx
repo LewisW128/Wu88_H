@@ -4,7 +4,6 @@ import { withBasePath } from "../lib/asset";
 import { useEdgeScroll } from "../lib/useEdgeScroll";
 import LeftRight from "./LeftRight";
 import RankedProductCard, { type RankedProductCardProps } from "./RankedProductCard";
-import Tag from "./Tag";
 
 const FADE = 120;
 const SCROLL_STEP = 317; // one card (297px) + its gap (20px)
@@ -20,13 +19,15 @@ export type HotGamesProps = {
 };
 
 // Figma "Hot Games" component (Components Library node 672:19756): a title
-// bar (icon + "熱門遊戲", a "更多" Tag, and a real Left&Right scroll pair --
-// same functional-nav pattern as Business's own prev/next buttons) above a
-// horizontally scrolling row of ranked cards, edge-faded like every other
-// scrollable row in this project. A large decorative dot-scatter graphic
-// sits low behind the row's left edge, peeking out from under rank 01.
+// bar (icon + "熱門遊戲" + a Left&Right scroll pair -- same functional-nav
+// pattern as Business's own prev/next buttons) above a horizontally
+// scrolling row of ranked cards, edge-faded like every other scrollable
+// row in this project. A large decorative dot-scatter graphic sits low
+// behind the row's left edge, peeking out from under rank 01. The "更多"
+// Tag Figma shows here was removed per the user -- there's no "more hot
+// games" destination for it to go to.
 //
-// The "更多"/nav side hides entirely when the row doesn't overflow its
+// The nav arrows hide entirely when the row doesn't overflow its
 // container at all (e.g. a very wide screen showing every card at once)
 // -- see the comment on SectionHeader for why `canLeft || canRight` is
 // the right test for that.
@@ -42,15 +43,12 @@ export default function HotGames({ games }: HotGamesProps) {
           <p className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#444242]">熱門遊戲</p>
         </div>
         {hasOverflow && (
-          <div className="flex items-center gap-[20px]">
-            <Tag label="更多" active />
-            <LeftRight
-              canLeft={canScroll.left}
-              canRight={canScroll.right}
-              onLeft={() => scrollByStep(-SCROLL_STEP)}
-              onRight={() => scrollByStep(SCROLL_STEP)}
-            />
-          </div>
+          <LeftRight
+            canLeft={canScroll.left}
+            canRight={canScroll.right}
+            onLeft={() => scrollByStep(-SCROLL_STEP)}
+            onRight={() => scrollByStep(SCROLL_STEP)}
+          />
         )}
       </div>
 
