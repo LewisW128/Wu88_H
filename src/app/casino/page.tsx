@@ -1,10 +1,10 @@
 import { DEFAULT_RING_COLOR } from "../../components/Avatar";
+import CasinoGameGrid, { type CasinoCategory } from "../../components/CasinoGameGrid";
 import ContainerBg from "../../components/ContainerBg";
 import Footer from "../../components/Footer";
-import GameSelections from "../../components/GameSelections";
 import HotGames from "../../components/HotGames";
 import Language from "../../components/Language";
-import ProductCard, { type ProductCardProps } from "../../components/ProductCard";
+import { type ProductCardProps } from "../../components/ProductCard";
 import QuickLinks from "../../components/QuickLinks";
 import type { RankedProductCardProps } from "../../components/RankedProductCard";
 import ScaleToFit from "../../components/ScaleToFit";
@@ -60,29 +60,24 @@ const hotGames: RankedProductCardProps[] = [
   { rank: "10", image: "/assets/hot-games/rank10-racing.png", title: "瘋狂賽車", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"] },
 ];
 
-// Figma "Frame 1295": 所有遊戲 (active by default) + 7 more category
-// shortcuts, then a trailing icon-only view-toggle button with no label.
-// Every icon here is genuinely different art per category (dice/reels,
-// camera, ticket, cards, hook, gamepad) -- get_design_context flattened
-// every instance to the same generic "grid" glyph (Actions' own default
-// appearance), so these came from download_assets' real rendered export
-// of each instance instead, cropped to the icon and re-keyed to a
-// transparent PNG.
-const CATEGORY_TABS = [
-  { key: "all", icon: "/icon/game-all.png", label: "所有遊戲" },
-  { key: "slot", icon: "/icon/game-slot.png", label: "電子遊戲" },
-  { key: "live", icon: "/icon/game-live.png", label: "真人娛樂" },
-  { key: "lottery", icon: "/icon/game-lottery.png", label: "彩票遊戲" },
-  { key: "cards", icon: "/icon/game-cards.png", label: "棋牌遊戲" },
-  { key: "fishing", icon: "/icon/game-fishing.png", label: "捕魚遊戲" },
-  { key: "esports", icon: "/icon/game-esports.png", label: "電競遊戲" },
-] as const;
-
-// Figma "Frame 1296": a 5-column x 4-row grid of "L" (225px) Products
-// cards, 20 total. No new per-game photography was supplied for this grid,
-// so -- same convention the homepage's own 推薦遊戲 row already uses --
-// it cycles the project's existing game art/titles instead of inventing
-// new ones.
+// Figma "Frame 1296"'s tab row: 所有遊戲 (a mix of existing project art,
+// reused the same way the homepage's own 推薦遊戲 row reuses art -- see
+// its own comment below) plus 6 more category tabs, each with its own
+// distinct set of "Products" cards in Figma (nodes 133:15752 電子遊戲,
+// 133:19563 真人娛樂, 133:22710 彩票遊戲, 133:25553 棋牌遊戲, 136:81084
+// 捕魚遊戲, 136:83473 電競遊戲) -- not the same cards re-filtered. Every
+// tab icon is genuinely different art (dice/reels, camera, ticket, cards,
+// hook, gamepad) -- get_design_context flattened every instance to the
+// same generic "grid" glyph (Actions' own default appearance), so these
+// came from download_assets' real rendered export of each instance
+// instead, cropped to the icon and re-keyed to a transparent PNG.
+//
+// Likewise, get_design_context can't resolve per-instance photo overrides
+// inside a "Products" grid at all (same flattening issue, just for whole
+// photos instead of icons) -- these categories' games are new art (not
+// reused from elsewhere in the project), pulled via download_assets'
+// rawImages off each category's grid frame and matched back to the
+// titles/labels read from that node's own screenshot.
 const casinoGames: ProductCardProps[] = [
   { image: "/assets/product-card/zombie-photo.png", title: "殭屍大戰", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L" },
   { image: "/assets/general-games/dungeon.png", title: "暗黑地下城", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "NEW"], size: "L" },
@@ -104,6 +99,75 @@ const casinoGames: ProductCardProps[] = [
   { image: "/assets/general-games/zeus.png", title: "宙斯創世", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L" },
   { image: "/assets/general-games/dragon-heir.png", title: "龍的傳人", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L" },
   { image: "/assets/general-games/yakuza.png", title: "人中之龍", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L" },
+];
+
+const slotGames: ProductCardProps[] = [
+  { image: "/assets/product-card/zombie-photo.png", title: "殭屍大戰", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L" },
+  { image: "/assets/casino/slot/dark-witch.jpg", title: "暗夜女巫", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L" },
+  { image: "/assets/casino/slot/thunder-zeus.jpg", title: "雷神宙斯", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L" },
+  { image: "/assets/casino/slot/dragon-heir.jpg", title: "龍的傳人", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L" },
+  { image: "/assets/casino/slot/yakuza.jpg", title: "人中之龍", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L" },
+  { image: "/assets/casino/slot/gold-hunt.jpg", title: "掏金歷險", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "NEW", "WU88"], size: "L" },
+  { image: "/assets/casino/slot/aladdin.jpg", title: "阿拉丁", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L" },
+  { image: "/assets/casino/slot/penguin.jpg", title: "企鵝打磚塊", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "NEW", "WU88"], size: "L" },
+  { image: "/assets/casino/slot/kingdom-rise.jpg", title: "王國崛起", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L" },
+  { image: "/assets/casino/slot/war-god-set.jpg", title: "戰神賽特", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "NEW"], size: "L" },
+  { image: "/assets/casino/slot/swordsmith.jpg", title: "鑄劍大師", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L" },
+  { image: "/assets/casino/slot/viking.jpg", title: "維京傳奇", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L" },
+  { image: "/assets/casino/slot/dwarf-mine.jpg", title: "矮人礦坑", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L" },
+];
+
+const liveGames: ProductCardProps[] = [
+  { image: "/assets/casino/live/dg.jpg", title: "DG 真人", category: "真人", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L" },
+  { image: "/assets/casino/live/wm.jpg", title: "WM 真人", category: "真人", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L" },
+  { image: "/assets/casino/live/mt.jpg", title: "MT 真人", category: "真人", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L" },
+  { image: "/assets/casino/live/t9.jpg", title: "T9 真人", category: "真人", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L" },
+  { image: "/assets/casino/live/jp.jpg", title: "JP 真人", category: "真人", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L" },
+  { image: "/assets/casino/live/wg.jpg", title: "WG 真人", category: "真人", views: "10,000", wins: "1,000", labels: ["HOT", "NEW", "WU88"], size: "L" },
+  { image: "/assets/casino/live/astar.jpg", title: "ASTAR 真人", category: "真人", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L" },
+  { image: "/assets/casino/live/allbet.jpg", title: "ALLBET 真人", category: "真人", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L" },
+  { image: "/assets/casino/live/db.jpg", title: "DB 真人", category: "真人", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L" },
+  { image: "/assets/casino/live/mt2.jpg", title: "MT 真人", category: "真人", views: "10,000", wins: "1,000", labels: ["HOT", "NEW"], size: "L" },
+];
+
+const lotteryGames: ProductCardProps[] = [
+  { image: "/assets/casino/lottery/wg.jpg", title: "WG 彩票", category: "彩票", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L" },
+  { image: "/assets/casino/lottery/9k.jpg", title: "9K 彩票", category: "彩票", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L" },
+  { image: "/assets/casino/lottery/db.jpg", title: "DB 彩票", category: "彩票", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L" },
+  { image: "/assets/casino/lottery/goldenwin.jpg", title: "高登彩票", category: "彩票", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L" },
+];
+
+const cardsGames: ProductCardProps[] = [
+  { image: "/assets/casino/cards/goldenwin.jpg", title: "高登棋牌", category: "棋牌", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L" },
+  { image: "/assets/casino/cards/good-road.jpg", title: "好路棋牌", category: "棋牌", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L" },
+  { image: "/assets/casino/cards/happy.jpg", title: "開心棋牌", category: "棋牌", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L" },
+  { image: "/assets/casino/cards/lucky.jpg", title: "幸福棋牌", category: "棋牌", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L" },
+];
+
+const fishingGames: ProductCardProps[] = [
+  { image: "/assets/casino/fishing/crazy.jpg", title: "瘋狂捕魚", category: "捕魚", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L" },
+  { image: "/assets/casino/fishing/happy.jpg", title: "開心捕魚", category: "捕魚", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L" },
+  { image: "/assets/casino/fishing/fish-among-fish.jpg", title: "魚中魚", category: "捕魚", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L" },
+  { image: "/assets/casino/fishing/fish-and-chips.jpg", title: "炸魚薯條", category: "捕魚", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L" },
+  { image: "/assets/casino/fishing/fishing-master.jpg", title: "摸魚高手", category: "捕魚", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L" },
+];
+
+const esportsGames: ProductCardProps[] = [
+  { image: "/assets/casino/esports/mario.jpg", title: "瑪利歐", category: "電競", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L" },
+  { image: "/assets/casino/esports/warcraft.jpg", title: "魔獸世界", category: "電競", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L" },
+  { image: "/assets/casino/esports/crazy-rally.jpg", title: "瘋狂拉力賽", category: "電競", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L" },
+  { image: "/assets/casino/esports/hero-showdown.jpg", title: "英雄對決", category: "電競", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L" },
+  { image: "/assets/casino/esports/pirates.jpg", title: "神鬼奇航", category: "電競", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L" },
+];
+
+const CASINO_CATEGORIES: CasinoCategory[] = [
+  { key: "all", icon: "/icon/game-all.png", label: "所有遊戲", games: casinoGames },
+  { key: "slot", icon: "/icon/game-slot.png", label: "電子遊戲", games: slotGames },
+  { key: "live", icon: "/icon/game-live.png", label: "真人娛樂", games: liveGames },
+  { key: "lottery", icon: "/icon/game-lottery.png", label: "彩票遊戲", games: lotteryGames },
+  { key: "cards", icon: "/icon/game-cards.png", label: "棋牌遊戲", games: cardsGames },
+  { key: "fishing", icon: "/icon/game-fishing.png", label: "捕魚遊戲", games: fishingGames },
+  { key: "esports", icon: "/icon/game-esports.png", label: "電競遊戲", games: esportsGames },
 ];
 
 // Figma "Frame 1242": a small decorative 6x6 grid of tiny dots, a page-level
@@ -172,20 +236,7 @@ export default function CasinoPage() {
                 <HotGames games={hotGames} />
               </div>
 
-              <div className="flex flex-col gap-[20px]">
-                <div className="flex items-center gap-[10px]">
-                  {CATEGORY_TABS.map((tab, i) => (
-                    <GameSelections key={tab.key} icon={tab.icon} label={tab.label} active={i === 0} />
-                  ))}
-                  <GameSelections icon="/icon/list-toggle.png" />
-                </div>
-
-                <div className="grid grid-cols-5 gap-[20px]">
-                  {casinoGames.map((game, i) => (
-                    <ProductCard key={i} {...game} />
-                  ))}
-                </div>
-              </div>
+              <CasinoGameGrid categories={CASINO_CATEGORIES} />
 
               <div className="mt-[55px] flex items-center justify-between">
                 <SocialLinks />
