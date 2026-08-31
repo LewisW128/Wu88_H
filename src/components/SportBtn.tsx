@@ -53,15 +53,21 @@ export default function SportBtn({ provider, image, windowStyle, imageStyle }: S
         className="pointer-events-none absolute left-0 top-[50px] h-[201.225px] w-[211px]"
       />
 
-      <div className="absolute right-[20px] top-[85px] flex items-center gap-[20px]">
-        <p className="whitespace-nowrap text-right text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#021128]">
-          {provider}
-          <br />
-          <span className="text-[#23f3d5]">體育</span>
-        </p>
-        <div className="flex size-[50px] shrink-0 items-center justify-center rounded-full border-[1.11px] border-[#f4f4f4] bg-[#3e4140] p-[10px] backdrop-blur-[10px]">
-          <img alt="" src={withBasePath("/item/arrow-special-dark.svg")} className="size-[27.761px]" />
-        </div>
+      {/* Left-anchored at a fixed offset, not grouped with the Play button
+          in a right-anchored flex row -- "SUPER"/"WG"/"AP"/"熊貓"/"LIVE"
+          are all different lengths, so right-anchoring the pair let the
+          text's own left edge (where a reader's eye actually lands)
+          drift per label while the Play button stayed flush right. Once
+          several of these sit side by side that reads as misaligned.
+          Fixed `left-[204px]` (Figma's own value for this text layer)
+          keeps every label starting at the same x regardless of length. */}
+      <p className="absolute left-[204px] top-[85px] whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#021128]">
+        {provider}
+        <br />
+        <span className="text-[#23f3d5]">體育</span>
+      </p>
+      <div className="absolute right-[20px] top-[85px] flex size-[50px] items-center justify-center rounded-full border-[1.11px] border-[#f4f4f4] bg-[#3e4140] p-[10px] backdrop-blur-[10px]">
+        <img alt="" src={withBasePath("/item/arrow-special-dark.svg")} className="size-[27.761px]" />
       </div>
     </div>
   );
