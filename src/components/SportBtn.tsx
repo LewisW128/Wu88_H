@@ -23,7 +23,16 @@ export type SportBtnProps = {
 // a hover toggle -- add one later if a rest-state design shows up.
 export default function SportBtn({ provider, image, windowStyle, imageStyle }: SportBtnProps) {
   return (
-    <div className="relative h-[169px] w-[346px]">
+    // `overflow-hidden` here isn't optional -- Figma's own outer container
+    // (816:11504-11508) is `h-[169px] w-[346px] overflow-clip`. The athlete
+    // window and the digital-dots decoration are BOTH sized/positioned to
+    // extend past this box in raw coordinates (WG's window starts at
+    // left:-23/top:-22.3; the dots graphic's own top:50/height:201.225 runs
+    // to y:251, past the card's 169px height) -- clipped there by Figma's
+    // own outer bound, not by their own component boundaries. Dropping
+    // this leaves the athlete photo and dots bleeding into whatever real
+    // page content sits above/below/beside this button.
+    <div className="relative h-[169px] w-[346px] overflow-hidden">
       <div className="absolute bottom-0 h-[119px] w-[346px] rounded-[25px] border border-[#a2a2a2] bg-[#f4f4f4]" />
 
       <div className="absolute overflow-clip" style={windowStyle}>
