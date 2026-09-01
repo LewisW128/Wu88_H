@@ -77,13 +77,22 @@ function GradientHeadline({ text, gradientId }: { text: string; gradientId: stri
 // rounded top-left corner. All three variants share the same two large
 // blurred glow-ellipse blobs positioned behind everything else.
 //
-// Home: Animations/container_01.mp4 is ~1.6:1, the same aspect ratio as
-// this whole 1728x1078 container (not the narrow portrait "girl"
-// sub-frame) -- it's an animated version of the entire background (glow
-// blobs + character together), so it covers the full box exactly like the
-// static photo it replaces, not layered as a small character cutout on
-// top of a separate blobs-only image. Its own glow blobs are baked into
-// the video, so the shared ones below render underneath/hidden for it.
+// Home: reverted from the baked-together container_01.mp4 (glow blobs +
+// character combined in one video) back to the same layered skeleton as
+// Casino/Sport -- shared glow blobs underneath, character on top as its
+// own element. The static character (home-hero-girl.png) is Wu88_v02's
+// own pre-cutout "Style=01_Container01_girl" asset (1786x2092, real
+// alpha) -- NOT extracted from the video or from Figma's "Event_girl02"
+// raw image fill (that one's a rectangular studio photo with a dark
+// gradient backdrop baked in; Figma only *displays* it cutout via a mask
+// Figma applies on top, so exporting the raw fill pulls the un-masked
+// rectangle, not an actual transparent PNG). Sized 893x1046 at
+// left-629/top-32 -- that's the exact box the original Figma layer
+// occupied (629.07,32.16, object-cover-fit into 893x1621, clipped by the
+// container's own 1078px bottom edge), recomputed for this asset's own
+// 0.8537 aspect ratio so the now-tightly-cropped cutout still lands in
+// the same visual footprint the video's character occupied (verified by
+// sampling the video frame's own non-white column/row bounds).
 //
 // Casino & Sport: same skeleton -- a giant tracked-out gradient-outline
 // headline (GradientHeadline above; Figma's own Casino source actually has
@@ -108,27 +117,24 @@ const SPORTS_SPRITE_FRAME_W = 770;
 const SPORTS_SPRITE_FRAME_H = 1096;
 const CASINO_SPRITE_FRAME_W = 763;
 const CASINO_SPRITE_FRAME_H = 1052;
+const HOME_SPRITE_FRAME_W = 893;
+const HOME_SPRITE_FRAME_H = 1046;
 export default function ContainerBg({ variant = "home" }: ContainerBgProps) {
   const isCasino = variant === "casino";
   const isSport = variant === "sport";
-  const showGlow = isCasino || isSport;
 
   return (
     <div className="relative h-[1078px] w-[1728px] overflow-hidden rounded-tl-[60px] bg-white">
-      {showGlow && (
-        <>
-          <div className="pointer-events-none absolute left-[867px] top-[176px] size-[764px]">
-            <div className="absolute inset-[-13.09%]">
-              <img alt="" src={withBasePath("/assets/container-bg/glow-ellipse-1.svg")} className="block size-full max-w-none" />
-            </div>
-          </div>
-          <div className="pointer-events-none absolute left-[789px] top-[54px] size-[366px]">
-            <div className="absolute inset-[-27.32%]">
-              <img alt="" src={withBasePath("/assets/container-bg/glow-ellipse-2.svg")} className="block size-full max-w-none" />
-            </div>
-          </div>
-        </>
-      )}
+      <div className="pointer-events-none absolute left-[867px] top-[176px] size-[764px]">
+        <div className="absolute inset-[-13.09%]">
+          <img alt="" src={withBasePath("/assets/container-bg/glow-ellipse-1.svg")} className="block size-full max-w-none" />
+        </div>
+      </div>
+      <div className="pointer-events-none absolute left-[789px] top-[54px] size-[366px]">
+        <div className="absolute inset-[-27.32%]">
+          <img alt="" src={withBasePath("/assets/container-bg/glow-ellipse-2.svg")} className="block size-full max-w-none" />
+        </div>
+      </div>
 
       {isCasino ? (
         <>
@@ -171,13 +177,16 @@ export default function ContainerBg({ variant = "home" }: ContainerBgProps) {
           </div>
         </>
       ) : (
-        <video
-          src={withBasePath("/assets/container-bg/hero.mp4")}
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="pointer-events-none absolute inset-0 size-full object-cover"
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-[629px] top-[32px]"
+          style={{
+            width: HOME_SPRITE_FRAME_W,
+            height: HOME_SPRITE_FRAME_H,
+            backgroundImage: `url(${withBasePath("/animation/home-hero-sprite.webp")})`,
+            backgroundSize: `${HOME_SPRITE_FRAME_W * 6}px ${HOME_SPRITE_FRAME_H * 6}px`,
+            animation: `home-hero-sprite ${SPRITE_DURATION_S}s steps(1, end) infinite`,
+          }}
         />
       )}
 

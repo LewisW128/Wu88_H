@@ -140,3 +140,50 @@ body {
   96.7742% { background-position: 0px -5260px; }
   100% { background-position: 0px 0px; }
 }
+
+/* Home hero (ContainerBg): same technique as casino/sports-hero-sprite
+   above -- 31 frames of a Kling idle-sway/smile loop (same script), played
+   back as a 6x6 sprite sheet. Cell offsets here are in the display box's
+   893x1046 units (matching HOME_SPRITE_FRAME_W/H's backgroundSize scaling
+   in ContainerBg.tsx), NOT the sprite's own native 884x1036 pixels --
+   using the native size here was the original bug: background-position
+   must live in the same scaled coordinate space that backgroundSize
+   stretches the sheet into, or the two drift apart step by step and the
+   next row/column's frame bleeds in as a visible seam. Replaces the old
+   baked-together container_01.mp4 (character + glow blobs in one video)
+   now that Home uses the same layered blobs-underneath/character-on-top
+   skeleton as Casino/Sport. */
+@keyframes home-hero-sprite {
+  0.0% { background-position: 0px 0px; }
+  3.2258% { background-position: -893px 0px; }
+  6.4516% { background-position: -1786px 0px; }
+  9.6774% { background-position: -2679px 0px; }
+  12.9032% { background-position: -3572px 0px; }
+  16.129% { background-position: -4465px 0px; }
+  19.3548% { background-position: 0px -1046px; }
+  22.5806% { background-position: -893px -1046px; }
+  25.8065% { background-position: -1786px -1046px; }
+  29.0323% { background-position: -2679px -1046px; }
+  32.2581% { background-position: -3572px -1046px; }
+  35.4839% { background-position: -4465px -1046px; }
+  38.7097% { background-position: 0px -2092px; }
+  41.9355% { background-position: -893px -2092px; }
+  45.1613% { background-position: -1786px -2092px; }
+  48.3871% { background-position: -2679px -2092px; }
+  51.6129% { background-position: -3572px -2092px; }
+  54.8387% { background-position: -4465px -2092px; }
+  58.0645% { background-position: 0px -3138px; }
+  61.2903% { background-position: -893px -3138px; }
+  64.5161% { background-position: -1786px -3138px; }
+  67.7419% { background-position: -2679px -3138px; }
+  70.9677% { background-position: -3572px -3138px; }
+  74.1935% { background-position: -4465px -3138px; }
+  77.4194% { background-position: 0px -4184px; }
+  80.6452% { background-position: -893px -4184px; }
+  83.871% { background-position: -1786px -4184px; }
+  87.0968% { background-position: -2679px -4184px; }
+  90.3226% { background-position: -3572px -4184px; }
+  93.5484% { background-position: -4465px -4184px; }
+  96.7742% { background-position: 0px -5230px; }
+  100% { background-position: 0px 0px; }
+}

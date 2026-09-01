@@ -1,0 +1,47 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="93" height="89" viewBox="0 0 93 89" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Main Selections">
+<g clip-path="url(#clip0_208_29449_sports)">
+<g id="Ellipse 8" filter="url(#filter0_f_208_29449_sports)">
+<circle cx="61" cy="110.16" r="48" fill="#8D54D8" fill-opacity="0.5"/>
+</g>
+<g id="Ellipse 9" filter="url(#filter1_f_208_29449_sports)">
+<circle cx="24" cy="91.1602" r="23" fill="#23F3D5" fill-opacity="0.5"/>
+</g>
+<g id="Actions">
+<circle id="Ellipse 27" cx="50" cy="49" r="5" fill="#23F3D5"/>
+<g id="Group">
+<path id="Subtract" d="M46.5002 34.9997C51.7469 34.9998 56.0001 39.253 56.0002 44.4997C56.0002 49.7464 51.7469 54.0005 46.5002 54.0006C41.2534 54.0006 36.9993 49.7465 36.9993 44.4997C36.9994 39.2529 41.2535 34.9997 46.5002 34.9997ZM47.9377 47.2575H45.1086L42.8147 49.7878L43.4035 51.8864C44.3542 52.2871 45.3993 52.5064 46.4993 52.5065C47.7801 52.5065 48.9833 52.2 50.0598 51.6657L50.342 49.8903C50.342 49.8903 50.3577 49.8503 50.3577 49.8346L48.0237 47.2419C48.0187 47.2433 47.9676 47.2575 47.9377 47.2575ZM49.5168 43.942C49.5168 43.9466 49.5162 43.9976 49.5012 44.0202L48.6213 46.7311L50.9231 49.2926L53.1555 48.9391C54.004 47.6662 54.4992 46.1418 54.4993 44.4997C54.4993 44.2404 54.4828 43.9806 54.4592 43.7292H54.467L52.5735 42.7399C52.5735 42.7399 52.5268 42.7 52.4953 42.6842L49.5168 43.942ZM40.4963 42.6999L38.5315 43.8161C38.5079 44.0439 38.5002 44.2796 38.5002 44.5153C38.5002 46.2519 39.0583 47.8632 40.0012 49.1754L42.1545 49.2614C42.1573 49.2619 42.2022 49.2694 42.2327 49.277L44.425 46.8571C44.4237 46.8548 44.3937 46.8011 44.386 46.778V46.7624L43.4983 44.028C43.4978 44.0246 43.4902 43.9649 43.4827 43.9342L40.5198 42.6842C40.5198 42.6842 40.5042 42.6999 40.4963 42.6999ZM46.8928 38.2135V41.5221C46.8954 41.5223 46.9091 41.5236 46.9162 41.5378L49.2258 43.2194L52.2043 41.9616L52.6448 39.3844C51.6469 38.1901 50.3107 37.2943 48.7785 36.8385L46.8928 38.2135ZM44.1819 36.8385C42.6496 37.3021 41.3136 38.2056 40.3235 39.4079L40.842 41.9225V41.9616L43.7815 43.2038L46.0832 41.5299C46.0832 41.5299 46.0987 41.5221 46.1067 41.5143V38.2292C46.1031 38.2277 46.067 38.2128 46.052 38.1979L44.1819 36.8385Z" fill="#3E4140"/>
+</g>
+</g>
+<g id="Line 1" filter="url(#filter2_d_208_29449_sports)">
+<line x1="38.5" y1="82.5" x2="55.5" y2="82.5" stroke="#23F3D5" stroke-width="3" stroke-linecap="round"/>
+</g>
+</g>
+<path d="M68 0.5C81.531 0.5 92.5 11.469 92.5 25V64C92.5 77.531 81.531 88.5 68 88.5H25C11.469 88.5 0.5 77.531 0.5 64V0.5H68Z" stroke="#A2A2A2"/>
+</g>
+<defs>
+<filter id="filter0_f_208_29449_sports" x="-33.6" y="15.5602" width="189.2" height="189.2" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="23.3" result="effect1_foregroundBlur_208_29449"/>
+</filter>
+<filter id="filter1_f_208_29449_sports" x="-45.6" y="21.5602" width="139.2" height="139.2" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="23.3" result="effect1_foregroundBlur_208_29449"/>
+</filter>
+<filter id="filter2_d_208_29449_sports" x="31" y="73" width="32" height="15" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dy="-2"/>
+<feGaussianBlur stdDeviation="3"/>
+<feComposite in2="hardAlpha" operator="out"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0.137255 0 0 0 0 0.952941 0 0 0 0 0.835294 0 0 0 1 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_208_29449"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_208_29449" result="shape"/>
+</filter>
+<clipPath id="clip0_208_29449_sports">
+<path d="M0 0H68C81.8071 0 93 11.1929 93 25V64C93 77.8071 81.8071 89 68 89H25C11.1929 89 0 77.8071 0 64V0Z" fill="white"/>
+</clipPath>
+</defs>
+</svg>
