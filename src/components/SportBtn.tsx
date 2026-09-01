@@ -1,4 +1,8 @@
+"use client";
+
+import { useState } from "react";
 import { withBasePath } from "../lib/asset";
+import AnimatedArrowSpecial from "./AnimatedArrowSpecial";
 
 export type SportBtnProps = {
   provider: string;
@@ -21,9 +25,11 @@ export type SportBtnProps = {
 // digital-dots decoration behind it, and a provider label + dark Play
 // button on the right. All 5 reference instances render the Play button
 // in its dark "hover" look permanently (there's no lighter rest state
-// among them), so that's just this component's one look rather than a
-// hover toggle -- add one later if a rest-state design shows up.
+// among them), so the button's own bg/border never toggles -- only the
+// arrow inside it draws on hover, same as News Banner/ProductCard/etc.
 export default function SportBtn({ provider, image, windowStyle, imageStyle }: SportBtnProps) {
+  const [hovered, setHovered] = useState(false);
+
   return (
     // `overflow-hidden` here isn't optional -- Figma's own outer container
     // (816:11504-11508) is `h-[169px] w-[346px] overflow-clip`. The athlete
@@ -43,7 +49,11 @@ export default function SportBtn({ provider, image, windowStyle, imageStyle }: S
     // the authored 346px, so a shrunk card doesn't scale them down with it;
     // it just clips the same fixed-position photo/text/button against a
     // narrower box, reading as a squashed, overlapping mess.
-    <div className="group relative h-[169px] w-[346px] shrink-0 overflow-hidden">
+    <div
+      className="group relative h-[169px] w-[346px] shrink-0 overflow-hidden"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       {/* Hover swaps the gray border for teal and layers a soft radial
           teal glow over the flat gray fill. Figma's own hover version is
           an inline SVG radialGradient with a gradientTransform (matrix
@@ -93,7 +103,7 @@ export default function SportBtn({ provider, image, windowStyle, imageStyle }: S
         <span className="text-[#23f3d5]">體育</span>
       </p>
       <div className="absolute right-[20px] top-[85px] flex size-[50px] items-center justify-center rounded-full border-[1.11px] border-[#f4f4f4] bg-[#3e4140] p-[10px] backdrop-blur-[10px]">
-        <img alt="" src={withBasePath("/item/arrow-special-dark.svg")} className="size-[27.761px]" />
+        <AnimatedArrowSpecial hovered={hovered} color="#23f3d5" />
       </div>
     </div>
   );
