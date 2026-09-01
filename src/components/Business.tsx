@@ -3,7 +3,6 @@
 import { withBasePath } from "../lib/asset";
 import { useEdgeScroll } from "../lib/useEdgeScroll";
 import BusinessCard, { type BusinessCardProps } from "./BusinessCard";
-import Tag from "./Tag";
 
 const FADE = 60;
 const SCROLL_STEP = 366; // one card (346px) + its gap (20px)
@@ -48,16 +47,17 @@ export type BusinessProps = {
 };
 
 // Figma "Business" component (Components Library node 737:8017). Title bar
-// (icon + "頂級合作廠商", a "更多" Tag, and prev/next nav buttons) above a
-// horizontally scrolling row of partner-logo cards. The row's edge fade
-// mimics Win List's row fade -- Figma's own mask only fades the right edge
-// (a static "more to scroll" hint for the un-scrolled starting state), but
-// made properly scroll-aware here so the left edge fades in once scrolled
-// and the right edge clears once you reach the last card. The nav buttons
+// (icon + "頂級合作廠商", prev/next nav buttons) above a horizontally
+// scrolling row of partner-logo cards. The row's edge fade mimics Win
+// List's row fade -- Figma's own mask only fades the right edge (a static
+// "more to scroll" hint for the un-scrolled starting state), but made
+// properly scroll-aware here so the left edge fades in once scrolled and
+// the right edge clears once you reach the last card. The nav buttons
 // scroll by one card-width and their own enabled/disabled look follows the
-// same scroll state.
+// same scroll state. No "更多" tag here -- unlike Hot Games/Promotions,
+// this row has nowhere to link off to, so it's just the nav arrows.
 //
-// The "更多"/nav side hides entirely once the row no longer overflows its
+// The nav side hides entirely once the row no longer overflows its
 // container -- see the comment on SectionHeader for why
 // `canLeft || canRight` is the right test for that.
 export default function Business({ cards }: BusinessProps) {
@@ -73,12 +73,9 @@ export default function Business({ cards }: BusinessProps) {
         </div>
 
         {hasOverflow && (
-          <div className="absolute right-0 flex items-center gap-[20px]">
-            <Tag label="更多" active />
-            <div className="flex items-center gap-[5px]">
-              <NavButton direction="left" disabled={!canScroll.left} onClick={() => scrollByStep(-SCROLL_STEP)} />
-              <NavButton direction="right" disabled={!canScroll.right} onClick={() => scrollByStep(SCROLL_STEP)} />
-            </div>
+          <div className="absolute right-0 flex items-center gap-[5px]">
+            <NavButton direction="left" disabled={!canScroll.left} onClick={() => scrollByStep(-SCROLL_STEP)} />
+            <NavButton direction="right" disabled={!canScroll.right} onClick={() => scrollByStep(SCROLL_STEP)} />
           </div>
         )}
       </div>
