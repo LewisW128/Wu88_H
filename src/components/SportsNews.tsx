@@ -17,11 +17,16 @@ function buildFadeMask(canLeft: boolean, canRight: boolean) {
   return `linear-gradient(to right, ${leftColor} 0px, black ${FADE}px, black calc(100% - ${FADE}px), ${rightColor} 100%)`;
 }
 
+// Reuses the same football/basketball/baseball glyphs as SportsLive's own
+// filter row (/icon/sport-filter-*.png) -- the versions cropped fresh for
+// this row came out with jagged, noisy edges (the alpha-key extraction
+// picked up antialiasing fringe as real pixels), while these were already
+// clean exports at the right stroke weight for a light-gray pill.
 const FILTERS = [
   { key: "all", label: "全部", icon: "/icon/game-all.png" },
-  { key: "football", label: "足球", icon: "/icon/sports-news-football.png" },
-  { key: "basketball", label: "籃球", icon: "/icon/sports-news-basketball.png" },
-  { key: "baseball", label: "棒球", icon: "/icon/sports-news-baseball.png" },
+  { key: "football", label: "足球", icon: "/icon/sport-filter-football.png" },
+  { key: "basketball", label: "籃球", icon: "/icon/sport-filter-basketball.png" },
+  { key: "baseball", label: "棒球", icon: "/icon/sport-filter-baseball.png" },
 ];
 
 export type SportsNewsProps = {
