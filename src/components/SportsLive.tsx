@@ -28,20 +28,27 @@ const FILTERS = [
 ];
 
 export type SportsLiveProps = {
-  games: SportGameBoardProps[];
+  // One real list per category -- see sports/page.tsx's own game data for
+  // where each comes from. Same `Record<string, T[]>` + `[key] ?? []`
+  // shape as SportsNews's `newsByCategory`, for the same reason: the key
+  // set here is exactly FILTERS' own keys, not a fixed tuple, so a
+  // missing/renamed category degrades to an empty row instead of a type
+  // error masking a real mismatch.
+  gamesByCategory: Record<string, SportGameBoardProps[]>;
 };
 
-// Figma "Sports Live" (03_WU88-H-PC-Sport node 801:11548): the "即時賽事"
-// title bar + a 4-icon sport-type filter row + a Left&Right pair, over a
-// horizontally scrolling row of SportGameBoard cards -- same title-bar/
-// filter-row/edge-faded-row skeleton as HotGames and Casino's category
-// grid, so it reuses their exact hook/mask/nav-button pieces rather than
-// re-deriving the scroll math. The 4 filter icons have no per-category
-// game data yet (Figma only ever defines the one 即時賽事 list), so
-// clicking one just swaps the active highlight for now -- wire in real
-// filtering once that's specified.
-export default function SportsLive({ games }: SportsLiveProps) {
+// Figma "Sports Live" (03_WU88-H-PC-Sport node 801:11548, per-category
+// content seen live at 54:9589 足球/54:27866 籃球/65:17483 棒球): the
+// "即時賽事" title bar + a 4-icon sport-type filter row + a Left&Right
+// pair, over a horizontally scrolling row of SportGameBoard cards -- same
+// title-bar/filter-row/edge-faded-row skeleton as HotGames and Casino's
+// category grid, so it reuses their exact hook/mask/nav-button pieces
+// rather than re-deriving the scroll math. Clicking a filter now swaps in
+// that category's own game list (same `activeFilter` + `[key] ?? []`
+// pattern as SportsNews), not just the active highlight.
+export default function SportsLive({ gamesByCategory }: SportsLiveProps) {
   const [activeFilter, setActiveFilter] = useState(FILTERS[0].key);
+  const games = gamesByCategory[activeFilter] ?? [];
   const { ref: scrollRef, canScroll, scrollByStep } = useEdgeScroll<HTMLDivElement>([games]);
   const hasOverflow = canScroll.left || canScroll.right;
 

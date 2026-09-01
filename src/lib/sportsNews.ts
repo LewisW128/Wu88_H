@@ -1,3 +1,4 @@
+import type { MatchAnalysisCardProps } from "../components/MatchAnalysisCard";
 import type { NewsBannerProps } from "../components/NewsBanner";
 
 // Three general sports feeds, not one -- Taiwan's own two (自由時報/LTN,
@@ -17,8 +18,11 @@ const RSS_URLS = [
   "https://www.rthk.hk/rthk/news/rss/c_expressnews_csport.xml",
 ];
 const REVALIDATE_SECONDS = 1800; // 30 minutes
-const PER_CATEGORY = 5;
+const NEWS_PER_CATEGORY = 5; // Sports_News's own scrollable row
+const MATCH_ANALYSIS_PER_CATEGORY = 8; // Sports Mach analysis's 2-col x 4-row grid
 const IMAGE_FETCH_TIMEOUT_MS = 4000;
+
+const WEEKDAY_NAMES = ["日", "一", "二", "三", "四", "五", "六"];
 
 // Fallback photos already in the project (the same ones the original
 // static mock content used) -- shown when a real article's og:image can't
@@ -37,6 +41,8 @@ type RawItem = {
   title: string;
   link: string;
   category: NewsCategory | "other";
+  description: string;
+  pubDate: string;
 };
 
 // 自由時報 (LTN) publishes one general sports RSS feed, not a separate
@@ -78,17 +84,45 @@ async function fetchOneFeed(url: string): Promise<RawItem[]> {
   const items: RawItem[] = [];
   const itemBlocks = xml.match(/<item>[\s\S]*?<\/item>/g) ?? [];
   for (const block of itemBlocks) {
-    // LTN wraps titles in CDATA; CNA doesn't -- accept either so one parser
-    // handles both feeds.
+    // LTN wraps titles/descriptions in CDATA; CNA doesn't -- accept either
+    // so one parser handles both feeds.
     const titleMatch = block.match(/<title>(?:<!\[CDATA\[([\s\S]*?)\]\]>|([\s\S]*?))<\/title>/);
     const linkMatch = block.match(/<link>([\s\S]*?)<\/link>/);
     if (!titleMatch || !linkMatch) continue;
     const title = decodeXmlEntities((titleMatch[1] ?? titleMatch[2]).trim());
     const link = decodeXmlEntities(linkMatch[1].trim());
     if (!title || !link) continue;
-    items.push({ title, link, category: classify(title) });
+
+    const descriptionMatch = block.match(/<description>(?:<!\[CDATA\[([\s\S]*?)\]\]>|([\s\S]*?))<\/description>/);
+    const description = cleanExcerpt(decodeXmlEntities((descriptionMatch?.[1] ?? descriptionMatch?.[2] ?? "").trim()));
+    const pubDateMatch = block.match(/<pubDate>([\s\S]*?)<\/pubDate>/);
+    const pubDate = (pubDateMatch?.[1] ?? "").trim();
+
+    items.push({ title, link, category: classify(title), description, pubDate });
   }
   return items;
+}
+
+// LTN's own description is already a short, source-truncated teaser (runs
+// end in "…") -- this just collapses the raw CDATA's leading/trailing
+// blank lines and internal newlines down to the single-paragraph excerpt
+// MatchAnalysisCard expects, not a second truncation pass.
+function cleanExcerpt(raw: string): string {
+  return raw.replace(/\s+/g, "").replace(/([。！？])/g, "$1 ").trim();
+}
+
+// RSS pubDate is RFC822 (`Tue, 01 Sep 2026 22:40:11 +0800`), directly
+// `Date`-parseable -- reformatted into the Chinese "YYYY年M月D日週X 上午/
+// 下午HH:mm" MatchAnalysisCard was already designed around (its own mock
+// data's exact style, e.g. "2026年7月17日週五 上午10:41").
+function formatArticleDate(pubDate: string): string {
+  const date = new Date(pubDate);
+  if (Number.isNaN(date.getTime())) return pubDate;
+  const hour24 = date.getHours();
+  const period = hour24 < 12 ? "上午" : "下午";
+  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+  const minute = String(date.getMinutes()).padStart(2, "0");
+  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日週${WEEKDAY_NAMES[date.getDay()]} ${period}${hour12}:${minute}`;
 }
 
 async function fetchRawItems(): Promise<RawItem[]> {
@@ -121,35 +155,59 @@ async function resolveImage(link: string): Promise<string | null> {
   }
 }
 
-export async function getSportsNewsByCategory(): Promise<Record<NewsCategory, NewsBannerProps[]>> {
-  const items = await fetchRawItems();
-
+function selectByCategory(items: RawItem[], perCategory: number): Record<NewsCategory, RawItem[]> {
   const onTopic = items.filter((i) => i.category !== "other");
-
-  const selected: Record<NewsCategory, RawItem[]> = {
-    all: onTopic.slice(0, PER_CATEGORY),
-    football: items.filter((i) => i.category === "football").slice(0, PER_CATEGORY),
-    basketball: items.filter((i) => i.category === "basketball").slice(0, PER_CATEGORY),
-    baseball: items.filter((i) => i.category === "baseball").slice(0, PER_CATEGORY),
+  return {
+    all: onTopic.slice(0, perCategory),
+    football: items.filter((i) => i.category === "football").slice(0, perCategory),
+    basketball: items.filter((i) => i.category === "basketball").slice(0, perCategory),
+    baseball: items.filter((i) => i.category === "baseball").slice(0, perCategory),
   };
+}
 
-  // Resolve each distinct article's image once, even if it shows up in
-  // both "all" and its own category, instead of re-fetching it twice.
-  const uniqueLinks = Array.from(new Set(Object.values(selected).flat().map((i) => i.link)));
+function mapCategories<T>(selected: Record<NewsCategory, RawItem[]>, toItem: (item: RawItem, image: string) => T, imageByLink: Map<string, string | null>): Record<NewsCategory, T[]> {
+  let fallbackIndex = 0;
+  const nextFallback = () => FALLBACK_IMAGES[fallbackIndex++ % FALLBACK_IMAGES.length];
+  const toList = (list: RawItem[]) => list.map((item) => toItem(item, imageByLink.get(item.link) ?? nextFallback()));
+  return {
+    all: toList(selected.all),
+    football: toList(selected.football),
+    basketball: toList(selected.basketball),
+    baseball: toList(selected.baseball),
+  };
+}
+
+export type SportsArticles = {
+  newsByCategory: Record<NewsCategory, NewsBannerProps[]>;
+  matchAnalysisByCategory: Record<NewsCategory, MatchAnalysisCardProps[]>;
+};
+
+// Sports_News and Sports Mach analysis both render this same classified
+// RSS pool (足球/籃球/棒球 keyword-matched, same categories, same 全部)
+// rather than each keeping its own separate mock/fetch -- the user's own
+// call ("賽事分析 should follow the news content, categorized the same
+// way 體育新聞 is"). They differ only in how many articles each shows
+// (Sports_News's horizontal row wants 5; Sports Mach analysis's 2-column
+// grid wants 8) and which fields they need (a caption vs a title+date+
+// excerpt) -- one shared fetch, one shared image-resolution pass over the
+// union of both selections (an article picked for both a 5-item and an
+// 8-item slice would otherwise have its og:image fetched twice), then two
+// different slice sizes and two different per-item mappers.
+export async function getSportsArticlesByCategory(): Promise<SportsArticles> {
+  const items = await fetchRawItems();
+  const newsSelected = selectByCategory(items, NEWS_PER_CATEGORY);
+  const matchSelected = selectByCategory(items, MATCH_ANALYSIS_PER_CATEGORY);
+
+  const uniqueLinks = Array.from(new Set([...Object.values(newsSelected).flat(), ...Object.values(matchSelected).flat()].map((i) => i.link)));
   const resolvedEntries = await Promise.all(uniqueLinks.map(async (link) => [link, await resolveImage(link)] as const));
   const imageByLink = new Map(resolvedEntries);
 
-  let fallbackIndex = 0;
-  const toBanners = (list: RawItem[]): NewsBannerProps[] =>
-    list.map((item) => {
-      const image = imageByLink.get(item.link) ?? FALLBACK_IMAGES[fallbackIndex++ % FALLBACK_IMAGES.length];
-      return { image, caption: item.title };
-    });
-
   return {
-    all: toBanners(selected.all),
-    football: toBanners(selected.football),
-    basketball: toBanners(selected.basketball),
-    baseball: toBanners(selected.baseball),
+    newsByCategory: mapCategories(newsSelected, (item, image) => ({ image, caption: item.title }), imageByLink),
+    matchAnalysisByCategory: mapCategories(
+      matchSelected,
+      (item, image) => ({ image, title: item.title, date: formatArticleDate(item.pubDate), excerpt: item.description || item.title }),
+      imageByLink,
+    ),
   };
 }

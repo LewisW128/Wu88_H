@@ -2,7 +2,6 @@ import { DEFAULT_RING_COLOR } from "../../components/Avatar";
 import ContainerBg from "../../components/ContainerBg";
 import Footer from "../../components/Footer";
 import Language from "../../components/Language";
-import type { MatchAnalysisCardProps } from "../../components/MatchAnalysisCard";
 import MinPanelHeight from "../../components/MinPanelHeight";
 import QuickLinks from "../../components/QuickLinks";
 import ScaleToFit from "../../components/ScaleToFit";
@@ -15,7 +14,7 @@ import SportsForm from "../../components/SportsForm";
 import SportsLive from "../../components/SportsLive";
 import SportsMachAnalysis from "../../components/SportsMachAnalysis";
 import SportsNews from "../../components/SportsNews";
-import { getSportsNewsByCategory } from "../../lib/sportsNews";
+import { getSportsArticlesByCategory } from "../../lib/sportsNews";
 import StickyUtilityBar from "../../components/StickyUtilityBar";
 import TalkingBar from "../../components/TalkingBar";
 import type { TalkSectionProps } from "../../components/TalkSection";
@@ -165,6 +164,200 @@ const sportsLiveGames: SportGameBoardProps[] = [
   },
 ];
 
+const SPORTS_LIVE_ODDS = [
+  { label: "x1", value: "12.4" },
+  { label: "x", value: "2.2" },
+  { label: "x1", value: "22.4" },
+] as const;
+
+// Figma "Sports Live" 足球 filter, seen live at 54:9589: 4 English
+// Premier League fixtures, sharing the same placeholder stats as the 全部
+// tab (6-0, 24'/16:15) since Figma never gave this category its own score/
+// odds data either. Team badges are real club crests -- see AGENTS.md-
+// adjacent note in flag/ for where these came from (D:\works\09_WU88-H\
+// source\public\icons\flag, copied in and renamed to this project's own
+// lowercase-hyphen flag/ convention). "EPL" itself (the competition, not
+// a club) uses the league's own badge, matching Figma's own choice to
+// label the first fixture's home side that way rather than inventing a
+// third club.
+const sportsLiveFootball: SportGameBoardProps[] = [
+  {
+    sportName: "FOOTBALL",
+    gameName: "English Premier League",
+    teamA: { name: "EPL", flag: "/flag/english-premier-league.svg" },
+    teamB: { name: "AVL", flag: "/flag/aston-villa.svg" },
+    scoreA: "6",
+    scoreB: "0",
+    sportTime: "24’",
+    startTime: "16:15",
+    odds: [...SPORTS_LIVE_ODDS],
+  },
+  {
+    sportName: "FOOTBALL",
+    gameName: "English Premier League",
+    teamA: { name: "CFC", flag: "/flag/chelsea.svg" },
+    teamB: { name: "Man Utd", flag: "/flag/manchester-united.svg" },
+    scoreA: "6",
+    scoreB: "0",
+    sportTime: "24’",
+    startTime: "16:15",
+    odds: [...SPORTS_LIVE_ODDS],
+  },
+  {
+    sportName: "FOOTBALL",
+    gameName: "English Premier League",
+    teamA: { name: "NEW", flag: "/flag/newcastle.svg" },
+    teamB: { name: "BRE", flag: "/flag/brentford.svg" },
+    scoreA: "6",
+    scoreB: "0",
+    sportTime: "24’",
+    startTime: "16:15",
+    odds: [...SPORTS_LIVE_ODDS],
+  },
+  {
+    sportName: "FOOTBALL",
+    gameName: "English Premier League",
+    teamA: { name: "FUL", flag: "/flag/fulham.svg" },
+    teamB: { name: "CRY", flag: "/flag/crystal-palace.svg" },
+    scoreA: "6",
+    scoreB: "0",
+    sportTime: "24’",
+    startTime: "16:15",
+    odds: [...SPORTS_LIVE_ODDS],
+  },
+];
+
+// Figma "Sports Live" 籃球 filter, seen live at 54:27866: 5 NBA fixtures,
+// same placeholder-stats convention as 全部/足球 above.
+const sportsLiveBasketball: SportGameBoardProps[] = [
+  {
+    sportName: "BASKETBALL",
+    gameName: "NBA",
+    teamA: { name: "GSW", flag: "/flag/golden-state-warriors.svg" },
+    teamB: { name: "DET", flag: "/flag/detroit-pistons.svg" },
+    scoreA: "6",
+    scoreB: "0",
+    sportTime: "24’",
+    startTime: "16:15",
+    odds: [...SPORTS_LIVE_ODDS],
+  },
+  {
+    sportName: "BASKETBALL",
+    gameName: "NBA",
+    teamA: { name: "DEN", flag: "/flag/denver-nuggets.svg" },
+    teamB: { name: "DAL", flag: "/flag/dallas-mavericks.svg" },
+    scoreA: "6",
+    scoreB: "0",
+    sportTime: "24’",
+    startTime: "16:15",
+    odds: [...SPORTS_LIVE_ODDS],
+  },
+  {
+    sportName: "BASKETBALL",
+    gameName: "NBA",
+    teamA: { name: "CHI", flag: "/flag/chicago-bulls.svg" },
+    teamB: { name: "CHA", flag: "/flag/charlotte-hornets.svg" },
+    scoreA: "6",
+    scoreB: "0",
+    sportTime: "24’",
+    startTime: "16:15",
+    odds: [...SPORTS_LIVE_ODDS],
+  },
+  {
+    sportName: "BASKETBALL",
+    gameName: "NBA",
+    teamA: { name: "BKN", flag: "/flag/brooklyn-nets.svg" },
+    teamB: { name: "BOS", flag: "/flag/boston-celtics.svg" },
+    scoreA: "6",
+    scoreB: "0",
+    sportTime: "24’",
+    startTime: "16:15",
+    odds: [...SPORTS_LIVE_ODDS],
+  },
+  {
+    sportName: "BASKETBALL",
+    gameName: "NBA",
+    teamA: { name: "ATL", flag: "/flag/atlanta-hawks.svg" },
+    teamB: { name: "CLE", flag: "/flag/cleveland-cavaliers.svg" },
+    scoreA: "6",
+    scoreB: "0",
+    sportTime: "24’",
+    startTime: "16:15",
+    odds: [...SPORTS_LIVE_ODDS],
+  },
+];
+
+// Figma "Sports Live" 棒球 filter, seen live at 65:17483, isn't usable
+// as-is: its "BASKETBALL"/"NBA" labels and World-Cup-country team names
+// are leftover from copy-pasting the 全部/籃球 tabs and were never
+// replaced with real baseball content -- using them verbatim would ship
+// the same broken mockup Figma has. Real MLB fixtures below instead,
+// same placeholder-stats convention as the other three tabs.
+const sportsLiveBaseball: SportGameBoardProps[] = [
+  {
+    sportName: "BASEBALL",
+    gameName: "MLB",
+    teamA: { name: "NYY", flag: "/flag/new-york-yankees.svg" },
+    teamB: { name: "BOS", flag: "/flag/boston-red-sox.svg" },
+    scoreA: "6",
+    scoreB: "0",
+    sportTime: "24’",
+    startTime: "16:15",
+    odds: [...SPORTS_LIVE_ODDS],
+  },
+  {
+    sportName: "BASEBALL",
+    gameName: "MLB",
+    teamA: { name: "HOU", flag: "/flag/houston-astros.svg" },
+    teamB: { name: "OAK", flag: "/flag/oakland-athletics.svg" },
+    scoreA: "6",
+    scoreB: "0",
+    sportTime: "24’",
+    startTime: "16:15",
+    odds: [...SPORTS_LIVE_ODDS],
+  },
+  {
+    sportName: "BASEBALL",
+    gameName: "MLB",
+    teamA: { name: "TOR", flag: "/flag/toronto-blue-jays.svg" },
+    teamB: { name: "KC", flag: "/flag/kansas-city-royals.svg" },
+    scoreA: "6",
+    scoreB: "0",
+    sportTime: "24’",
+    startTime: "16:15",
+    odds: [...SPORTS_LIVE_ODDS],
+  },
+  {
+    sportName: "BASEBALL",
+    gameName: "MLB",
+    teamA: { name: "LAA", flag: "/flag/los-angeles-angels.svg" },
+    teamB: { name: "MIN", flag: "/flag/minnesota-twins.svg" },
+    scoreA: "6",
+    scoreB: "0",
+    sportTime: "24’",
+    startTime: "16:15",
+    odds: [...SPORTS_LIVE_ODDS],
+  },
+  {
+    sportName: "BASEBALL",
+    gameName: "MLB",
+    teamA: { name: "ARI", flag: "/flag/arizona-diamondbacks.svg" },
+    teamB: { name: "CWS", flag: "/flag/chicago-white-sox.svg" },
+    scoreA: "6",
+    scoreB: "0",
+    sportTime: "24’",
+    startTime: "16:15",
+    odds: [...SPORTS_LIVE_ODDS],
+  },
+];
+
+const sportsLiveGamesByCategory: Record<string, SportGameBoardProps[]> = {
+  all: sportsLiveGames,
+  football: sportsLiveFootball,
+  basketball: sportsLiveBasketball,
+  baseball: sportsLiveBaseball,
+};
+
 // Figma "Sports form" (03_WU88-H-PC-Sport node 66:29850): 5 betting-
 // provider buttons, each with its own athlete cutout crop/frame -- see
 // SportBtn's own comment for why `windowStyle`/`imageStyle` differ per
@@ -202,70 +395,8 @@ const sportsFormButtons: SportBtnProps[] = [
   },
 ];
 
-// Figma "Sports Mach analysis" (node 66:20574): 8 Match analysis cards.
-// The 4th card reuses the 1st's photo+headline in Figma too (same "not yet
-// customized" placeholder pattern as News Banner above).
-const sportsMachArticles: MatchAnalysisCardProps[] = [
-  {
-    image: "/assets/sports-match/bellingham.jpg",
-    title: "世足/阿根廷慶功他不爽！貝林漢拍對手後腦恐遭禁賽",
-    date: "2026年7月17日週五 上午10:41",
-    excerpt:
-      "英格蘭今在世界盃4強賽以1比2不敵阿根廷，比賽結束英格蘭中場貝林漢（Jude Bellingham）淚謝球迷後，被鏡頭拍到打阿根廷替補球員巴柯（Valentin Barco）的後腦引發軒然大波，恐面臨國際足總追加禁賽處罰。雙方此役火藥味十足，全場共出現26次犯規，英格蘭在第55分鐘破門以1比0領先，眼看就要拿到自1966年以來首張世界盃決賽門票，沒想到第85分鐘與傷停補時階段被阿根廷逆轉。",
-  },
-  {
-    image: "/assets/sports-match/argentina.jpg",
-    title: "不想待在英超了嗎？阿根廷晉級決賽功臣發文嘲笑英格蘭惹怒球迷",
-    date: "2026年7月17日週五 上午10:41",
-    excerpt:
-      "阿根廷能在四強賽2:1擊敗英格蘭，25歲中場大將費南德斯功不可沒，他在第85分鐘以一記精彩長射破網，讓阿根廷追成1:1平手，這位效力英超藍軍切爾西的好手，似乎是鐵了心要離開了，在自己的IG上發文嘲笑英格蘭，也讓英格蘭球迷對他更感冒。",
-  },
-  {
-    image: "/assets/sports-match/heat.jpg",
-    title: "NBA》熱火昔日兄弟撕破臉！Adebayo爆揍Herro內幕曝光 NBA官方決定不罰了",
-    date: "2026年7月17日週五 上午10:41",
-    excerpt:
-      "邁阿密熱火昔日兩大主力Bam Adebayo與Tyler Herro，日前在拉斯維加斯爆發肢體衝突，不過，這場風波似乎將高高舉起、輕輕放下。根據《ESPN》權威記者Shams Charania報導，聯盟發言人證實，在與兩位球員及球員工會溝通後，各方都希望盡快息事寧人，因此官方決定不對動手的Adebayo進行任何處罰。",
-  },
-  {
-    image: "/assets/sports-match/bellingham.jpg",
-    title: "世足/阿根廷慶功他不爽！貝林漢拍對手後腦恐遭禁賽",
-    date: "2026年7月17日週五 上午10:41",
-    excerpt:
-      "英格蘭今在世界盃4強賽以1比2不敵阿根廷，比賽結束英格蘭中場貝林漢（Jude Bellingham）淚謝球迷後，被鏡頭拍到打阿根廷替補球員巴柯（Valentin Barco）的後腦引發軒然大波，恐面臨國際足總追加禁賽處罰。",
-  },
-  {
-    image: "/assets/sports-match/sasaki.jpg",
-    title: "佐佐木朗希6局「斷崖式下滑」原因曝光！羅伯斯揭真相　再捎大谷回歸好消息",
-    date: "2026年7月17日週五 上午10:41",
-    excerpt:
-      "道奇日籍投手佐佐木朗希今（31日）先發對戰水手，主投5又1/3局失2分，收下本季第5勝，也是近期2連勝。不過他在前5局無失分的情況下，第6局卻突然球速、控球同步下滑。賽後總教練羅伯斯（Dave Roberts）透露，主因是右小腿抽筋，並大讚佐佐木下半季展現出更強烈的自信心。",
-  },
-  {
-    image: "/assets/sports-match/scooter.jpg",
-    title: "MLB／騎滑板車撞消防車　巨人隊貝德離譜事蹟+1！左腳骨折宣告本季報銷",
-    date: "2026年7月17日週五 上午10:41",
-    excerpt:
-      "近來名古屋亞運棒球中華隊球員徵召爭議，出現富邦悍將、台鋼雄鷹去跟棒協「協調」後，沒有支援球員，以及有高達8位旅外球員徵召，包括受傷開刀的徐若熙、大聯盟球員鄭宗哲，筆者認為，球團、棒協及運動部應該坐下來針對補充役球員的徵召進行討論、協商。",
-  },
-  {
-    image: "/assets/sports-match/fifa-president.jpg",
-    title: "FIFA主席偷賣世界盃股權！UEFA怒聯手55國封殺所有賽事　痛批：非可交易商品",
-    date: "2026年7月17日週五 上午10:41",
-    excerpt:
-      "歐洲足球總會（UEFA）昨（30）日召開緊急會議，旗下55個會員協會一致通過決議，將全面杯葛國際足球總會（FIFA）主辦的所有賽事，以反對FIFA主席因凡提諾（Gianni Infantino）提出出售世界盃部分股權予私人投資者的計畫。歐足總強調，世界盃屬於全球足球共同資產，絕非可供交易的商業商品。",
-  },
-  {
-    image: "/assets/sports-match/lakers.jpg",
-    title: "湖人醞釀重磅交易？傳將全力挖角Jokic　盼與Doncic組歐洲雙星",
-    date: "2026年7月17日週五 上午10:41",
-    excerpt:
-      "洛杉磯湖人隊正醞釀一筆可能撼動 NBA 版圖的超級重磅交易。隨著丹佛金塊隊為規避豪華稅，將前鋒 Peyton Watson 交易至克里夫蘭騎士隊，球隊內部動盪引發外界關注。據湖人內部消息人士 Anthony F. Irwin 透露，待湖人球團所有權問題塵埃落定後，球隊將下定決心全力網羅三屆最有價值球員 Nikola Jokic，期盼讓他與當家球星 Luka Doncic 聯手。",
-  },
-];
-
 export default async function SportsPage() {
-  const sportsNewsByCategory = await getSportsNewsByCategory();
+  const { newsByCategory: sportsNewsByCategory, matchAnalysisByCategory: sportsMachArticlesByCategory } = await getSportsArticlesByCategory();
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-[#f4f4f4]">
@@ -307,7 +438,7 @@ export default async function SportsPage() {
                   makes up the remaining 455 -- same measure-the-delta
                   approach as Casino's own Hot Games margin above. */}
               <div className="mt-[455px]">
-                <SportsLive games={sportsLiveGames} />
+                <SportsLive gamesByCategory={sportsLiveGamesByCategory} />
               </div>
 
               {/* Sports form sits a plain 40px below Sports Live (944 vs
@@ -327,7 +458,7 @@ export default async function SportsPage() {
                   subtracted, same repeating 40px rhythm as every section
                   gap on this page. */}
               <div className="mt-[15px]">
-                <SportsMachAnalysis articles={sportsMachArticles} />
+                <SportsMachAnalysis articlesByCategory={sportsMachArticlesByCategory} />
               </div>
 
               <div className="flex items-center justify-between">
