@@ -22,11 +22,13 @@ export type SportBtnProps = {
 // context on 03_WU88-H-PC-Sport node 66:65131 (the WG instance there,
 // 816:11986, is mid-hover). A light-gray, bordered pill (346x119) with a
 // real athlete cutout photo overlapping its top edge, the project's
-// digital-dots decoration behind it, and a provider label + dark Play
-// button on the right. All 5 reference instances render the Play button
-// in its dark "hover" look permanently (there's no lighter rest state
-// among them), so the button's own bg/border never toggles -- only the
-// arrow inside it draws on hover, same as News Banner/ProductCard/etc.
+// digital-dots decoration behind it, and a provider label + Play arrow on
+// the right. Text and the arrow's position are both static (Figma's own
+// fixed left-[204px]/right-[20px]) -- only the arrow's own look changes on
+// hover: at rest it's bare (no circle) and dark (#3e4140); hovering fades
+// in the dark circle behind it while the arrow itself cross-draws from
+// dark to teal (#23f3d5), same two-instances-of-AnimatedArrowSpecial
+// technique as ProductCard/GameCard/PromotionCard's Play buttons.
 export default function SportBtn({ provider, image, windowStyle, imageStyle }: SportBtnProps) {
   const [hovered, setHovered] = useState(false);
 
@@ -102,8 +104,25 @@ export default function SportBtn({ provider, image, windowStyle, imageStyle }: S
         <br />
         <span className="text-[#23f3d5]">體育</span>
       </p>
-      <div className="absolute right-[20px] top-[85px] flex size-[50px] items-center justify-center rounded-full border-[1.11px] border-[#f4f4f4] bg-[#3e4140] p-[10px] backdrop-blur-[10px]">
-        <AnimatedArrowSpecial hovered={hovered} color="#23f3d5" />
+      {/* The circle itself (bg/border/blur) only exists on hover -- at rest
+          the arrow floats bare with no backing shape. Interpolating
+          `backdrop-blur` between "none" and a value doesn't animate in
+          most engines, so the blur amount transitions 0->10px instead of
+          toggling the filter on/off. */}
+      <div
+        className="absolute right-[20px] top-[85px] flex size-[50px] items-center justify-center rounded-full p-[10px] transition-[background-color,border-color,backdrop-filter] duration-300 ease-out"
+        style={{
+          backgroundColor: hovered ? "#3e4140" : "transparent",
+          borderWidth: 1.11,
+          borderStyle: "solid",
+          borderColor: hovered ? "#f4f4f4" : "transparent",
+          backdropFilter: `blur(${hovered ? 10 : 0}px)`,
+        }}
+      >
+        <div className="relative size-[27.761px]">
+          <AnimatedArrowSpecial hovered={!hovered} color="#3e4140" className="absolute inset-0" />
+          <AnimatedArrowSpecial hovered={hovered} color="#23f3d5" className="absolute inset-0" />
+        </div>
       </div>
     </div>
   );
