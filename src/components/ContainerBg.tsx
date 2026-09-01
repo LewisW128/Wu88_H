@@ -52,7 +52,7 @@ function SportsHeadline() {
         stroke="url(#sports-headline-stroke)"
         strokeWidth={2}
         fontFamily="Inter, sans-serif"
-        fontWeight={700}
+        fontWeight={900}
         fontSize={200}
         style={{ letterSpacing: "32px" }}
       >
@@ -84,12 +84,23 @@ function SportsHeadline() {
 // until that's supplied this renders the same still photo, saved there as
 // a placeholder so swapping in a real clip later is a one-line change.
 //
-// Sport: same skeleton as Casino (still photo + giant tracked-out
-// headline) -- "SPORTS" instead of "CASINO", and the headline is a hollow
-// gradient outline instead of a flat white-50% fill (see SportsHeadline
-// above). The hero photo is the recurring WU88 catgirl character
-// (Catgirl character reference in memory) in a football kit, exported
-// straight off Figma's own "04_Sport" Container_BG instance -- not new art.
+// Sport: same skeleton as Casino (giant tracked-out headline behind the
+// hero figure) -- "SPORTS" instead of "CASINO", and the headline is a
+// hollow gradient outline instead of a flat white-50% fill (see
+// SportsHeadline above). The hero itself is an idle sway/smile-at-camera
+// loop, not the original still photo: generated with Higgsfield/Kling 3.0
+// from that same still (the recurring WU88 catgirl character -- Catgirl
+// character reference in memory) as the start_image, prompted on a
+// locked-off camera so the framing and composition match the original
+// photo exactly, just with motion added. Played back as a background-
+// position-stepped sprite sheet (see the sports-hero-sprite @keyframes in
+// globals.css for why), not a <video> -- MP4/H.264 can't carry alpha, and
+// this hero needs a transparent background to sit over the page like the
+// original cutout photo did.
+const SPRITE_FRAME_COUNT = 31;
+const SPRITE_FRAME_W = 770;
+const SPRITE_FRAME_H = 1096;
+const SPRITE_DURATION_S = SPRITE_FRAME_COUNT / 6;
 export default function ContainerBg({ variant = "home" }: ContainerBgProps) {
   const isCasino = variant === "casino";
   const isSport = variant === "sport";
@@ -129,11 +140,23 @@ export default function ContainerBg({ variant = "home" }: ContainerBgProps) {
       ) : isSport ? (
         <>
           <SportsHeadline />
-          <img
-            alt=""
-            src={withBasePath("/animation/sports-hero-catgirl.png")}
-            className="pointer-events-none absolute bottom-[-18px] left-[711px] h-[1096px] w-[877px] object-contain"
-          />
+          {/* Outer box matches the original still photo's box exactly
+              (bottom-[-18px]/left-[711px]/h-1096/w-877); centering a
+              narrower fixed-size inner box inside it reproduces
+              object-contain's own centering for a 804x1144-native frame
+              that doesn't share the box's aspect ratio. */}
+          <div className="pointer-events-none absolute bottom-[-18px] left-[711px] flex h-[1096px] w-[877px] items-center justify-center">
+            <div
+              aria-hidden
+              style={{
+                width: SPRITE_FRAME_W,
+                height: SPRITE_FRAME_H,
+                backgroundImage: `url(${withBasePath("/animation/sports-hero-sprite.webp")})`,
+                backgroundSize: `${SPRITE_FRAME_W * 6}px ${SPRITE_FRAME_H * 6}px`,
+                animation: `sports-hero-sprite ${SPRITE_DURATION_S}s steps(1, end) infinite`,
+              }}
+            />
+          </div>
         </>
       ) : (
         <video

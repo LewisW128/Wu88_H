@@ -52,3 +52,50 @@ body {
     opacity: 0.15;
   }
 }
+
+/* Sport hero (ContainerBg): 31 frames of a Kling-generated idle-sway loop,
+   each background-removed individually (video-level bg removal produced
+   noisy mattes and dropped the held ball mid-motion; per-frame image
+   removal didn't). MP4/H.264 can't carry alpha, so this plays back as a
+   sprite sheet instead of a video -- a 6x6 grid of the 770x1096 frames
+   (804x1144 native, scaled to fill this box's 1096px height the same way
+   object-contain would), stepped via background-position. Explicit
+   per-frame keyframes (not a single 0%->100% pair) because steps() only
+   subdivides a *linear* path between two values, and the frames' grid
+   layout isn't on one line -- each stop here holds its own frame's exact
+   background-position, and steps(1,end) (set where this is used) makes it
+   jump straight there instead of sliding across the sheet. */
+@keyframes sports-hero-sprite {
+  0.0% { background-position: 0px 0px; }
+  3.2258% { background-position: -770px 0px; }
+  6.4516% { background-position: -1540px 0px; }
+  9.6774% { background-position: -2310px 0px; }
+  12.9032% { background-position: -3080px 0px; }
+  16.129% { background-position: -3850px 0px; }
+  19.3548% { background-position: 0px -1096px; }
+  22.5806% { background-position: -770px -1096px; }
+  25.8065% { background-position: -1540px -1096px; }
+  29.0323% { background-position: -2310px -1096px; }
+  32.2581% { background-position: -3080px -1096px; }
+  35.4839% { background-position: -3850px -1096px; }
+  38.7097% { background-position: 0px -2192px; }
+  41.9355% { background-position: -770px -2192px; }
+  45.1613% { background-position: -1540px -2192px; }
+  48.3871% { background-position: -2310px -2192px; }
+  51.6129% { background-position: -3080px -2192px; }
+  54.8387% { background-position: -3850px -2192px; }
+  58.0645% { background-position: 0px -3288px; }
+  61.2903% { background-position: -770px -3288px; }
+  64.5161% { background-position: -1540px -3288px; }
+  67.7419% { background-position: -2310px -3288px; }
+  70.9677% { background-position: -3080px -3288px; }
+  74.1935% { background-position: -3850px -3288px; }
+  77.4194% { background-position: 0px -4384px; }
+  80.6452% { background-position: -770px -4384px; }
+  83.871% { background-position: -1540px -4384px; }
+  87.0968% { background-position: -2310px -4384px; }
+  90.3226% { background-position: -3080px -4384px; }
+  93.5484% { background-position: -3850px -4384px; }
+  96.7742% { background-position: 0px -5480px; }
+  100% { background-position: 0px 0px; }
+}
