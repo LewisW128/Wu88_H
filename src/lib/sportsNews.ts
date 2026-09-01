@@ -1,15 +1,21 @@
 import type { NewsBannerProps } from "../components/NewsBanner";
 
-// Two general sports feeds, not one -- 自由時報 (LTN) alone turned up only a
-// single genuine 足球 headline on a normal day (Taiwan sports media covers
-// 棒球/籃球 far more than football day-to-day), so 中央社 (CNA, Taiwan's
-// wire service, widely republished) is merged in as a second source purely
-// to widen the pool each category draws from. This narrows but doesn't
-// erase the gap -- on a quiet day for international football there may
-// still be only 1-2 genuine articles between both outlets combined; unlike
-// baseball/basketball this isn't a bug to fix, it's what's actually being
-// published right now.
-const RSS_URLS = ["https://news.ltn.com.tw/rss/sports.xml", "https://feeds.feedburner.com/rsscna/sport"];
+// Three general sports feeds, not one -- Taiwan's own two (自由時報/LTN,
+// 中央社/CNA) between them turned up only 1-2 genuine 足球 headlines on a
+// normal day, since Taiwan sports media covers 棒球/籃球 far more than
+// football day-to-day. RTHK (Radio Television Hong Kong, a public
+// broadcaster) is merged in as a third source specifically because Hong
+// Kong media covers European football (英超/西甲/德甲/歐聯) heavily -- this
+// is the actual fix for a thin 足球 tab, not just a marginal widening like
+// CNA was. HK romanizes club/competition names differently than Taiwan
+// (英超 team names like 阿仙奴/熱刺 instead of 阿森納/托特納姆), which is why
+// the football keyword list below adds 歐聯/德甲 alongside Taiwan's own
+// 歐冠 -- both are the same competition, just each outlet's own term for it.
+const RSS_URLS = [
+  "https://news.ltn.com.tw/rss/sports.xml",
+  "https://feeds.feedburner.com/rsscna/sport",
+  "https://www.rthk.hk/rthk/news/rss/c_expressnews_csport.xml",
+];
 const REVALIDATE_SECONDS = 1800; // 30 minutes
 const PER_CATEGORY = 5;
 const IMAGE_FETCH_TIMEOUT_MS = 4000;
@@ -40,7 +46,7 @@ type RawItem = {
 // etc.) -- "all" is every item that matched football/basketball/baseball,
 // not literally every item in the feed, so those never surface here.
 const CATEGORY_KEYWORDS: Record<Exclude<NewsCategory, "all">, string[]> = {
-  football: ["足球", "世足", "英超", "西甲", "歐冠", "世界盃", "中華隊足球", "FIFA"],
+  football: ["足球", "世足", "英超", "西甲", "德甲", "歐冠", "歐聯", "世界盃", "中華隊足球", "FIFA"],
   basketball: ["籃球", "NBA", "SBL", "PLG", "TPBL", "女籃", "中華籃"],
   baseball: ["棒球", "MLB", "中職", "大聯盟", "日職", "統一獅", "中信兄弟", "樂天桃猿", "富邦悍將", "味全龍", "台鋼雄鷹"],
 };
