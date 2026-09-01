@@ -6,13 +6,13 @@ import GameSelections from "./GameSelections";
 import MatchAnalysisCard, { type MatchAnalysisCardProps } from "./MatchAnalysisCard";
 
 // Same filter row as Sports_News -- see its own comment for why these are
-// the real source SVGs from Wu88_v02's Sports_game icon library, not a
-// screenshot crop.
+// the real source SVGs from Wu88_v02's actions icon library (全部 = the
+// general "Overview" glyph), not Sports_game's icons or a screenshot crop.
 const FILTERS = [
-  { key: "all", label: "全部", icon: "/icon/sports-game-all.svg" },
-  { key: "football", label: "足球", icon: "/icon/sports-game-football.svg" },
-  { key: "basketball", label: "籃球", icon: "/icon/sports-game-basketball.svg" },
-  { key: "baseball", label: "棒球", icon: "/icon/sports-game-baseball.svg" },
+  { key: "all", label: "全部", icon: "/icon/action-overview.svg" },
+  { key: "football", label: "足球", icon: "/icon/action-football.svg" },
+  { key: "basketball", label: "籃球", icon: "/icon/action-basketball.svg" },
+  { key: "baseball", label: "棒球", icon: "/icon/action-baseball.svg" },
 ];
 
 export type SportsMachAnalysisProps = {

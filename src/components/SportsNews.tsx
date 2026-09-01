@@ -17,16 +17,18 @@ function buildFadeMask(canLeft: boolean, canRight: boolean) {
   return `linear-gradient(to right, ${leftColor} 0px, black ${FADE}px, black calc(100% - ${FADE}px), ${rightColor} 100%)`;
 }
 
-// Real source SVGs (not a screenshot crop) from the WU88 icon library at
-// Wu88_v02/public/icons/actions/Sports_game -- "World Cup" is the 全部
-// glyph. Same flat #3E4140 stroke on every one, so (matching GameSelections'
-// existing recolor-via-background-only pattern) no separate active variant
-// is needed.
+// Real source SVGs from the WU88 icon library at Wu88_v02/public/icons/
+// actions -- 全部 uses the general "Overview" glyph (not Sports_game's own
+// "World Cup" trophy) per the user's explicit call; football/basketball/
+// baseball come from the same actions folder for a consistent family (each
+// already bakes in its own teal accent dot, matching every other actions
+// icon elsewhere in this project), replacing the plain Sports_game outline
+// balls this row started with.
 const FILTERS = [
-  { key: "all", label: "全部", icon: "/icon/sports-game-all.svg" },
-  { key: "football", label: "足球", icon: "/icon/sports-game-football.svg" },
-  { key: "basketball", label: "籃球", icon: "/icon/sports-game-basketball.svg" },
-  { key: "baseball", label: "棒球", icon: "/icon/sports-game-baseball.svg" },
+  { key: "all", label: "全部", icon: "/icon/action-overview.svg" },
+  { key: "football", label: "足球", icon: "/icon/action-football.svg" },
+  { key: "basketball", label: "籃球", icon: "/icon/action-basketball.svg" },
+  { key: "baseball", label: "棒球", icon: "/icon/action-baseball.svg" },
 ];
 
 export type SportsNewsProps = {
