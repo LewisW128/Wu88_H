@@ -8,6 +8,7 @@ export type SectionHeaderProps = {
   canRight?: boolean;
   onLeft?: () => void;
   onRight?: () => void;
+  onMoreClick?: () => void;
 };
 
 // Figma "Title_bar" (reused across Hot Games/General Games/Promotions):
@@ -22,7 +23,7 @@ export type SectionHeaderProps = {
 // more" or a scroller in the first place. Callers that don't track real
 // scroll state (this component's own default) keep the original
 // always-visible look.
-export default function SectionHeader({ icon, title, canLeft = true, canRight = true, onLeft, onRight }: SectionHeaderProps) {
+export default function SectionHeader({ icon, title, canLeft = true, canRight = true, onLeft, onRight, onMoreClick }: SectionHeaderProps) {
   const hasOverflow = canLeft || canRight;
   return (
     <div className="flex h-[44px] w-full items-center justify-between">
@@ -32,7 +33,7 @@ export default function SectionHeader({ icon, title, canLeft = true, canRight = 
       </div>
       {hasOverflow && (
         <div className="flex items-center gap-[20px]">
-          <Tag label="更多" active />
+          <Tag label="更多" active onClick={onMoreClick} />
           <LeftRight canLeft={canLeft} canRight={canRight} onLeft={onLeft} onRight={onRight} />
         </div>
       )}

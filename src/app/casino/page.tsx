@@ -204,7 +204,12 @@ const CASINO_CATEGORIES: CasinoCategory[] = [
   { key: "esports", icon: "/icon/game-esports.png", activeIcon: "/icon/game-esports-active.png", label: "電競遊戲", games: esportsGames },
 ];
 
-export default function CasinoPage() {
+// `tab` (e.g. `?tab=slot`) lets a link from elsewhere -- the homepage's
+// 電子遊戲推薦 section's own "更多" -- land here with a specific category
+// tab already selected, instead of always opening on 所有遊戲.
+export default async function CasinoPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const { tab } = await searchParams;
+
   return (
     <div className="flex min-h-screen flex-col items-center bg-[#f4f4f4]">
       <ScaleToFit>
@@ -258,7 +263,7 @@ export default function CasinoPage() {
                 <HotGames games={hotGames} />
               </div>
 
-              <CasinoGameGrid categories={CASINO_CATEGORIES} />
+              <CasinoGameGrid categories={CASINO_CATEGORIES} initialTab={tab} />
 
               <div className="mt-[55px] flex items-center justify-between">
                 <SocialLinks />

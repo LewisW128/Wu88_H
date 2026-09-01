@@ -14,6 +14,10 @@ export type CasinoCategory = {
 
 export type CasinoGameGridProps = {
   categories: CasinoCategory[];
+  /** Pre-selects a tab other than the first (e.g. from the homepage's
+   * 電子遊戲推薦 "更多" link, `?tab=slot`) -- falls back to the first
+   * category if the given key doesn't match any of them. */
+  initialTab?: string;
 };
 
 // Figma "Frame 1296": the category tab row (Frame 1295) plus its grid
@@ -22,8 +26,10 @@ export type CasinoGameGridProps = {
 // 133:15752/19563/22710/25553, 136:81084/83473) -- not the same 20 cards
 // re-filtered -- so this owns the active-tab state and swaps the whole
 // grid's content, rather than just re-styling a shared static list.
-export default function CasinoGameGrid({ categories }: CasinoGameGridProps) {
-  const [active, setActive] = useState(categories[0]?.key);
+export default function CasinoGameGrid({ categories, initialTab }: CasinoGameGridProps) {
+  const [active, setActive] = useState(
+    initialTab && categories.some((c) => c.key === initialTab) ? initialTab : categories[0]?.key,
+  );
   const activeCategory = categories.find((c) => c.key === active) ?? categories[0];
 
   return (
