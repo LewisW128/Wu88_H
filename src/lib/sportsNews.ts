@@ -1,6 +1,15 @@
 import type { NewsBannerProps } from "../components/NewsBanner";
 
-const RSS_URL = "https://news.ltn.com.tw/rss/sports.xml";
+// Two general sports feeds, not one -- 自由時報 (LTN) alone turned up only a
+// single genuine 足球 headline on a normal day (Taiwan sports media covers
+// 棒球/籃球 far more than football day-to-day), so 中央社 (CNA, Taiwan's
+// wire service, widely republished) is merged in as a second source purely
+// to widen the pool each category draws from. This narrows but doesn't
+// erase the gap -- on a quiet day for international football there may
+// still be only 1-2 genuine articles between both outlets combined; unlike
+// baseball/basketball this isn't a bug to fix, it's what's actually being
+// published right now.
+const RSS_URLS = ["https://news.ltn.com.tw/rss/sports.xml", "https://feeds.feedburner.com/rsscna/sport"];
 const REVALIDATE_SECONDS = 1800; // 30 minutes
 const PER_CATEGORY = 5;
 const IMAGE_FETCH_TIMEOUT_MS = 4000;
@@ -26,8 +35,10 @@ type RawItem = {
 
 // 自由時報 (LTN) publishes one general sports RSS feed, not a separate
 // feed per sport -- category tabs are produced by keyword-matching each
-// headline instead of hitting 4 different feed URLs. "all" isn't just
-// "no filter": it's every item regardless of category, in feed order.
+// headline instead of hitting 4 different feed URLs. That feed also
+// covers sports this page has no tab for (桌球/網球/橄欖球/霹靂舞/中國大師賽
+// etc.) -- "all" is every item that matched football/basketball/baseball,
+// not literally every item in the feed, so those never surface here.
 const CATEGORY_KEYWORDS: Record<Exclude<NewsCategory, "all">, string[]> = {
   football: ["足球", "世足", "英超", "西甲", "歐冠", "世界盃", "中華隊足球", "FIFA"],
   basketball: ["籃球", "NBA", "SBL", "PLG", "TPBL", "女籃", "中華籃"],
@@ -50,8 +61,8 @@ function classify(title: string): NewsCategory | "other" {
   return "other";
 }
 
-async function fetchRawItems(): Promise<RawItem[]> {
-  const res = await fetch(RSS_URL, {
+async function fetchOneFeed(url: string): Promise<RawItem[]> {
+  const res = await fetch(url, {
     next: { revalidate: REVALIDATE_SECONDS },
     headers: { "User-Agent": "Mozilla/5.0 (compatible; wu88-sports-news/1.0)" },
   });
@@ -61,14 +72,22 @@ async function fetchRawItems(): Promise<RawItem[]> {
   const items: RawItem[] = [];
   const itemBlocks = xml.match(/<item>[\s\S]*?<\/item>/g) ?? [];
   for (const block of itemBlocks) {
-    const titleMatch = block.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/);
+    // LTN wraps titles in CDATA; CNA doesn't -- accept either so one parser
+    // handles both feeds.
+    const titleMatch = block.match(/<title>(?:<!\[CDATA\[([\s\S]*?)\]\]>|([\s\S]*?))<\/title>/);
     const linkMatch = block.match(/<link>([\s\S]*?)<\/link>/);
     if (!titleMatch || !linkMatch) continue;
-    const title = decodeXmlEntities(titleMatch[1].trim());
+    const title = decodeXmlEntities((titleMatch[1] ?? titleMatch[2]).trim());
     const link = decodeXmlEntities(linkMatch[1].trim());
+    if (!title || !link) continue;
     items.push({ title, link, category: classify(title) });
   }
   return items;
+}
+
+async function fetchRawItems(): Promise<RawItem[]> {
+  const perFeed = await Promise.all(RSS_URLS.map(fetchOneFeed));
+  return perFeed.flat();
 }
 
 // LTN's own RSS carries no image/enclosure -- only a direct (non-redirect)
@@ -99,8 +118,10 @@ async function resolveImage(link: string): Promise<string | null> {
 export async function getSportsNewsByCategory(): Promise<Record<NewsCategory, NewsBannerProps[]>> {
   const items = await fetchRawItems();
 
+  const onTopic = items.filter((i) => i.category !== "other");
+
   const selected: Record<NewsCategory, RawItem[]> = {
-    all: items.slice(0, PER_CATEGORY),
+    all: onTopic.slice(0, PER_CATEGORY),
     football: items.filter((i) => i.category === "football").slice(0, PER_CATEGORY),
     basketball: items.filter((i) => i.category === "basketball").slice(0, PER_CATEGORY),
     baseball: items.filter((i) => i.category === "baseball").slice(0, PER_CATEGORY),
