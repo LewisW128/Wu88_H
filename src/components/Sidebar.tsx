@@ -11,7 +11,11 @@ const NAV_ICONS = [
   { page: "promo", icon: "/assets/sidebar/nav-promo.svg", label: "優惠活動" },
 ] as const;
 
-export type SidebarPage = "home" | (typeof NAV_ICONS)[number]["page"];
+// "profile" has no dedicated nav icon yet (Figma's own Profile Page sidebar
+// has more slots than this component currently renders -- out of scope
+// here), so it just leaves every icon in its inactive state instead of
+// silently mislabeling the page as "home".
+export type SidebarPage = "home" | "profile" | (typeof NAV_ICONS)[number]["page"];
 
 function Divider() {
   return <div className="h-px w-[36px] shrink-0 bg-[#f4f4f4]" />;

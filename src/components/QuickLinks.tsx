@@ -1,6 +1,11 @@
+import Link from "next/link";
 import { withBasePath } from "../lib/asset";
 
-const LINKS = ["賭場", "體育", "會員中心"];
+const LINKS = [
+  { label: "賭場", href: "/casino" },
+  { label: "體育", href: "/sports" },
+  { label: "會員中心", href: "/profile" },
+];
 
 // Figma node 900:9523's stroke is the WU88 rainbow (the same gradient as
 // Avatar/ProductLabel's badge ring), not a flat teal -- get_design_context
@@ -25,16 +30,16 @@ const BORDER_GRADIENT =
 export default function QuickLinks() {
   return (
     <div className="flex items-center gap-[10px]">
-      {LINKS.map((label) => (
-        <button
+      {LINKS.map(({ label, href }) => (
+        <Link
           key={label}
-          type="button"
+          href={href}
           className="flex w-[120px] items-center justify-between rounded-[15px] border border-transparent px-[10px] py-[5px]"
           style={{ background: `linear-gradient(white, white) padding-box, ${BORDER_GRADIENT} border-box` }}
         >
           <p className="whitespace-nowrap text-[14px] font-medium leading-[20px] tracking-[0.15px] text-[#3e4140]">{label}</p>
           <img alt="" src={withBasePath("/assets/product-card/arrow-special.svg")} className="size-[25px]" />
-        </button>
+        </Link>
       ))}
     </div>
   );
