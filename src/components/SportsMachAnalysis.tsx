@@ -5,11 +5,12 @@ import { withBasePath } from "../lib/asset";
 import GameSelections from "./GameSelections";
 import MatchAnalysisCard, { type MatchAnalysisCardProps } from "./MatchAnalysisCard";
 
-// Same filter row as Sports_News -- see its own comment for why these
-// reuse SportsLive's clean /icon/sport-filter-*.png exports instead of the
-// noisy, jaggy-edged crops this section briefly had.
+// Same filter row as Sports_News -- see its own comment for why 全部 uses
+// Figma's real "Sports Games" grid icon (not Casino's dice-style one) and
+// football/basketball/baseball reuse SportsLive's clean /icon/sport-filter-*.png
+// exports instead of the noisy, jaggy-edged crops this section briefly had.
 const FILTERS = [
-  { key: "all", label: "全部", icon: "/icon/game-all.png" },
+  { key: "all", label: "全部", icon: "/icon/sports-games-all.png" },
   { key: "football", label: "足球", icon: "/icon/sport-filter-football.png" },
   { key: "basketball", label: "籃球", icon: "/icon/sport-filter-basketball.png" },
   { key: "baseball", label: "棒球", icon: "/icon/sport-filter-baseball.png" },
