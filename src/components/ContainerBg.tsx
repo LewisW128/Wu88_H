@@ -52,7 +52,7 @@ function SportsHeadline() {
         stroke="url(#sports-headline-stroke)"
         strokeWidth={2}
         fontFamily="Inter, sans-serif"
-        fontWeight={900}
+        fontWeight={700}
         fontSize={200}
         style={{ letterSpacing: "32px" }}
       >
