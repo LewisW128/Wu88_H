@@ -17,19 +17,16 @@ function buildFadeMask(canLeft: boolean, canRight: boolean) {
   return `linear-gradient(to right, ${leftColor} 0px, black ${FADE}px, black calc(100% - ${FADE}px), ${rightColor} 100%)`;
 }
 
-// 全部's icon is Figma's own "Sports Games" glyph (a 4-square grid,
-// distinct from Casino's dice-style "所有遊戲" icon this briefly borrowed
-// from) -- cropped straight off this section's own screenshot rather than
-// reused cross-page. football/basketball/baseball reuse SportsLive's own
-// filter row (/icon/sport-filter-*.png) -- the versions cropped fresh for
-// this row came out with jagged, noisy edges (the alpha-key extraction
-// picked up antialiasing fringe as real pixels), while these were already
-// clean exports at the right stroke weight for a light-gray pill.
+// Real source SVGs (not a screenshot crop) from the WU88 icon library at
+// Wu88_v02/public/icons/actions/Sports_game -- "World Cup" is the 全部
+// glyph. Same flat #3E4140 stroke on every one, so (matching GameSelections'
+// existing recolor-via-background-only pattern) no separate active variant
+// is needed.
 const FILTERS = [
-  { key: "all", label: "全部", icon: "/icon/sports-games-all.png" },
-  { key: "football", label: "足球", icon: "/icon/sport-filter-football.png" },
-  { key: "basketball", label: "籃球", icon: "/icon/sport-filter-basketball.png" },
-  { key: "baseball", label: "棒球", icon: "/icon/sport-filter-baseball.png" },
+  { key: "all", label: "全部", icon: "/icon/sports-game-all.svg" },
+  { key: "football", label: "足球", icon: "/icon/sports-game-football.svg" },
+  { key: "basketball", label: "籃球", icon: "/icon/sports-game-basketball.svg" },
+  { key: "baseball", label: "棒球", icon: "/icon/sports-game-baseball.svg" },
 ];
 
 export type SportsNewsProps = {
