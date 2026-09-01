@@ -30,7 +30,15 @@ const RAINBOW_STOPS: [number, string][] = [
 // does. Figma's 2x3 matrix is [[a,b,e],[c,d,f]] (x'=a·x+b·y+e); SVG's
 // matrix(a,b,c,d,e,f) is x'=a·x+c·y+e -- so the middle two params swap
 // positions when porting one to the other.
-function SportsHeadline() {
+//
+// Shared between SPORTS and CASINO -- CASINO's own Figma source has a flat
+// white-50% fill, not a gradient outline, but per request its headline
+// should now look the same as Sport's, so both render through this one
+// component/gradient instead of keeping two near-duplicate treatments.
+// Same 973x242 box and matrix for both: both strings are 6 characters at
+// the same font-size/tracking/weight, so the derived-for-SPORTS geometry
+// reads as the same intended treatment on CASINO too, not a mismatched one.
+function GradientHeadline({ text, gradientId }: { text: string; gradientId: string }) {
   return (
     <svg
       viewBox="0 0 973 242"
@@ -39,7 +47,7 @@ function SportsHeadline() {
       className="pointer-events-none absolute left-[174px] top-[197px]"
     >
       <defs>
-        <linearGradient id="sports-headline-stroke" gradientUnits="objectBoundingBox" gradientTransform="matrix(-0.9168286919593811, 0.17904022336006165, -0.18193991482257843, -0.08572134375572205, 0.942574679851532, 0.45118892192840576)">
+        <linearGradient id={gradientId} gradientUnits="objectBoundingBox" gradientTransform="matrix(-0.9168286919593811, 0.17904022336006165, -0.18193991482257843, -0.08572134375572205, 0.942574679851532, 0.45118892192840576)">
           {RAINBOW_STOPS.map(([offset, color]) => (
             <stop key={offset} offset={offset} stopColor={color} />
           ))}
@@ -49,14 +57,14 @@ function SportsHeadline() {
         x="0"
         y="190"
         fill="rgba(255,255,255,0.5)"
-        stroke="url(#sports-headline-stroke)"
+        stroke={`url(#${gradientId})`}
         strokeWidth={2}
         fontFamily="Inter, sans-serif"
         fontWeight={700}
         fontSize={200}
         style={{ letterSpacing: "32px" }}
       >
-        SPORTS
+        {text}
       </text>
     </svg>
   );
@@ -77,30 +85,29 @@ function SportsHeadline() {
 // top of a separate blobs-only image. Its own glow blobs are baked into
 // the video, so the shared ones below render underneath/hidden for it.
 //
-// Casino: Figma only has a still "Dealer 1" photo + a "CASINO" giant
-// tracked-out headline behind it -- no video, no Figma-native motion
-// (checked via get_motion_context, nothing timed on this node). The user
-// asked for the hero's real motion asset to live at /public/animation;
-// until that's supplied this renders the same still photo, saved there as
-// a placeholder so swapping in a real clip later is a one-line change.
-//
-// Sport: same skeleton as Casino (giant tracked-out headline behind the
-// hero figure) -- "SPORTS" instead of "CASINO", and the headline is a
-// hollow gradient outline instead of a flat white-50% fill (see
-// SportsHeadline above). The hero itself is an idle sway/smile-at-camera
-// loop, not the original still photo: generated with Higgsfield/Kling 3.0
-// from that same still (the recurring WU88 catgirl character -- Catgirl
-// character reference in memory) as the start_image, prompted on a
-// locked-off camera so the framing and composition match the original
-// photo exactly, just with motion added. Played back as a background-
-// position-stepped sprite sheet (see the sports-hero-sprite @keyframes in
-// globals.css for why), not a <video> -- MP4/H.264 can't carry alpha, and
-// this hero needs a transparent background to sit over the page like the
-// original cutout photo did.
+// Casino & Sport: same skeleton -- a giant tracked-out gradient-outline
+// headline (GradientHeadline above; Figma's own Casino source actually has
+// a flat white-50% fill, no gradient, but per request it now matches
+// Sport's hollow-outline treatment instead) behind a hero figure that's an
+// idle sway/smile-at-camera loop, not a still photo. Both generated with
+// Higgsfield/Kling 3.0 from that variant's own still (Casino's WU88 dealer;
+// Sport's the recurring WU88 catgirl character -- Catgirl character
+// reference in memory) as the start_image, prompted on a locked-off camera
+// so the framing and composition match the original photo exactly, just
+// with motion added -- Casino's first prompt attempt read as sighing
+// instead of swaying (open-mouth exhale expression), fixed by dropping
+// "breathing" from the prompt and explicitly asking for a closed-mouth
+// smile. Both play back as a background-position-stepped sprite sheet
+// (casino-hero-sprite / sports-hero-sprite @keyframes in globals.css), not
+// a <video> -- MP4/H.264 can't carry alpha, and both heroes need a
+// transparent background to sit over the page like their original cutout
+// photos did.
 const SPRITE_FRAME_COUNT = 31;
-const SPRITE_FRAME_W = 770;
-const SPRITE_FRAME_H = 1096;
 const SPRITE_DURATION_S = SPRITE_FRAME_COUNT / 6;
+const SPORTS_SPRITE_FRAME_W = 770;
+const SPORTS_SPRITE_FRAME_H = 1096;
+const CASINO_SPRITE_FRAME_W = 763;
+const CASINO_SPRITE_FRAME_H = 1052;
 export default function ContainerBg({ variant = "home" }: ContainerBgProps) {
   const isCasino = variant === "casino";
   const isSport = variant === "sport";
@@ -125,21 +132,26 @@ export default function ContainerBg({ variant = "home" }: ContainerBgProps) {
 
       {isCasino ? (
         <>
-          <p
-            className="pointer-events-none absolute left-[174px] top-[197px] whitespace-nowrap text-[200px] font-bold tracking-[32px] text-white/50"
-            style={{ fontFamily: "Inter, sans-serif" }}
-          >
-            CASINO
-          </p>
-          <img
-            alt=""
-            src={withBasePath("/animation/casino-hero-dealer.png")}
-            className="pointer-events-none absolute left-[731px] top-[-8px] h-[1052px] w-[763px] object-cover"
+          <GradientHeadline text="CASINO" gradientId="casino-headline-stroke" />
+          {/* Native frame res (816x1124) is close enough to this box's own
+              763x1052 (both ~0.726 aspect) that stretching straight to the
+              box size reads as object-cover would, without sports-hero's
+              extra contain/centering wrapper. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute left-[731px] top-[-8px]"
+            style={{
+              width: CASINO_SPRITE_FRAME_W,
+              height: CASINO_SPRITE_FRAME_H,
+              backgroundImage: `url(${withBasePath("/animation/casino-hero-sprite.webp")})`,
+              backgroundSize: `${CASINO_SPRITE_FRAME_W * 6}px ${CASINO_SPRITE_FRAME_H * 6}px`,
+              animation: `casino-hero-sprite ${SPRITE_DURATION_S}s steps(1, end) infinite`,
+            }}
           />
         </>
       ) : isSport ? (
         <>
-          <SportsHeadline />
+          <GradientHeadline text="SPORTS" gradientId="sports-headline-stroke" />
           {/* Outer box matches the original still photo's box exactly
               (bottom-[-18px]/left-[711px]/h-1096/w-877); centering a
               narrower fixed-size inner box inside it reproduces
@@ -149,10 +161,10 @@ export default function ContainerBg({ variant = "home" }: ContainerBgProps) {
             <div
               aria-hidden
               style={{
-                width: SPRITE_FRAME_W,
-                height: SPRITE_FRAME_H,
+                width: SPORTS_SPRITE_FRAME_W,
+                height: SPORTS_SPRITE_FRAME_H,
                 backgroundImage: `url(${withBasePath("/animation/sports-hero-sprite.webp")})`,
-                backgroundSize: `${SPRITE_FRAME_W * 6}px ${SPRITE_FRAME_H * 6}px`,
+                backgroundSize: `${SPORTS_SPRITE_FRAME_W * 6}px ${SPORTS_SPRITE_FRAME_H * 6}px`,
                 animation: `sports-hero-sprite ${SPRITE_DURATION_S}s steps(1, end) infinite`,
               }}
             />
