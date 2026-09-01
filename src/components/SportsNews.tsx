@@ -30,7 +30,10 @@ const FILTERS = [
 ];
 
 export type SportsNewsProps = {
-  banners: NewsBannerProps[];
+  // One real (自由時報 sports RSS) list per category -- see
+  // lib/sportsNews.ts's own comment for how "all" differs from a filtered
+  // category and why images are resolved server-side rather than here.
+  newsByCategory: Record<string, NewsBannerProps[]>;
 };
 
 // Figma "Sports_News" (03_WU88-H-PC-Sport node 66:59470, seen live at
@@ -41,8 +44,9 @@ export type SportsNewsProps = {
 // Tag, a Left&Right pair, and an edge-faded horizontally scrolling row of
 // News Banner cards -- the same skeleton as HotGames/SportsLive/SportsForm
 // yet again.
-export default function SportsNews({ banners }: SportsNewsProps) {
+export default function SportsNews({ newsByCategory }: SportsNewsProps) {
   const [activeFilter, setActiveFilter] = useState(FILTERS[0].key);
+  const banners = newsByCategory[activeFilter] ?? [];
   const { ref: scrollRef, canScroll, scrollByStep } = useEdgeScroll<HTMLDivElement>([banners]);
   const hasOverflow = canScroll.left || canScroll.right;
 

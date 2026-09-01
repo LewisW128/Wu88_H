@@ -4,7 +4,6 @@ import Footer from "../../components/Footer";
 import Language from "../../components/Language";
 import type { MatchAnalysisCardProps } from "../../components/MatchAnalysisCard";
 import MinPanelHeight from "../../components/MinPanelHeight";
-import type { NewsBannerProps } from "../../components/NewsBanner";
 import QuickLinks from "../../components/QuickLinks";
 import ScaleToFit from "../../components/ScaleToFit";
 import Search from "../../components/Search";
@@ -16,6 +15,7 @@ import SportsForm from "../../components/SportsForm";
 import SportsLive from "../../components/SportsLive";
 import SportsMachAnalysis from "../../components/SportsMachAnalysis";
 import SportsNews from "../../components/SportsNews";
+import { getSportsNewsByCategory } from "../../lib/sportsNews";
 import StickyUtilityBar from "../../components/StickyUtilityBar";
 import TalkingBar from "../../components/TalkingBar";
 import type { TalkSectionProps } from "../../components/TalkSection";
@@ -202,18 +202,6 @@ const sportsFormButtons: SportBtnProps[] = [
   },
 ];
 
-// Figma "Sports_News" (node 66:59470): 5 News Banner cards. The 2nd card's
-// own caption in Figma is literally identical to the 1st's (never got
-// customized past the default placeholder) -- kept as-is rather than
-// inventing a different headline that isn't in the design.
-const sportsNewsBanners: NewsBannerProps[] = [
-  { image: "/assets/sports-news/argentina-1.jpg", caption: "不想待在英超了嗎？阿根廷晉級決賽功臣發文嘲笑英格蘭惹怒球迷" },
-  { image: "/assets/sports-news/argentina-2.jpg", caption: "不想待在英超了嗎？阿根廷晉級決賽功臣發文嘲笑英格蘭惹怒球迷" },
-  { image: "/assets/sports-news/messi.jpg", caption: "世足》梅西不只會西班牙語 自曝「我會講英語但不喜歡」" },
-  { image: "/assets/sports-news/mlb-lee.jpg", caption: "MLB》美媒盛讚李灝宇值得待在大聯盟！老虎隨隊記者點出待進步之處" },
-  { image: "/assets/sports-news/mlb-rankings.jpg", caption: "MLB》最新打擊實力榜出爐！大谷翔平狂轟猛炸排名回升 卻仍輸PCA" },
-];
-
 // Figma "Sports Mach analysis" (node 66:20574): 8 Match analysis cards.
 // The 4th card reuses the 1st's photo+headline in Figma too (same "not yet
 // customized" placeholder pattern as News Banner above).
@@ -276,7 +264,9 @@ const sportsMachArticles: MatchAnalysisCardProps[] = [
   },
 ];
 
-export default function SportsPage() {
+export default async function SportsPage() {
+  const sportsNewsByCategory = await getSportsNewsByCategory();
+
   return (
     <div className="flex min-h-screen flex-col items-center bg-[#f4f4f4]">
       <ScaleToFit>
@@ -329,7 +319,7 @@ export default function SportsPage() {
               {/* Sports_News sits a plain 40px below Sports form (1212 vs
                   944+228) -- 15 once the shared gap-25 is subtracted. */}
               <div className="mt-[15px]">
-                <SportsNews banners={sportsNewsBanners} />
+                <SportsNews newsByCategory={sportsNewsByCategory} />
               </div>
 
               {/* Sports Mach analysis sits a plain 40px below Sports_News

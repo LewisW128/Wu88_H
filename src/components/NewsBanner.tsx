@@ -37,7 +37,7 @@ export default function NewsBanner({ image, caption }: NewsBannerProps) {
     >
       <img
         alt=""
-        src={withBasePath(image)}
+        src={image.startsWith("http") ? image : withBasePath(image)}
         className="pointer-events-none absolute left-0 top-1/2 h-[300.192px] w-[450.287px] -translate-y-1/2 object-cover"
       />
       <div
