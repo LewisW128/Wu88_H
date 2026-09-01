@@ -204,25 +204,6 @@ const CASINO_CATEGORIES: CasinoCategory[] = [
   { key: "esports", icon: "/icon/game-esports.png", activeIcon: "/icon/game-esports-active.png", label: "電競遊戲", games: esportsGames },
 ];
 
-// Figma "Frame 1242": a small decorative 6x6 grid of tiny dots, a page-level
-// sibling of Container_BG (not part of it) sitting near the bottom-left of
-// the hero, overlapping Sidebar's own column -- purely decorative, so it's
-// given a low z-index and sits behind Sidebar's sticky column instead of
-// competing with its icons.
-function MicroDotGrid() {
-  return (
-    <div className="pointer-events-none absolute left-[46px] top-[957px] z-0 flex flex-col gap-[7.75px]">
-      {Array.from({ length: 6 }).map((_, row) => (
-        <div key={row} className="flex gap-[7.75px]">
-          {Array.from({ length: 6 }).map((_, col) => (
-            <div key={col} className="size-[3.875px] rounded-full bg-[#8d54d8]/40" />
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-}
-
 export default function CasinoPage() {
   return (
     <div className="flex min-h-screen flex-col items-center bg-[#f4f4f4]">
@@ -242,8 +223,6 @@ export default function CasinoPage() {
           <div className="pointer-events-none absolute right-0 top-0">
             <ContainerBg variant="casino" />
           </div>
-
-          <MicroDotGrid />
 
           {/* `MinPanelHeight` (not a plain div): on a category with only a
               row or two of cards, this grid's real content is shorter than
