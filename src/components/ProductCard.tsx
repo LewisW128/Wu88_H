@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { withBasePath } from "../lib/asset";
+import AnimatedArrowSpecial from "./AnimatedArrowSpecial";
 import ProductLabel, { type ProductLabelType } from "./ProductLabel";
 
 export type ProductCardProps = {
@@ -36,6 +37,7 @@ export type ProductCardProps = {
 // a second icon button appears below the like button.
 export default function ProductCard({ image, title, category, views, wins, labels = ["HOT"], like = false, size = "S" }: ProductCardProps) {
   const [liked, setLiked] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
   const width = size === "L" ? 225 : 200;
   const maskAsset = size === "L" ? "photo-mask-l.svg" : "photo-mask.svg";
@@ -48,6 +50,8 @@ export default function ProductCard({ image, title, category, views, wins, label
   return (
     <div
       className="group relative h-[266px] shrink-0 overflow-clip rounded-bl-[25px] rounded-br-[25px] rounded-tr-[25px]"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{ width: `${width}px` }}
     >
       <img alt="" src={image} className="pointer-events-none absolute inset-0 size-full object-cover" style={maskStyle} />
@@ -94,8 +98,10 @@ export default function ProductCard({ image, title, category, views, wins, label
         aria-label={title}
         className="absolute -bottom-[0.19px] -right-[0.19px] flex size-[50px] items-center justify-center rounded-full bg-[#f4f4f4] p-[10px] backdrop-blur-[10px] transition-colors duration-300 group-hover:bg-[#3e4140]"
       >
-        <img alt="" src={withBasePath("/assets/product-card/arrow-special.svg")} className="size-[27.761px] group-hover:hidden" />
-        <img alt="" src={withBasePath("/assets/product-card/arrow-special-hover.svg")} className="hidden size-[27.761px] group-hover:block" />
+        <div className="relative size-[27.761px]">
+          <AnimatedArrowSpecial hovered={!hovered} color="#3e4140" className="absolute inset-0" />
+          <AnimatedArrowSpecial hovered={hovered} color="#23f3d5" className="absolute inset-0" />
+        </div>
       </button>
 
       {like && (

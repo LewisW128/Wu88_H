@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { withBasePath } from "../lib/asset";
+import AnimatedArrowSpecial from "./AnimatedArrowSpecial";
 
 // Figma "Form" component (Components Library node 1:485). Layering, bottom
 // to top: looping video -> dark "Subtract" shade (keeps the label legible
@@ -47,12 +48,14 @@ export type GameCardProps = {
 // natural flex-reflow direction that pushes later siblings away.
 export default function GameCard({ video, image, mainText, subText, onMouseEnter, onMouseLeave }: GameCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [hovered, setHovered] = useState(false);
 
   return (
     <div
       className="group relative h-[184px] w-[161px] shrink-0 origin-bottom-left transition-[width,height] duration-300 ease-out hover:z-10 hover:h-[206.816px] hover:w-[180.964px]"
       onMouseEnter={() => {
         videoRef.current?.play();
+        setHovered(true);
         onMouseEnter?.();
       }}
       onMouseLeave={() => {
@@ -61,6 +64,7 @@ export default function GameCard({ video, image, mainText, subText, onMouseEnter
           el.pause();
           el.currentTime = 0;
         }
+        setHovered(false);
         onMouseLeave?.();
       }}
     >
@@ -96,8 +100,10 @@ export default function GameCard({ video, image, mainText, subText, onMouseEnter
           aria-label={mainText}
           className="absolute -right-[0.3px] top-0 flex size-[47.029px] items-center justify-center rounded-full bg-[#f4f4f4] p-[9.406px] backdrop-blur-[9.406px] transition-colors duration-300 group-hover:bg-[#3e4140]"
         >
-          <img alt="" src={withBasePath("/assets/game-card/arrow-special.svg")} className="size-[26.111px] group-hover:hidden" />
-          <img alt="" src={withBasePath("/assets/game-card/arrow-special-hover.svg")} className="hidden size-[26.111px] group-hover:block" />
+          <div className="relative size-[26.111px]">
+            <AnimatedArrowSpecial hovered={!hovered} size={26.111} color="#3e4140" className="absolute inset-0" />
+            <AnimatedArrowSpecial hovered={hovered} size={26.111} color="#23f3d5" className="absolute inset-0" />
+          </div>
         </button>
       </div>
     </div>

@@ -1,4 +1,8 @@
+"use client";
+
+import { useState } from "react";
 import { withBasePath } from "../lib/asset";
+import AnimatedArrowSpecial from "./AnimatedArrowSpecial";
 
 export type PromotionCardSize = "General" | "Small" | "Large";
 
@@ -61,6 +65,7 @@ function TimeUnit({ value, unit }: { value: string; unit: string }) {
 // the promo text; its Play button is also a touch smaller (47.761 vs 50px).
 export default function PromotionCard({ size = "General", image, lines, countdown }: PromotionCardProps) {
   const config = SIZE_CONFIG[size];
+  const [hovered, setHovered] = useState(false);
   const maskStyle = {
     maskImage: `url("${withBasePath(config.mask)}")`,
     maskSize: `${config.width}px 210px`,
@@ -68,7 +73,12 @@ export default function PromotionCard({ size = "General", image, lines, countdow
   };
 
   return (
-    <div className="group relative h-[210px] shrink-0" style={{ width: config.width }}>
+    <div
+      className="group relative h-[210px] shrink-0"
+      style={{ width: config.width }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <div className="absolute inset-0" style={maskStyle}>
         {size === "Small" ? (
           <div
@@ -138,18 +148,10 @@ export default function PromotionCard({ size = "General", image, lines, countdow
         className="absolute bottom-0 right-0 flex items-center justify-center rounded-full bg-[#f4f4f4] p-[10px] backdrop-blur-[10px] transition-colors duration-300 group-hover:bg-[#3e4140]"
         style={{ width: config.buttonSize, height: config.buttonSize }}
       >
-        <img
-          alt=""
-          src={withBasePath("/assets/product-card/arrow-special.svg")}
-          className="group-hover:hidden"
-          style={{ width: config.arrowSize, height: config.arrowSize }}
-        />
-        <img
-          alt=""
-          src={withBasePath("/assets/product-card/arrow-special-hover.svg")}
-          className="hidden group-hover:block"
-          style={{ width: config.arrowSize, height: config.arrowSize }}
-        />
+        <div className="relative" style={{ width: config.arrowSize, height: config.arrowSize }}>
+          <AnimatedArrowSpecial hovered={!hovered} size={config.arrowSize} color="#3e4140" className="absolute inset-0" />
+          <AnimatedArrowSpecial hovered={hovered} size={config.arrowSize} color="#23f3d5" className="absolute inset-0" />
+        </div>
       </button>
     </div>
   );
