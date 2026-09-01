@@ -16,11 +16,15 @@ function buildFadeMask(canLeft: boolean, canRight: boolean) {
   return `linear-gradient(to right, ${leftColor} 0px, black ${FADE}px, black calc(100% - ${FADE}px), ${rightColor} 100%)`;
 }
 
+// Real source SVGs from the WU88 icon library (Wu88_v02/public/icons/
+// actions/Sports_game) -- see SportsFormFilter's own comment for why a
+// single icon per category is enough (active recolors via CSS filter
+// instead of needing a separate white export).
 const FILTERS = [
-  { key: "all", icon: "/icon/sport-filter-all.png", activeIcon: "/icon/sport-filter-all-active.png" },
-  { key: "football", icon: "/icon/sport-filter-football.png", activeIcon: "/icon/sport-filter-football-active.png" },
-  { key: "basketball", icon: "/icon/sport-filter-basketball.png", activeIcon: "/icon/sport-filter-basketball-active.png" },
-  { key: "baseball", icon: "/icon/sport-filter-baseball.png", activeIcon: "/icon/sport-filter-baseball-active.png" },
+  { key: "all", icon: "/icon/sports-game-all.svg" },
+  { key: "football", icon: "/icon/sports-game-football.svg" },
+  { key: "basketball", icon: "/icon/sports-game-basketball.svg" },
+  { key: "baseball", icon: "/icon/sports-game-baseball.svg" },
 ];
 
 export type SportsLiveProps = {
@@ -54,7 +58,6 @@ export default function SportsLive({ games }: SportsLiveProps) {
             <SportsFormFilter
               key={f.key}
               icon={f.icon}
-              activeIcon={f.activeIcon}
               active={f.key === activeFilter}
               onClick={() => setActiveFilter(f.key)}
             />
