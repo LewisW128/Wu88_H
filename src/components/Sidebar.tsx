@@ -55,16 +55,14 @@ export type SidebarProps = {
   // matching nav icon. All six icon slots are actually the same Figma
   // "Main Selections" component (on/off variant) reused per page -- see
   // 02_WU88-H-PC-Casino node 122:6692's "Frame 1257", where the 賭場 slot
-  // is the active variant instead of 首頁. 賭場/體育 both have their own
-  // active-state SVG (nav-sports-active.svg built by hand from casino's --
-  // same glow-card template/clip-path/underline, with 體育's own football
-  // glyph swapped in in place of casino's coin, since Figma never actually
-  // had one: an earlier PNG "export" here was a fully-opaque flat rectangle
-  // with none of the card's rounding or transparency, showing as a hard
-  // gray square instead of blending into the glow card like every other
-  // icon); 優惠活動 still falls back to its plain icon until its own page
-  // asks for one, same as MainSelections did before any page but home
-  // existed.
+  // is the active variant instead of 首頁. 賭場/體育/優惠活動 all have their
+  // own active-state SVG now, each built by hand from casino's -- same
+  // glow-card template/clip-path/underline, with that item's own glyph
+  // (football for 體育, gift box for 優惠活動) swapped in for casino's coin,
+  // since Figma never actually had one: an earlier PNG "export" for 體育
+  // was a fully-opaque flat rectangle with none of the card's rounding or
+  // transparency, showing as a hard gray square instead of blending into
+  // the glow card like every other icon.
   page?: SidebarPage;
 };
 
