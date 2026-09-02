@@ -5,9 +5,11 @@ import { withBasePath } from "../lib/asset";
 // row this page shows as "電子遊戲推薦" when logged in swaps to a favorites
 // row before login -- there's nothing to favorite yet, so it's a single
 // empty-state card instead of a real ProductCard grid. Reuses ProductCard's
-// own S-size mask/dots assets (photo-mask.svg, digital-dots.svg) since it's
-// the same 200x266 card shape with the same bottom-right notch, just with a
-// plain gray fill instead of a photo and a "+" glyph instead of the arrow.
+// own S-size mask/dots assets (product-card/photo-mask.svg, game-card/
+// digital-dots.svg -- yes, two different folders; that's where ProductCard
+// itself already sources each from) since it's the same 200x266 card shape
+// with the same bottom-right notch, just with a plain gray fill instead of
+// a photo and a "+" glyph instead of the arrow.
 export default function FavoriteGamesEmpty() {
   const maskStyle = {
     maskImage: `url("${withBasePath("/assets/product-card/photo-mask.svg")}")`,
@@ -25,7 +27,7 @@ export default function FavoriteGamesEmpty() {
       <div className="relative h-[266px] w-[200px] shrink-0 overflow-clip rounded-bl-[25px] rounded-br-[25px] rounded-tr-[25px] bg-[#f4f4f4]" style={maskStyle}>
         <img
           alt=""
-          src={withBasePath("/assets/product-card/digital-dots.svg")}
+          src={withBasePath("/assets/game-card/digital-dots.svg")}
           className="pointer-events-none absolute left-[20px] top-[20px] size-[218px]"
           style={{ ...maskStyle, maskPosition: "-20px -20px" }}
         />
