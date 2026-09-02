@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { withBasePath } from "../lib/asset";
 
 export type TopUpProps = {
@@ -16,6 +17,10 @@ export type TopUpProps = {
 // plain width/max-width transition can't without hardcoding a guessed px
 // value).
 //
+// The avatar circle links to /profile (per request) even in this
+// logged-out state -- there's no real auth here to gate it behind, and
+// QuickLinks' own 會員中心 pill already points there the same way.
+//
 // The pill's own bg-[#f4f4f4] and backdrop-blur are plain and permanent
 // in both Figma states -- not something that fades with scroll position.
 //
@@ -31,13 +36,17 @@ export default function TopUp({ account }: TopUpProps) {
   return (
     <div className="group flex h-[65px] items-center rounded-[50px] bg-[#f4f4f4] p-[15px] backdrop-blur-[15px]">
       <div className="mr-[38px] flex shrink-0 items-center gap-[10px] transition-[margin] duration-300 group-hover:mr-[20px]">
-        <div className="relative size-[34px] shrink-0 overflow-hidden rounded-full border-2 border-[#3e4140] bg-white">
+        <Link
+          href="/profile"
+          aria-label="會員中心"
+          className="relative size-[34px] shrink-0 overflow-hidden rounded-full border-2 border-[#3e4140] bg-white"
+        >
           <img
             alt=""
             src={withBasePath("/assets/top-up/avatar-icon.svg")}
             className="absolute inset-[calc(18.64%-1.25px)_calc(7.63%-1.69px)_calc(-3.39%-2.14px)_calc(7.63%-1.69px)] block size-full max-w-none"
           />
-        </div>
+        </Link>
 
         <p className="hidden whitespace-nowrap text-[10px] font-medium leading-[18px] tracking-[0.15px] text-[#a2a2a2] group-hover:block">
           {`@ ${account}`}
