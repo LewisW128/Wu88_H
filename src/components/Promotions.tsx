@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEdgeScroll } from "../lib/useEdgeScroll";
 import PromotionCard, { type PromotionCardProps } from "./PromotionCard";
 import SectionHeader from "./SectionHeader";
@@ -22,9 +23,12 @@ export type PromotionsProps = {
 // component (it used to be an inline, non-scroll-aware block in page.tsx)
 // so it can share `useEdgeScroll` and get a real fade mask and a "更多"/nav
 // pair that actually scrolls and hides itself when there's nothing to
-// scroll to, same as every other row here.
+// scroll to, same as every other row here. "更多" goes to /promotions,
+// same idea as GeneralGames' own "更多" -- see the profile/home page's
+// own copy of this row, which now shares that navigation too.
 export default function Promotions({ promotions }: PromotionsProps) {
   const { ref: scrollRef, canScroll, scrollByStep } = useEdgeScroll<HTMLDivElement>([promotions]);
+  const router = useRouter();
 
   return (
     <div className="flex w-full flex-col items-start gap-[15px]">
@@ -35,6 +39,7 @@ export default function Promotions({ promotions }: PromotionsProps) {
         canRight={canScroll.right}
         onLeft={() => scrollByStep(-SCROLL_STEP)}
         onRight={() => scrollByStep(SCROLL_STEP)}
+        onMoreClick={() => router.push("/promotions")}
       />
       <div
         ref={scrollRef}
