@@ -10,7 +10,7 @@ import Promotions from "../../components/Promotions";
 import QuickLinks from "../../components/QuickLinks";
 import ScaleToFit from "../../components/ScaleToFit";
 import Search from "../../components/Search";
-import Sidebar from "../../components/Sidebar";
+import ProfileSidebar from "../../components/ProfileSidebar";
 import SocialLinks from "../../components/SocialLinks";
 import Statistics from "../../components/Statistics";
 import StickyUtilityBar from "../../components/StickyUtilityBar";
@@ -133,7 +133,7 @@ export default function ProfilePage() {
         <div className="relative rounded-tl-[60px] bg-white">
           <MinPanelHeight className="relative z-10 grid" style={{ gridTemplateColumns: "164px minmax(0, 1fr) 295px" }}>
             <div className="sticky top-[79px] z-10 self-start justify-self-start pl-[30px]">
-              <Sidebar page="profile" />
+              <ProfileSidebar />
             </div>
 
             <div className="flex flex-col gap-[25px] pb-[40px]">
@@ -145,8 +145,13 @@ export default function ProfilePage() {
                 <TopUp account="123456" />
               </StickyUtilityBar>
 
-              <div className="flex w-full items-start gap-[20px]">
-                <ProfileCard avatar="/assets/profile/avatar-placeholder.jpg" name="JESSICA" email="JESSICA123@gmail.com" memberId="1234567890" />
+              {/* `items-end`, not `items-start`: Figma has these two cards at
+                  different heights (ProfileCard 303px vs VipCard 236px) but
+                  the SAME bottom edge (76+303 = 143+236 = 379) -- VipCard's
+                  own top sits 67px lower than ProfileCard's, not shorter-
+                  and-top-aligned. */}
+              <div className="flex w-full items-end gap-[20px]">
+                <ProfileCard avatar="/assets/profile/avatar-placeholder.png" name="JESSICA" email="JESSICA123@gmail.com" memberId="1234567890" />
                 <VipCard level={8} currentExp={700} maxExp={1500} continuousDeposit="10,000" />
               </div>
 

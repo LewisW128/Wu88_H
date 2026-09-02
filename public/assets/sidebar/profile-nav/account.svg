@@ -1,0 +1,18 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="93" height="89" viewBox="0 0 93 89" fill="none" xmlns="http://www.w3.org/2000/svg">
+<foreignObject x="-20" y="-20" width="133" height="129"><div xmlns="http://www.w3.org/1999/xhtml" style="backdrop-filter:blur(10px);clip-path:url(#bgblur_0_0_143_clip_path);height:100%;width:100%"></div></foreignObject><g id="Main Selections" data-figma-bg-blur-radius="20">
+<path d="M25 1H68C81.2548 1 92 11.7452 92 25V64C92 77.2548 81.2548 88 68 88H25C11.7452 88 1 77.2548 1 64V25C1 11.7452 11.7452 1 25 1Z" fill="white" fill-opacity="0.8"/>
+<path d="M25 1H68C81.2548 1 92 11.7452 92 25V64C92 77.2548 81.2548 88 68 88H25C11.7452 88 1 77.2548 1 64V25C1 11.7452 11.7452 1 25 1Z" stroke="#F4F4F4" stroke-width="2"/>
+<g id="Actions">
+<path id="Ellipse 29" d="M51.1861 39.5C51.1861 41.9853 49.1713 44 46.6861 44C44.2008 44 42.1861 41.9853 42.1861 39.5C42.1861 37.0147 44.2008 35 46.6861 35C49.1713 35 51.1861 37.0147 51.1861 39.5Z" stroke="#3E4140" stroke-width="2"/>
+<path id="Ellipse 30" d="M47 40.5C48.7753 40.5 50.305 39.6803 51 38.5" stroke="#3E4140" stroke-width="2" stroke-linecap="round"/>
+<circle id="Ellipse 27" cx="52" cy="50" r="5" fill="#23F3D5"/>
+<path id="Ellipse 2" d="M56 55C56 50.5817 51.9706 47 47 47C42.0294 47 38 50.5817 38 55" stroke="#3E4140" stroke-width="2" stroke-linecap="round"/>
+<path id="Line 19" d="M41 38V40" stroke="#3E4140" stroke-width="3" stroke-linecap="round"/>
+<path id="Line 21" d="M47 51L47 54" stroke="#3E4140" stroke-width="3" stroke-linecap="round"/>
+<path id="Line 20" d="M52 38V40" stroke="#3E4140" stroke-width="3" stroke-linecap="round"/>
+</g>
+</g>
+<defs>
+<clipPath id="bgblur_0_0_143_clip_path" transform="translate(20 20)"><path d="M25 1H68C81.2548 1 92 11.7452 92 25V64C92 77.2548 81.2548 88 68 88H25C11.7452 88 1 77.2548 1 64V25C1 11.7452 11.7452 1 25 1Z"/>
+</clipPath></defs>
+</svg>
