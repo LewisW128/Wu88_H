@@ -1,4 +1,5 @@
 import { DEFAULT_RING_COLOR } from "../../components/Avatar";
+import FavoriteGamesEmpty from "../../components/FavoriteGamesEmpty";
 import Footer from "../../components/Footer";
 import GeneralGames from "../../components/GeneralGames";
 import Language from "../../components/Language";
@@ -121,9 +122,13 @@ export type ProfilePageProps = {
 // the only way to reach it short of hand-editing the page. Defaults to
 // the logged-in state, same as before this existed.
 //
-// Guest is a pure prompt page, not just a swapped ProfileCard: 電子遊戲
-// 推薦/投注紀錄/優惠活動 all show real member data/history, so they're
-// hidden until logged in, same as everything below.
+// Figma's guest page keeps the same row order as logged-in, just with
+// different content per row: the 電子遊戲推薦 row becomes a "收藏的遊戲"
+// empty-favorites card (FavoriteGamesEmpty, node 455:23414) since there's
+// nothing to recommend without an account yet, 投注紀錄 keeps its 4-card
+// layout but shows placeholder "---"/"0" values (node 459:85252) instead
+// of real numbers, and 優惠活動 is unchanged -- it's generic marketing
+// content, not member data, so it shows for guests exactly as logged-in.
 export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   const isGuest = (await searchParams).guest === "1";
 
@@ -175,22 +180,27 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                 )}
               </div>
 
-              {!isGuest && (
-                <>
-                  <GeneralGames games={generalGames} />
+              {isGuest ? <FavoriteGamesEmpty /> : <GeneralGames games={generalGames} />}
 
-                  <Statistics
-                    stats={[
-                      { icon: "/assets/statistics/icon-diamond.svg", value: "10,000", label: "總投注" },
-                      { icon: "/assets/statistics/icon-win.svg", value: "10,000,000", label: "總獲利" },
-                      { icon: "/assets/statistics/icon-trophy.svg", value: "6", label: "排名" },
-                      { icon: "/assets/statistics/icon-fraction.svg", value: "100,000%", label: "平均勝率" },
-                    ]}
-                  />
+              <Statistics
+                stats={
+                  isGuest
+                    ? [
+                        { icon: "/assets/statistics/icon-diamond.svg", value: "---", label: "總投注" },
+                        { icon: "/assets/statistics/icon-win.svg", value: "---", label: "總獲利" },
+                        { icon: "/assets/statistics/icon-trophy.svg", value: "0", label: "排名" },
+                        { icon: "/assets/statistics/icon-fraction.svg", value: "---", label: "平均勝率" },
+                      ]
+                    : [
+                        { icon: "/assets/statistics/icon-diamond.svg", value: "10,000", label: "總投注" },
+                        { icon: "/assets/statistics/icon-win.svg", value: "10,000,000", label: "總獲利" },
+                        { icon: "/assets/statistics/icon-trophy.svg", value: "6", label: "排名" },
+                        { icon: "/assets/statistics/icon-fraction.svg", value: "100,000%", label: "平均勝率" },
+                      ]
+                }
+              />
 
-                  <Promotions promotions={promotions} />
-                </>
-              )}
+              <Promotions promotions={promotions} />
 
               <div className="flex items-center justify-between">
                 <SocialLinks />
