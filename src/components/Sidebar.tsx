@@ -2,13 +2,13 @@ import Link from "next/link";
 import { withBasePath } from "../lib/asset";
 import MainSelections from "./MainSelections";
 
-// 賭場/體育 have real routes now (/casino, /sports) -- 優惠活動 stays a
-// plain (non-navigating) button, same as 聯繫客服/下載APP below, until
-// that page exists.
+// 賭場/體育/優惠活動 all have real routes now (/casino, /sports,
+// /promotions) -- only 聯繫客服/下載APP below stay plain (non-navigating)
+// buttons, since those pages don't exist yet.
 const NAV_ICONS = [
   { page: "casino", href: "/casino", icon: "/assets/sidebar/nav-casino.svg", activeIcon: "/assets/sidebar/nav-casino-active.svg", label: "賭場" },
   { page: "sports", href: "/sports", icon: "/assets/sidebar/nav-sports.svg", activeIcon: "/assets/sidebar/nav-sports-active.svg", label: "體育" },
-  { page: "promo", icon: "/assets/sidebar/nav-promo.svg", label: "優惠活動" },
+  { page: "promo", href: "/promotions", icon: "/assets/sidebar/nav-promo.svg", activeIcon: "/assets/sidebar/nav-promo-active.svg", label: "優惠活動" },
 ] as const;
 
 // "profile" has no dedicated nav icon yet (Figma's own Profile Page sidebar
