@@ -35,6 +35,12 @@ export type ProfileCardProps =
 // ~226x216 box via a plain CSS size override on its SVG, rather than a
 // second static digital-dots asset (per the user's own call to reuse the
 // hero's version here instead of re-exporting a new one).
+//
+// The three ribbon streaks are the same path geometry either way, but
+// Figma recolors them from teal to gray for the guest state (small:
+// #3E4140 @ 50% opacity, medium: solid #3E4140, large: solid #BFBFBF vs.
+// the logged-in teal #23F3D5 fills) -- hence the separate *-guest.svg
+// assets swapped in below instead of a single shared file.
 export default function ProfileCard(props: ProfileCardProps) {
   const [hideProfile, setHideProfile] = useState(false);
   const [hideNickname, setHideNickname] = useState(false);
@@ -42,7 +48,11 @@ export default function ProfileCard(props: ProfileCardProps) {
   return (
     <div className={`relative h-[303px] overflow-hidden rounded-[25px] bg-white ${props.loggedIn ? "flex-1" : "w-full"}`}>
       <div className="absolute left-0 right-0 top-[67px] h-[236px] overflow-hidden rounded-[25px] border border-[#f4f4f4] bg-white">
-        <img alt="" src={withBasePath("/assets/profile/ribbon-small.svg")} className="absolute left-[190px] top-[119px] h-[59px] w-[80px]" />
+        <img
+          alt=""
+          src={withBasePath(props.loggedIn ? "/assets/profile/ribbon-small.svg" : "/assets/profile/ribbon-small-guest.svg")}
+          className="absolute left-[190px] top-[119px] h-[59px] w-[80px]"
+        />
 
         {props.loggedIn ? (
           <div className="absolute left-[319px] top-[19px] flex flex-col items-start">
@@ -103,8 +113,16 @@ export default function ProfileCard(props: ProfileCardProps) {
         <TwinklingDots className="pointer-events-none absolute left-[-18px] top-[93.19px] h-[215.53px] w-[226px]" />
       </div>
 
-      <img alt="" src={withBasePath("/assets/profile/ribbon-medium.svg")} className="absolute left-[-76px] top-[218px] h-[121px] w-[163px]" />
-      <img alt="" src={withBasePath("/assets/profile/ribbon-large.svg")} className="absolute left-[8px] top-[220px] h-[223px] w-[299px]" />
+      <img
+        alt=""
+        src={withBasePath(props.loggedIn ? "/assets/profile/ribbon-medium.svg" : "/assets/profile/ribbon-medium-guest.svg")}
+        className="absolute left-[-76px] top-[218px] h-[121px] w-[163px]"
+      />
+      <img
+        alt=""
+        src={withBasePath(props.loggedIn ? "/assets/profile/ribbon-large.svg" : "/assets/profile/ribbon-large-guest.svg")}
+        className="absolute left-[8px] top-[220px] h-[223px] w-[299px]"
+      />
     </div>
   );
 }
