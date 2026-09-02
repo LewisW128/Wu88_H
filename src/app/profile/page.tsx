@@ -117,10 +117,13 @@ export type ProfilePageProps = {
 };
 
 // `?guest=1` previews the logged-out state (Figma node 455:23317) --
-// there's no real auth/session system in this project yet (see the
-// project's own memory note on this), so this is the only way to reach
-// it short of hand-editing the page. Defaults to the logged-in state,
-// same as before this existed.
+// there's no real auth/session system in this project yet, so this is
+// the only way to reach it short of hand-editing the page. Defaults to
+// the logged-in state, same as before this existed.
+//
+// Guest is a pure prompt page, not just a swapped ProfileCard: 電子遊戲
+// 推薦/投注紀錄/優惠活動 all show real member data/history, so they're
+// hidden until logged in, same as everything below.
 export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   const isGuest = (await searchParams).guest === "1";
 
@@ -172,18 +175,22 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                 )}
               </div>
 
-              <GeneralGames games={generalGames} />
+              {!isGuest && (
+                <>
+                  <GeneralGames games={generalGames} />
 
-              <Statistics
-                stats={[
-                  { icon: "/assets/statistics/icon-diamond.svg", value: "10,000", label: "總投注" },
-                  { icon: "/assets/statistics/icon-win.svg", value: "10,000,000", label: "總獲利" },
-                  { icon: "/assets/statistics/icon-trophy.svg", value: "6", label: "排名" },
-                  { icon: "/assets/statistics/icon-fraction.svg", value: "100,000%", label: "平均勝率" },
-                ]}
-              />
+                  <Statistics
+                    stats={[
+                      { icon: "/assets/statistics/icon-diamond.svg", value: "10,000", label: "總投注" },
+                      { icon: "/assets/statistics/icon-win.svg", value: "10,000,000", label: "總獲利" },
+                      { icon: "/assets/statistics/icon-trophy.svg", value: "6", label: "排名" },
+                      { icon: "/assets/statistics/icon-fraction.svg", value: "100,000%", label: "平均勝率" },
+                    ]}
+                  />
 
-              <Promotions promotions={promotions} />
+                  <Promotions promotions={promotions} />
+                </>
+              )}
 
               <div className="flex items-center justify-between">
                 <SocialLinks />
