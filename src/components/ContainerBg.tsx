@@ -2,7 +2,7 @@ import { withBasePath } from "../lib/asset";
 import TwinklingDots from "./TwinklingDots";
 
 export type ContainerBgProps = {
-  variant?: "home" | "casino" | "sport";
+  variant?: "home" | "casino" | "sport" | "promotions";
 };
 
 // The WU88 rainbow gradient (same palette as QuickLinks' border ring and
@@ -94,6 +94,12 @@ function GradientHeadline({ text, gradientId }: { text: string; gradientId: stri
 // the same visual footprint the video's character occupied (verified by
 // sampling the video frame's own non-white column/row bounds).
 //
+// Promotions: same skeleton again, but a plain still photo (chest of loot +
+// the recurring catgirl character) behind a flat white-50% "PROMOTIONS"
+// headline -- Figma's own source for this one really is a flat fill, no
+// gradient stroke, so it's just a <p> like Casino's originally was, not
+// routed through GradientHeadline.
+//
 // Casino & Sport: same skeleton -- a giant tracked-out gradient-outline
 // headline (GradientHeadline above; Figma's own Casino source actually has
 // a flat white-50% fill, no gradient, but per request it now matches
@@ -122,6 +128,7 @@ const HOME_SPRITE_FRAME_H = 1046;
 export default function ContainerBg({ variant = "home" }: ContainerBgProps) {
   const isCasino = variant === "casino";
   const isSport = variant === "sport";
+  const isPromotions = variant === "promotions";
 
   return (
     <div className="relative h-[1078px] w-[1728px] overflow-hidden rounded-tl-[60px] bg-white">
@@ -176,6 +183,26 @@ export default function ContainerBg({ variant = "home" }: ContainerBgProps) {
             />
           </div>
         </>
+      ) : isPromotions ? (
+        <>
+          {/* Figma's own headline here is a flat white-50% fill, no
+              gradient stroke -- unlike Casino/Sport, this one was never
+              asked to match GradientHeadline's hollow-outline look, so it
+              stays a plain <p> like Casino's originally was. Narrower
+              tracking (20px vs Casino/Sport's 32px) is Figma's own value
+              for this string. */}
+          <p
+            className="pointer-events-none absolute left-[150px] top-[197px] whitespace-nowrap text-[200px] font-bold tracking-[20px] text-white/50"
+            style={{ fontFamily: "Inter, sans-serif" }}
+          >
+            PROMOTIONS
+          </p>
+          <img
+            alt=""
+            src={withBasePath("/assets/promotions/hero-chest.png")}
+            className="pointer-events-none absolute left-[276px] top-[27px] h-[1024px] w-[1536px] object-cover"
+          />
+        </>
       ) : (
         <div
           aria-hidden
@@ -192,7 +219,11 @@ export default function ContainerBg({ variant = "home" }: ContainerBgProps) {
 
       <TwinklingDots
         className={`pointer-events-none absolute top-[82px] h-[361px] w-[378.536px] -translate-x-1/2 ${
-          isCasino ? "left-[calc(50%+158.27px)]" : isSport ? "left-[calc(50%+248.27px)]" : "left-[calc(50%+238.27px)]"
+          isCasino
+            ? "left-[calc(50%+158.27px)]"
+            : isSport || isPromotions
+              ? "left-[calc(50%+248.27px)]"
+              : "left-[calc(50%+238.27px)]"
         }`}
       />
 
