@@ -31,19 +31,23 @@ const RAINBOW_STOPS: [number, string][] = [
 // matrix(a,b,c,d,e,f) is x'=a·x+c·y+e -- so the middle two params swap
 // positions when porting one to the other.
 //
-// Shared between SPORTS and CASINO -- CASINO's own Figma source has a flat
-// white-50% fill, not a gradient outline, but per request its headline
-// should now look the same as Sport's, so both render through this one
-// component/gradient instead of keeping two near-duplicate treatments.
-// Same 973x242 box and matrix for both: both strings are 6 characters at
-// the same font-size/tracking/weight, so the derived-for-SPORTS geometry
-// reads as the same intended treatment on CASINO too, not a mismatched one.
+// Shared between SPORTS, CASINO and PROMOTIONS -- CASINO/PROMOTIONS' own
+// Figma sources have a flat white-50% fill, not a gradient outline, but
+// per request all three headlines now share this one hollow-outline
+// treatment instead of near-duplicating it per page. The 973x242 box/matrix
+// were derived from SPORTS' own 6-character string; PROMOTIONS is 10
+// characters, so at the same font-size/tracking that text is genuinely
+// wider than 973px -- `overflow: visible` on the <svg> lets it render past
+// the box's right edge instead of getting clipped there (there's nothing
+// else positioned in that space to collide with, and Container_BG's own
+// `overflow-hidden` still clips it at the page's real edge regardless).
 function GradientHeadline({ text, gradientId }: { text: string; gradientId: string }) {
   return (
     <svg
       viewBox="0 0 973 242"
       width={973}
       height={242}
+      style={{ overflow: "visible" }}
       className="pointer-events-none absolute left-[174px] top-[197px]"
     >
       <defs>
