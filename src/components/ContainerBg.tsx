@@ -125,6 +125,8 @@ const CASINO_SPRITE_FRAME_W = 763;
 const CASINO_SPRITE_FRAME_H = 1052;
 const HOME_SPRITE_FRAME_W = 893;
 const HOME_SPRITE_FRAME_H = 1046;
+const PROMO_SPRITE_FRAME_W = 1536;
+const PROMO_SPRITE_FRAME_H = 1024;
 export default function ContainerBg({ variant = "home" }: ContainerBgProps) {
   const isCasino = variant === "casino";
   const isSport = variant === "sport";
@@ -197,10 +199,25 @@ export default function ContainerBg({ variant = "home" }: ContainerBgProps) {
           >
             PROMOTIONS
           </p>
-          <img
-            alt=""
-            src={withBasePath("/assets/promotions/hero-chest.png")}
-            className="pointer-events-none absolute left-[276px] top-[27px] h-[1024px] w-[1536px] object-cover"
+          {/* Sprite replaces the plain static photo: 31 frames of her
+              opening the chest and showing off the glowing crystals,
+              individually background-removed off a white-background Kling
+              generation (source photo already RGBA-transparent, matching
+              casino/sport/home's own pre-cutout assets, not a Figma raw
+              fill with a baked-in studio backdrop). Native frame res
+              (1176x784) shares the exact same 1.5 aspect as this box
+              (1536x1024), so stretching straight to the box size introduces
+              no distortion. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute left-[276px] top-[27px]"
+            style={{
+              width: PROMO_SPRITE_FRAME_W,
+              height: PROMO_SPRITE_FRAME_H,
+              backgroundImage: `url(${withBasePath("/assets/promotions/hero-sprite.webp")})`,
+              backgroundSize: `${PROMO_SPRITE_FRAME_W * 6}px ${PROMO_SPRITE_FRAME_H * 6}px`,
+              animation: `promo-hero-sprite ${SPRITE_DURATION_S}s steps(1, end) infinite`,
+            }}
           />
         </>
       ) : (
