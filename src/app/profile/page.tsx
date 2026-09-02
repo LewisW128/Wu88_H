@@ -112,7 +112,18 @@ const promotions: (PromotionCardProps & { key: string })[] = [
   { key: "wheel", size: "General", image: "/assets/promotions/wheel.png", lines: ["天天轉 8,888", "武財神風輪盤"] },
 ];
 
-export default function ProfilePage() {
+export type ProfilePageProps = {
+  searchParams: Promise<{ guest?: string }>;
+};
+
+// `?guest=1` previews the logged-out state (Figma node 455:23317) --
+// there's no real auth/session system in this project yet (see the
+// project's own memory note on this), so this is the only way to reach
+// it short of hand-editing the page. Defaults to the logged-in state,
+// same as before this existed.
+export default async function ProfilePage({ searchParams }: ProfilePageProps) {
+  const isGuest = (await searchParams).guest === "1";
+
   return (
     <div className="flex min-h-screen flex-col items-center bg-[#f4f4f4]">
       <ScaleToFit>
@@ -151,8 +162,14 @@ export default function ProfilePage() {
                   own top sits 67px lower than ProfileCard's, not shorter-
                   and-top-aligned. */}
               <div className="flex w-full items-end gap-[20px]">
-                <ProfileCard avatar="/assets/profile/avatar-placeholder.png" name="JESSICA" email="JESSICA123@gmail.com" memberId="1234567890" />
-                <VipCard level={8} currentExp={700} maxExp={1500} continuousDeposit="10,000" />
+                {isGuest ? (
+                  <ProfileCard loggedIn={false} />
+                ) : (
+                  <>
+                    <ProfileCard loggedIn avatar="/assets/profile/avatar-placeholder.png" name="JESSICA" email="JESSICA123@gmail.com" memberId="1234567890" />
+                    <VipCard level={8} currentExp={700} maxExp={1500} continuousDeposit="10,000" />
+                  </>
+                )}
               </div>
 
               <GeneralGames games={generalGames} />

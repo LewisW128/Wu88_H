@@ -2,23 +2,26 @@
 
 import { useState } from "react";
 import { withBasePath } from "../lib/asset";
+import AnimatedArrowSpecial from "./AnimatedArrowSpecial";
 import Switch from "./Switch";
 import TwinklingDots from "./TwinklingDots";
 
-export type ProfileCardProps = {
-  avatar: string;
-  name: string;
-  email: string;
-  memberId: string;
-};
+export type ProfileCardProps =
+  | { loggedIn: true; avatar: string; name: string; email: string; memberId: string }
+  | { loggedIn: false };
 
-// Figma "Frame 1304" (05_WU88-H-PC-Profile-Page node 444:42438, seen live
-// on the page at 428:17332): the profile header's left half -- a bordered
-// info panel (name + verified checkmark, email, member ID, an edit
-// button, and two privacy toggles) with an avatar photo bleeding out over
-// its own left edge, cut across by two diagonal teal ribbons. Sits beside
-// VipCard as a flex-1 pair (614px + 614px + a 20px gap = this page's usual
-// 1249px content width), not a fixed px card.
+// Figma "Frame 1304": the profile header, in two states --
+// logged-in (05_WU88-H-PC-Profile-Page node 444:42438, seen live at
+// 428:17332) and logged-out/guest (node 455:23386, seen live at
+// 455:23317). Same avatar-with-ribbons treatment either way, but the
+// info panel differs in both width and content: logged-in sits at a
+// fixed 614px beside VipCard (614+614+20 gap = this page's usual 1249px
+// content width -- VipCard doesn't exist for a guest, so there's nothing
+// to share the row with), and shows the real name/email/ID; logged-out
+// spans the full row width and shows 註冊/登錄 buttons instead, with both
+// privacy toggles rendered `disabled` (there's nothing to toggle before
+// you've logged in). The avatar itself swaps a real cropped photo for a
+// generic person-outline icon centered in the same mask shape.
 //
 // Paint order matters and mirrors Figma's own layer order exactly: the
 // info panel is painted first, then the avatar on top of it (so the
@@ -32,47 +35,71 @@ export type ProfileCardProps = {
 // ~226x216 box via a plain CSS size override on its SVG, rather than a
 // second static digital-dots asset (per the user's own call to reuse the
 // hero's version here instead of re-exporting a new one).
-export default function ProfileCard({ avatar, name, email, memberId }: ProfileCardProps) {
+export default function ProfileCard(props: ProfileCardProps) {
   const [hideProfile, setHideProfile] = useState(false);
   const [hideNickname, setHideNickname] = useState(false);
 
   return (
-    <div className="relative h-[303px] flex-1 overflow-hidden rounded-[25px] bg-white">
-      <div className="absolute left-0 top-[67px] h-[236px] w-[614px] overflow-hidden rounded-[25px] border border-[#f4f4f4] bg-white">
+    <div className={`relative h-[303px] overflow-hidden rounded-[25px] bg-white ${props.loggedIn ? "flex-1" : "w-full"}`}>
+      <div className="absolute left-0 right-0 top-[67px] h-[236px] overflow-hidden rounded-[25px] border border-[#f4f4f4] bg-white">
         <img alt="" src={withBasePath("/assets/profile/ribbon-small.svg")} className="absolute left-[190px] top-[119px] h-[59px] w-[80px]" />
 
-        <div className="absolute left-[319px] top-[19px] flex flex-col items-start">
-          <div className="flex items-center gap-[5px]">
-            <img alt="" src={withBasePath("/assets/profile/verified-check.svg")} className="size-[8.133px]" />
-            <p className="whitespace-nowrap text-[20px] font-bold leading-[32px] tracking-[0.35px] text-[#3e4140]">{name}</p>
+        {props.loggedIn ? (
+          <div className="absolute left-[319px] top-[19px] flex flex-col items-start">
+            <div className="flex items-center gap-[5px]">
+              <img alt="" src={withBasePath("/assets/profile/verified-check.svg")} className="size-[8.133px]" />
+              <p className="whitespace-nowrap text-[20px] font-bold leading-[32px] tracking-[0.35px] text-[#3e4140]">{props.name}</p>
+            </div>
+            <p className="whitespace-nowrap text-[14px] leading-[20px] tracking-[0.15px] text-[#a2a2a2]">{props.email}</p>
+            <p className="whitespace-nowrap text-[10px] leading-[18px] tracking-[0.15px] text-[#a2a2a2]">ID {props.memberId}</p>
           </div>
-          <p className="whitespace-nowrap text-[14px] leading-[20px] tracking-[0.15px] text-[#a2a2a2]">{email}</p>
-          <p className="whitespace-nowrap text-[10px] leading-[18px] tracking-[0.15px] text-[#a2a2a2]">ID {memberId}</p>
-        </div>
+        ) : (
+          <div className="absolute left-[945px] top-[19px] flex items-center gap-[10px]">
+            <button type="button" className="flex h-[40px] items-center gap-[20px] overflow-hidden rounded-[15px] bg-[#8d54d8] p-[10px]">
+              <span className="whitespace-nowrap text-[12px] font-bold leading-[18px] tracking-[0.15px] text-white">註冊</span>
+              <AnimatedArrowSpecial hovered size={25} color="white" />
+            </button>
+            <button type="button" className="flex h-[40px] items-center gap-[20px] overflow-hidden rounded-[15px] bg-[#23f3d5] p-[10px]">
+              <span className="whitespace-nowrap text-[12px] font-bold leading-[18px] tracking-[0.15px] text-[#3e4140]">登錄</span>
+              <AnimatedArrowSpecial hovered size={25} color="#3e4140" />
+            </button>
+          </div>
+        )}
 
-        <div className="absolute left-[319px] top-[110px] h-px w-[275px] bg-[#f4f4f4]" />
+        <div className="absolute left-[318px] right-[19px] top-[109px] h-px bg-[#f4f4f4]" />
 
-        <button type="button" aria-label="edit profile" className="absolute right-[19px] top-[46px] size-[25px]">
-          <img alt="" src={withBasePath("/assets/profile/edit-icon.svg")} className="size-full" />
-        </button>
+        {props.loggedIn && (
+          <button type="button" aria-label="edit profile" className="absolute right-[19px] top-[46px] size-[25px]">
+            <img alt="" src={withBasePath("/assets/profile/edit-icon.svg")} className="size-full" />
+          </button>
+        )}
 
-        <div className="absolute left-[319px] top-[130px] flex w-[275px] items-center justify-between">
+        <div className="absolute right-[19px] top-[130px] flex w-[275px] items-center justify-between">
           <p className="w-[73px] text-[12px] leading-[18px] tracking-[0.15px] text-[#a2a2a2]">隱藏個人資料</p>
-          <Switch checked={hideProfile} onChange={setHideProfile} />
+          <Switch checked={hideProfile} onChange={setHideProfile} disabled={!props.loggedIn} />
         </div>
-        <div className="absolute left-[319px] top-[173px] flex w-[275px] items-center justify-between">
+        <div className="absolute right-[19px] top-[173px] flex w-[275px] items-center justify-between">
           <p className="w-[73px] text-[12px] leading-[18px] tracking-[0.15px] text-[#a2a2a2]">隱藏暱稱</p>
-          <Switch checked={hideNickname} onChange={setHideNickname} />
+          <Switch checked={hideNickname} onChange={setHideNickname} disabled={!props.loggedIn} />
         </div>
       </div>
 
       <div className="absolute left-0 top-[-18px] h-[402.797px] w-[243.268px] overflow-hidden">
-        <div
-          className="absolute left-[-30px] top-[13px] h-[316px] w-[235px]"
-          style={{ maskImage: `url("${withBasePath("/assets/profile/avatar-mask.svg")}")`, maskSize: "100% 100%", maskRepeat: "no-repeat" }}
-        >
-          <img alt="" src={avatar} className="pointer-events-none absolute inset-0 size-full object-cover" />
-        </div>
+        {props.loggedIn ? (
+          <div
+            className="absolute left-[-30px] top-[13px] h-[316px] w-[235px]"
+            style={{ maskImage: `url("${withBasePath("/assets/profile/avatar-mask.svg")}")`, maskSize: "100% 100%", maskRepeat: "no-repeat" }}
+          >
+            <img alt="" src={props.avatar} className="pointer-events-none absolute inset-0 size-full object-cover" />
+          </div>
+        ) : (
+          <div
+            className="absolute left-[-18px] top-0 size-[297px] overflow-hidden"
+            style={{ maskImage: `url("${withBasePath("/assets/profile/avatar-mask.svg")}")`, maskSize: "100% 100%", maskRepeat: "no-repeat" }}
+          >
+            <img alt="" src={withBasePath("/assets/profile/guest-avatar-icon.svg")} className="pointer-events-none absolute inset-[7.7%_7.5%]" />
+          </div>
+        )}
         <TwinklingDots className="pointer-events-none absolute left-[-18px] top-[93.19px] h-[215.53px] w-[226px]" />
       </div>
 

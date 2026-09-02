@@ -4,6 +4,10 @@ const ON_GRADIENT =
 export type SwitchProps = {
   checked: boolean;
   onChange?: (checked: boolean) => void;
+  // Figma's own guest/logged-out ProfileCard (node 455:23386) shows both
+  // toggles in a separate "Disable" export (flat #a2a2a2 track, #f4f4f4
+  // knob) -- there's nothing to toggle before you've logged in.
+  disabled?: boolean;
 };
 
 // Figma "Switch button" (Components Library node 456:31795/456:31796): the
@@ -12,19 +16,21 @@ export type SwitchProps = {
 // gray for "off" as static exports. Reproduced here as a real animated
 // toggle instead (knob slides left/right, track color transitions) since
 // a static "off" knob glued to the right edge would read as broken/on.
-export default function Switch({ checked, onChange }: SwitchProps) {
+export default function Switch({ checked, onChange, disabled = false }: SwitchProps) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={checked}
+      aria-disabled={disabled}
+      disabled={disabled}
       onClick={() => onChange?.(!checked)}
-      className="relative h-[23px] w-[45px] shrink-0 rounded-[11.5px] transition-colors duration-200"
-      style={{ background: checked ? ON_GRADIENT : "#3e4140" }}
+      className="relative h-[23px] w-[45px] shrink-0 rounded-[11.5px] transition-colors duration-200 disabled:cursor-not-allowed"
+      style={{ background: disabled ? "#a2a2a2" : checked ? ON_GRADIENT : "#3e4140" }}
     >
       <span
-        className="absolute top-1/2 size-[17px] -translate-y-1/2 rounded-full bg-white transition-[left] duration-200"
-        style={{ left: checked ? 25 : 3 }}
+        className="absolute top-1/2 size-[17px] -translate-y-1/2 rounded-full transition-[left] duration-200"
+        style={{ left: checked ? 25 : 3, background: disabled ? "#f4f4f4" : "white" }}
       />
     </button>
   );
