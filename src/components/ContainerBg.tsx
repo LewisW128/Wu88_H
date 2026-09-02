@@ -31,19 +31,23 @@ const RAINBOW_STOPS: [number, string][] = [
 // matrix(a,b,c,d,e,f) is x'=a·x+c·y+e -- so the middle two params swap
 // positions when porting one to the other.
 //
-// Shared between SPORTS and CASINO -- CASINO's own Figma source has a flat
-// white-50% fill, not a gradient outline, but per request its headline
-// should now look the same as Sport's, so both render through this one
-// component/gradient instead of keeping two near-duplicate treatments.
-// Same 973x242 box and matrix for both: both strings are 6 characters at
-// the same font-size/tracking/weight, so the derived-for-SPORTS geometry
-// reads as the same intended treatment on CASINO too, not a mismatched one.
+// Shared between SPORTS, CASINO and PROMOTIONS -- CASINO/PROMOTIONS' own
+// Figma sources have a flat white-50% fill, not a gradient outline, but
+// per request all three headlines now share this one hollow-outline
+// treatment instead of near-duplicating it per page. The 973x242 box/matrix
+// were derived from SPORTS' own 6-character string; PROMOTIONS is 10
+// characters, so at the same font-size/tracking that text is genuinely
+// wider than 973px -- `overflow: visible` on the <svg> lets it render past
+// the box's right edge instead of getting clipped there (there's nothing
+// else positioned in that space to collide with, and Container_BG's own
+// `overflow-hidden` still clips it at the page's real edge regardless).
 function GradientHeadline({ text, gradientId }: { text: string; gradientId: string }) {
   return (
     <svg
       viewBox="0 0 973 242"
       width={973}
       height={242}
+      style={{ overflow: "visible" }}
       className="pointer-events-none absolute left-[174px] top-[197px]"
     >
       <defs>
@@ -94,11 +98,11 @@ function GradientHeadline({ text, gradientId }: { text: string; gradientId: stri
 // the same visual footprint the video's character occupied (verified by
 // sampling the video frame's own non-white column/row bounds).
 //
-// Promotions: same skeleton again, but a plain still photo (chest of loot +
-// the recurring catgirl character) behind a flat white-50% "PROMOTIONS"
-// headline -- Figma's own source for this one really is a flat fill, no
-// gradient stroke, so it's just a <p> like Casino's originally was, not
-// routed through GradientHeadline.
+// Promotions: same skeleton again -- an animated chest-of-loot scene (see
+// its own sprite comment below) behind a "PROMOTIONS" headline. Figma's own
+// source for this headline is a flat white-50% fill with 20px tracking, no
+// gradient stroke, but per request it now goes through the same
+// GradientHeadline hollow-outline treatment as Casino/Sport instead.
 //
 // Casino & Sport: same skeleton -- a giant tracked-out gradient-outline
 // headline (GradientHeadline above; Figma's own Casino source actually has
@@ -125,6 +129,8 @@ const CASINO_SPRITE_FRAME_W = 763;
 const CASINO_SPRITE_FRAME_H = 1052;
 const HOME_SPRITE_FRAME_W = 893;
 const HOME_SPRITE_FRAME_H = 1046;
+const PROMO_SPRITE_FRAME_W = 1536;
+const PROMO_SPRITE_FRAME_H = 1024;
 export default function ContainerBg({ variant = "home" }: ContainerBgProps) {
   const isCasino = variant === "casino";
   const isSport = variant === "sport";
@@ -185,22 +191,30 @@ export default function ContainerBg({ variant = "home" }: ContainerBgProps) {
         </>
       ) : isPromotions ? (
         <>
-          {/* Figma's own headline here is a flat white-50% fill, no
-              gradient stroke -- unlike Casino/Sport, this one was never
-              asked to match GradientHeadline's hollow-outline look, so it
-              stays a plain <p> like Casino's originally was. Narrower
-              tracking (20px vs Casino/Sport's 32px) is Figma's own value
-              for this string. */}
-          <p
-            className="pointer-events-none absolute left-[150px] top-[197px] whitespace-nowrap text-[200px] font-bold tracking-[20px] text-white/50"
-            style={{ fontFamily: "Inter, sans-serif" }}
-          >
-            PROMOTIONS
-          </p>
-          <img
-            alt=""
-            src={withBasePath("/assets/promotions/hero-chest.png")}
-            className="pointer-events-none absolute left-[276px] top-[27px] h-[1024px] w-[1536px] object-cover"
+          {/* Figma's own headline here is a flat white-50% fill with 20px
+              tracking, not a gradient stroke -- but per request this now
+              matches Casino/Sport's hollow-outline GradientHeadline look
+              instead, same as Casino's own flat-fill original did before. */}
+          <GradientHeadline text="PROMOTIONS" gradientId="promotions-headline-stroke" />
+          {/* Sprite replaces the plain static photo: 31 frames of her
+              opening the chest and showing off the glowing crystals,
+              individually background-removed off a white-background Kling
+              generation (source photo already RGBA-transparent, matching
+              casino/sport/home's own pre-cutout assets, not a Figma raw
+              fill with a baked-in studio backdrop). Native frame res
+              (1176x784) shares the exact same 1.5 aspect as this box
+              (1536x1024), so stretching straight to the box size introduces
+              no distortion. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute left-[276px] top-[27px]"
+            style={{
+              width: PROMO_SPRITE_FRAME_W,
+              height: PROMO_SPRITE_FRAME_H,
+              backgroundImage: `url(${withBasePath("/assets/promotions/hero-sprite.webp")})`,
+              backgroundSize: `${PROMO_SPRITE_FRAME_W * 6}px ${PROMO_SPRITE_FRAME_H * 6}px`,
+              animation: `promo-hero-sprite ${SPRITE_DURATION_S}s steps(1, end) infinite`,
+            }}
           />
         </>
       ) : (

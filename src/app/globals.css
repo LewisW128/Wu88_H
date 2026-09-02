@@ -187,3 +187,48 @@ body {
   96.7742% { background-position: 0px -5230px; }
   100% { background-position: 0px 0px; }
 }
+
+/* Promotions hero (ContainerBg): same technique as the other three sprites
+   above -- 31 frames of a Kling animation (chest lid opens, she pulls out
+   glowing energy crystals and shows them to camera, cold mist drifts out),
+   individually background-removed against a white source (avoiding the
+   black-edge fringing a black-background source caused for casino), played
+   back as a 6x6 sprite sheet. Offsets here are in the hero box's own
+   1536x1024 units, matching PROMO_SPRITE_FRAME_W/H's backgroundSize
+   scaling in ContainerBg.tsx -- see home-hero-sprite's own comment for why
+   that has to match backgroundSize's units, not the sprite's native
+   1176x784 pixels, or the frames drift out of alignment with each step. */
+@keyframes promo-hero-sprite {
+  0.0% { background-position: 0px 0px; }
+  3.2258% { background-position: -1536px 0px; }
+  6.4516% { background-position: -3072px 0px; }
+  9.6774% { background-position: -4608px 0px; }
+  12.9032% { background-position: -6144px 0px; }
+  16.129% { background-position: -7680px 0px; }
+  19.3548% { background-position: 0px -1024px; }
+  22.5806% { background-position: -1536px -1024px; }
+  25.8065% { background-position: -3072px -1024px; }
+  29.0323% { background-position: -4608px -1024px; }
+  32.2581% { background-position: -6144px -1024px; }
+  35.4839% { background-position: -7680px -1024px; }
+  38.7097% { background-position: 0px -2048px; }
+  41.9355% { background-position: -1536px -2048px; }
+  45.1613% { background-position: -3072px -2048px; }
+  48.3871% { background-position: -4608px -2048px; }
+  51.6129% { background-position: -6144px -2048px; }
+  54.8387% { background-position: -7680px -2048px; }
+  58.0645% { background-position: 0px -3072px; }
+  61.2903% { background-position: -1536px -3072px; }
+  64.5161% { background-position: -3072px -3072px; }
+  67.7419% { background-position: -4608px -3072px; }
+  70.9677% { background-position: -6144px -3072px; }
+  74.1935% { background-position: -7680px -3072px; }
+  77.4194% { background-position: 0px -4096px; }
+  80.6452% { background-position: -1536px -4096px; }
+  83.871% { background-position: -3072px -4096px; }
+  87.0968% { background-position: -4608px -4096px; }
+  90.3226% { background-position: -6144px -4096px; }
+  93.5484% { background-position: -7680px -4096px; }
+  96.7742% { background-position: 0px -5120px; }
+  100% { background-position: 0px 0px; }
+}
