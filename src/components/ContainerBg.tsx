@@ -2,7 +2,7 @@ import { withBasePath } from "../lib/asset";
 import TwinklingDots from "./TwinklingDots";
 
 export type ContainerBgProps = {
-  variant?: "home" | "casino" | "sport" | "promotions";
+  variant?: "home" | "home-energy" | "casino" | "sport" | "promotions";
 };
 
 // The WU88 rainbow gradient (same palette as QuickLinks' border ring and
@@ -98,6 +98,17 @@ function GradientHeadline({ text, gradientId }: { text: string; gradientId: stri
 // the same visual footprint the video's character occupied (verified by
 // sampling the video frame's own non-white column/row bounds).
 //
+// Home-energy: the home page's second hero slide (style=02_Container02,
+// Figma node 894:103893), for the daily-login energy-refill carousel
+// panel -- same glow blobs + digital dots as the other home slide, but a
+// plain static cutout photo instead of an idle-sway sprite loop (Figma's
+// own source here really is just the one still, not a 31-frame sequence
+// like every other hero -- no animation to reproduce, it just wasn't
+// asked for). Same digital-dots offset as the default home slide too
+// (913px left in both, once you subtract this box's own half-width from
+// Figma's centered position) -- falls through to that shared branch
+// below rather than needing its own.
+//
 // Promotions: same skeleton again -- an animated chest-of-loot scene (see
 // its own sprite comment below) behind a "PROMOTIONS" headline. Figma's own
 // source for this headline is a flat white-50% fill with 20px tracking, no
@@ -135,6 +146,7 @@ export default function ContainerBg({ variant = "home" }: ContainerBgProps) {
   const isCasino = variant === "casino";
   const isSport = variant === "sport";
   const isPromotions = variant === "promotions";
+  const isHomeEnergy = variant === "home-energy";
 
   return (
     <div className="relative h-[1078px] w-[1728px] overflow-hidden rounded-tl-[60px] bg-white">
@@ -217,6 +229,12 @@ export default function ContainerBg({ variant = "home" }: ContainerBgProps) {
             }}
           />
         </>
+      ) : isHomeEnergy ? (
+        <img
+          alt=""
+          src={withBasePath("/assets/container-bg/home-hero-energy-girl.webp")}
+          className="pointer-events-none absolute right-0 top-0 h-[827px] w-[1437px] object-cover"
+        />
       ) : (
         <div
           aria-hidden

@@ -1,10 +1,15 @@
 import { DEFAULT_RING_COLOR } from "../components/Avatar";
 import Business from "../components/Business";
-import ContainerBg from "../components/ContainerBg";
 import Footer from "../components/Footer";
 import { type GameCardProps } from "../components/GameCard";
 import FormBar from "../components/FormBar";
 import GeneralGames from "../components/GeneralGames";
+import {
+  Provider as HeroCarouselProvider,
+  Background as HeroCarouselBackground,
+  Content as HeroCarouselContent,
+  Dots as HeroCarouselDots,
+} from "../components/HomeHeroCarousel";
 import HotGames from "../components/HotGames";
 import Language from "../components/Language";
 import { type ProductCardProps } from "../components/ProductCard";
@@ -155,31 +160,6 @@ const promotions: (PromotionCardProps & { key: string })[] = [
   { key: "wheel", size: "General", image: "/assets/promotions/wheel.png", lines: ["天天轉 8,888", "武財神風輪盤"] },
 ];
 
-// Figma "Cotainer change bar": a 4-segment carousel indicator, first
-// segment wider + teal to mark the active hero slide.
-function CarouselDots() {
-  return (
-    <div className="flex items-center gap-[10px]">
-      <div className="h-[2px] w-[50px] rounded-full bg-[#23f3d5]" />
-      <div className="h-[2px] w-[40px] rounded-full bg-[#f4f4f4]" />
-      <div className="h-[2px] w-[40px] rounded-full bg-[#f4f4f4]" />
-      <div className="h-[2px] w-[40px] rounded-full bg-[#f4f4f4]" />
-    </div>
-  );
-}
-
-// Figma "Frame 1241": the hero headline sitting on top of Container_BG.
-function HeroText() {
-  return (
-    <div className="flex flex-col items-start gap-[14px]">
-      <p className="w-full text-[40px] font-black leading-[36px] tracking-[0.36px] text-[#8d54d8]">精彩不設限 贏得更過癮</p>
-      <p className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#3e4140]">
-        高額獎金 <span className="text-[#23f3d5]">24h</span> 精彩不間斷
-      </p>
-    </div>
-  );
-}
-
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col items-center bg-[#f4f4f4]">
@@ -218,6 +198,12 @@ export default function Home() {
             utility row, and the sidebar are all still visible alongside
             Win List despite the hero having scrolled away above them. */}
         <div className="relative rounded-tl-[60px] bg-white">
+          {/* HomeHeroCarousel.Provider wraps both Background (this section,
+              a sibling of the grid below) and Content (inside the grid's
+              middle column, far below) so they share one `active` slide
+              index -- see that component's own comment on why they can't
+              just be local state in either piece alone. */}
+          <HeroCarouselProvider>
           {/* Anchored to the RIGHT edge, not the left: Container_BG is a
               fixed 1728x1078 asset that can't stretch to fill a wider
               fluid panel without distorting or zooming the video, so on a
@@ -232,7 +218,7 @@ export default function Home() {
               white background, indistinguishable from the video's own
               blank left margin it used to show there. */}
           <div className="pointer-events-none absolute right-0 top-0">
-            <ContainerBg />
+            <HeroCarouselBackground />
           </div>
 
           {/* The middle column is fluid (not a fixed 1249px) so this grid
@@ -289,8 +275,8 @@ export default function Home() {
                   Games, etc.), so the extra 15px belongs here, on this
                   wrapper, rather than changing that shared gap. */}
               <div className="flex flex-col gap-[123px] pb-[15px] pt-[150px]">
-                <HeroText />
-                <CarouselDots />
+                <HeroCarouselContent />
+                <HeroCarouselDots />
               </div>
 
               {/* Figma "Form Bar" sits inside this same hero layer, between
@@ -335,6 +321,7 @@ export default function Home() {
               <TalkingBar messages={talkingBarMessages} privateMessages={talkingBarPrivateMessages} simulatedMessages={talkingBarSimulatedMessages} />
             </div>
           </div>
+          </HeroCarouselProvider>
         </div>
       </ScaleToFit>
     </div>
