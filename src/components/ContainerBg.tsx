@@ -94,11 +94,11 @@ function GradientHeadline({ text, gradientId }: { text: string; gradientId: stri
 // the same visual footprint the video's character occupied (verified by
 // sampling the video frame's own non-white column/row bounds).
 //
-// Promotions: same skeleton again, but a plain still photo (chest of loot +
-// the recurring catgirl character) behind a flat white-50% "PROMOTIONS"
-// headline -- Figma's own source for this one really is a flat fill, no
-// gradient stroke, so it's just a <p> like Casino's originally was, not
-// routed through GradientHeadline.
+// Promotions: same skeleton again -- an animated chest-of-loot scene (see
+// its own sprite comment below) behind a "PROMOTIONS" headline. Figma's own
+// source for this headline is a flat white-50% fill with 20px tracking, no
+// gradient stroke, but per request it now goes through the same
+// GradientHeadline hollow-outline treatment as Casino/Sport instead.
 //
 // Casino & Sport: same skeleton -- a giant tracked-out gradient-outline
 // headline (GradientHeadline above; Figma's own Casino source actually has
@@ -187,18 +187,11 @@ export default function ContainerBg({ variant = "home" }: ContainerBgProps) {
         </>
       ) : isPromotions ? (
         <>
-          {/* Figma's own headline here is a flat white-50% fill, no
-              gradient stroke -- unlike Casino/Sport, this one was never
-              asked to match GradientHeadline's hollow-outline look, so it
-              stays a plain <p> like Casino's originally was. Narrower
-              tracking (20px vs Casino/Sport's 32px) is Figma's own value
-              for this string. */}
-          <p
-            className="pointer-events-none absolute left-[150px] top-[197px] whitespace-nowrap text-[200px] font-bold tracking-[20px] text-white/50"
-            style={{ fontFamily: "Inter, sans-serif" }}
-          >
-            PROMOTIONS
-          </p>
+          {/* Figma's own headline here is a flat white-50% fill with 20px
+              tracking, not a gradient stroke -- but per request this now
+              matches Casino/Sport's hollow-outline GradientHeadline look
+              instead, same as Casino's own flat-fill original did before. */}
+          <GradientHeadline text="PROMOTIONS" gradientId="promotions-headline-stroke" />
           {/* Sprite replaces the plain static photo: 31 frames of her
               opening the chest and showing off the glowing crystals,
               individually background-removed off a white-background Kling
