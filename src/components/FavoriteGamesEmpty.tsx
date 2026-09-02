@@ -24,7 +24,15 @@ export default function FavoriteGamesEmpty() {
         <p className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#444242]">收藏的遊戲</p>
       </div>
 
-      <div className="relative h-[266px] w-[200px] shrink-0 overflow-clip rounded-bl-[25px] rounded-br-[25px] rounded-tr-[25px] bg-[#f4f4f4]" style={maskStyle}>
+      <div className="relative h-[266px] w-[200px] shrink-0 overflow-clip rounded-bl-[25px] rounded-br-[25px] rounded-tr-[25px]">
+        {/* Only the background fill and dots are masked into the notch
+            shape -- the button below sits in that notch unmasked, same as
+            ProductCard's own photo/gradient-vs-button split. Masking the
+            outer container itself (this component's first bug) clips the
+            button along with everything else, since it'd then be a child
+            of the masked element too. */}
+        <div className="absolute inset-0 bg-[#f4f4f4]" style={maskStyle} />
+
         <img
           alt=""
           src={withBasePath("/assets/game-card/digital-dots.svg")}
