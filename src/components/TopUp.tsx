@@ -17,9 +17,12 @@ export type TopUpProps = {
 // plain width/max-width transition can't without hardcoding a guessed px
 // value).
 //
-// The avatar circle links to /profile (per request) even in this
-// logged-out state -- there's no real auth here to gate it behind, and
-// QuickLinks' own 會員中心 pill already points there the same way.
+// The avatar circle links to /profile?guest=1 (per request) since this
+// TopUp itself always renders the logged-out state (no real auth here to
+// gate it behind) -- linking plain /profile would land on that page's
+// own default logged-in mock, which contradicts the not-logged-in bar
+// the user just clicked from. QuickLinks' own 會員中心 pill still points
+// to plain /profile, matching its own always-logged-in TopBar context.
 //
 // The pill's own bg-[#f4f4f4] and backdrop-blur are plain and permanent
 // in both Figma states -- not something that fades with scroll position.
@@ -37,7 +40,7 @@ export default function TopUp({ account }: TopUpProps) {
     <div className="group flex h-[65px] items-center rounded-[50px] bg-[#f4f4f4] p-[15px] backdrop-blur-[15px]">
       <div className="mr-[38px] flex shrink-0 items-center gap-[10px] transition-[margin] duration-300 group-hover:mr-[20px]">
         <Link
-          href="/profile"
+          href="/profile?guest=1"
           aria-label="會員中心"
           className="relative size-[34px] shrink-0 overflow-hidden rounded-full border-2 border-[#3e4140] bg-white"
         >
