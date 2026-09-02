@@ -165,7 +165,7 @@ export default function PromotionsPage() {
                   should hold here too. Verify against the live Figma
                   screenshot and adjust if the reused row sits off. */}
               <div className="mt-[384px]">
-                <Promotions promotions={topPromotions} />
+                <Promotions promotions={topPromotions} showMore={false} />
               </div>
 
               <PromotionsGrid categories={PROMOTIONS_CATEGORIES} />

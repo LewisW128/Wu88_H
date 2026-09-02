@@ -16,6 +16,10 @@ function buildFadeMask(canLeft: boolean, canRight: boolean) {
 
 export type PromotionsProps = {
   promotions: (PromotionCardProps & { key: string })[];
+  // Off on /promotions' own page, where this row sits directly above the
+  // full 所有優惠 listing -- a "更多" back to /promotions there would be
+  // pointless. Every other page (home, profile) keeps it on.
+  showMore?: boolean;
 };
 
 // Figma "優惠活動" section: same title-bar + scrollable-card-row pattern as
@@ -26,7 +30,7 @@ export type PromotionsProps = {
 // scroll to, same as every other row here. "更多" goes to /promotions,
 // same idea as GeneralGames' own "更多" -- see the profile/home page's
 // own copy of this row, which now shares that navigation too.
-export default function Promotions({ promotions }: PromotionsProps) {
+export default function Promotions({ promotions, showMore = true }: PromotionsProps) {
   const { ref: scrollRef, canScroll, scrollByStep } = useEdgeScroll<HTMLDivElement>([promotions]);
   const router = useRouter();
 
@@ -39,7 +43,8 @@ export default function Promotions({ promotions }: PromotionsProps) {
         canRight={canScroll.right}
         onLeft={() => scrollByStep(-SCROLL_STEP)}
         onRight={() => scrollByStep(SCROLL_STEP)}
-        onMoreClick={() => router.push("/promotions")}
+        onMoreClick={showMore ? () => router.push("/promotions") : undefined}
+        hideMore={!showMore}
       />
       <div
         ref={scrollRef}

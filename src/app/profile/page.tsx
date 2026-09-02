@@ -202,7 +202,12 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
 
               <Promotions promotions={promotions} />
 
-              <div className="flex items-center justify-between">
+              {/* 80px above this row (Figma node 455:23317: Promotions
+                  bottom at y=1266, this row at y=1346), not the column's
+                  shared gap-[25px] every other pair uses -- same +55px
+                  bump home/promotions already apply above their own
+                  SocialLinks/QuickLinks row. */}
+              <div className="mt-[55px] flex items-center justify-between">
                 <SocialLinks />
                 <QuickLinks />
               </div>

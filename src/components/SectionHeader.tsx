@@ -9,6 +9,12 @@ export type SectionHeaderProps = {
   onLeft?: () => void;
   onRight?: () => void;
   onMoreClick?: () => void;
+  // Promotions' own page (05_WU88-H-PC-Promotions) reuses this same
+  // "優惠活動" row directly under its hero, but a "更多" leading to /promotions
+  // makes no sense on /promotions itself -- the full listing is already
+  // the very next section down. Hides just the Tag, not the whole
+  // trailing group, so the scroll arrows stay if the row still overflows.
+  hideMore?: boolean;
 };
 
 // Figma "Title_bar" (reused across Hot Games/General Games/Promotions):
@@ -23,7 +29,7 @@ export type SectionHeaderProps = {
 // more" or a scroller in the first place. Callers that don't track real
 // scroll state (this component's own default) keep the original
 // always-visible look.
-export default function SectionHeader({ icon, title, canLeft = true, canRight = true, onLeft, onRight, onMoreClick }: SectionHeaderProps) {
+export default function SectionHeader({ icon, title, canLeft = true, canRight = true, onLeft, onRight, onMoreClick, hideMore = false }: SectionHeaderProps) {
   const hasOverflow = canLeft || canRight;
   return (
     <div className="flex h-[44px] w-full items-center justify-between">
@@ -33,7 +39,7 @@ export default function SectionHeader({ icon, title, canLeft = true, canRight = 
       </div>
       {hasOverflow && (
         <div className="flex items-center gap-[20px]">
-          <Tag label="更多" active onClick={onMoreClick} />
+          {!hideMore && <Tag label="更多" active onClick={onMoreClick} />}
           <LeftRight canLeft={canLeft} canRight={canRight} onLeft={onLeft} onRight={onRight} />
         </div>
       )}
