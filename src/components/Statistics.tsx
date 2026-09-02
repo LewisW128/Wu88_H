@@ -4,6 +4,11 @@ export type StatisticEntry = {
   icon: string;
   value: string;
   label: string;
+  // Guest/not-logged-in cards (05_WU88-H-PC-Profile-Page node 459:85252)
+  // drop the trend-graph glyph entirely -- there's no real trend to show
+  // before you have an account. Defaults to shown, matching every
+  // existing logged-in caller.
+  trend?: boolean;
 };
 
 export type StatisticsProps = {
@@ -33,7 +38,7 @@ export default function Statistics({ stats }: StatisticsProps) {
                 <img alt="" src={withBasePath(stat.icon)} className="size-[25px]" />
                 <p className="whitespace-nowrap text-[20px] font-bold leading-[32px] tracking-[0.35px] text-[#3e4140]">{stat.value}</p>
               </div>
-              <img alt="" src={withBasePath("/assets/statistics/icon-graph.svg")} className="size-[25px]" />
+              {stat.trend !== false && <img alt="" src={withBasePath("/assets/statistics/icon-graph.svg")} className="size-[25px]" />}
             </div>
             <p className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#a2a2a2]">{stat.label}</p>
           </div>
