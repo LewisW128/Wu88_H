@@ -236,31 +236,32 @@ body {
 /* Home-energy hero (ContainerBg, variant="home-energy"): the daily-login
    carousel slide's character, restyled cyberpunk (see ContainerBg.tsx's
    own comment) then animated the same way as the other three hero
-   sprites -- a Kling full-body dance loop from that still (per request:
-   the whole body swaying with the beat, not just a gentle idle sway, and
-   the reaching arm/hand moving WITH the body rather than staying locked
-   in place -- an earlier attempt kept that arm frozen while everything
-   else moved). Generated against a white source (the first pass reused
-   the Figma still's own black-filled-alpha background and reproduced
-   Casino's exact black-edge fringing bug; re-generating from a white
-   backdrop fixed it, same as Promotions). The raw 5s clip has energetic
-   moments (hair swinging across the face, wide-open laughing, the arm
-   raised well above her head) that either don't read as "confident smile
-   at camera" or read as more motion than wanted, so the 20 sprite frames
-   are hand-picked from a denser 61-frame sample rather than evenly
-   spaced -- deliberately staying inside the gentler half of that clip's
-   own range of motion (per request, toned down from an earlier full-
-   swing pass) while keeping her face visible and smiling in every one.
-   Individually
-   background-removed per frame, played back as a 6x6 sprite sheet. Only
-   20 frames, not 31 -- fewer round trips through upload/remove-
-   background/download for a short loop, not a full 31-frame action
-   sequence like Promotions' chest-opening -- so the math here is /20 (5%
-   per step), not /31, and only the first 20 of the 36 grid cells are
-   ever visible. Offsets are in the hero box's own 1536x1024 units
-   (matching HOME_ENERGY_SPRITE_FRAME_W/H's backgroundSize scaling in
-   ContainerBg.tsx), not the sprite's native 1176x784 pixels -- see
-   home-hero-sprite's own comment for why that distinction matters. */
+   sprites -- a Kling loop from that still, generated against a white
+   source (the first pass reused the Figma still's own black-filled-alpha
+   background and reproduced Casino's exact black-edge fringing bug;
+   re-generating from a white backdrop fixed it, same as Promotions).
+   Went through several motion passes per request before landing here:
+   a full dance read as too much (and separately had the reaching arm
+   frozen in place while the rest of her body moved, its own bug fixed
+   by explicitly prompting the arm to move WITH the body); a plain idle
+   sway read as too little ("not just standing there breathing"). This
+   version choreographs a clearly visible rhythmic side-to-side body sway
+   with the reaching arm lowering and swinging with that rhythm through
+   the middle of the loop, then rising back into the reaching pose near
+   the loop point -- landing back where slide 2's frame started for a
+   seamless cut to slide 1's own idle-sway hero. The clip stays well-
+   behaved throughout (unlike the full-dance take, no hair-across-the-
+   face or wide-open-laughing frames to dodge), so the 20 sprite frames
+   are evenly sampled across all 61 frames of a 12fps extraction instead
+   of hand-picked. Individually background-removed per frame, played back
+   as a 6x6 sprite sheet. Only 20 frames, not 31 -- fewer round trips
+   through upload/remove-background/download for a short loop, not a
+   full 31-frame action sequence like Promotions' chest-opening -- so the
+   math here is /20 (5% per step), not /31, and only the first 20 of the
+   36 grid cells are ever visible. Offsets are in the hero box's own
+   1536x1024 units (matching HOME_ENERGY_SPRITE_FRAME_W/H's backgroundSize
+   scaling in ContainerBg.tsx), not the sprite's native 1176x784 pixels --
+   see home-hero-sprite's own comment for why that distinction matters. */
 @keyframes home-energy-hero-sprite {
   0% { background-position: 0px 0px; }
   5% { background-position: -1536px 0px; }
