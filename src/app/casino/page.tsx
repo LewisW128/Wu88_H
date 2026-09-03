@@ -249,7 +249,7 @@ export default async function CasinoPage({ searchParams }: { searchParams: Promi
                   <Search />
                   <Language />
                 </div>
-                <TopUp account="123456" />
+                <TopUp />
               </StickyUtilityBar>
 
               {/* Figma has no headline/carousel/Form Bar on this page --

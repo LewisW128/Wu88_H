@@ -428,7 +428,7 @@ export default async function SportsPage() {
                   <Search />
                   <Language />
                 </div>
-                <TopUp account="123456" />
+                <TopUp />
               </StickyUtilityBar>
 
               {/* Sports Live's own top sits 480px below the utility row's

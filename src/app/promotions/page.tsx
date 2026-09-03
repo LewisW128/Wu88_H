@@ -153,7 +153,7 @@ export default function PromotionsPage() {
                   <Search />
                   <Language />
                 </div>
-                <TopUp account="123456" />
+                <TopUp />
               </StickyUtilityBar>
 
               {/* Same 384px gap under the hero as Casino/Sports use -- no

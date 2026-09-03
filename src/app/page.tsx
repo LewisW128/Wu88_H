@@ -256,7 +256,7 @@ export default function Home() {
                   <Search />
                   <Language />
                 </div>
-                <TopUp account="123456" />
+                <TopUp />
               </StickyUtilityBar>
 
               {/* Figma (01_WU88-H-PC-Home-Page node 883:125520) puts Frame

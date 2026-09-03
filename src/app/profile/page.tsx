@@ -161,7 +161,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                   <Search />
                   <Language />
                 </div>
-                <TopUp account="123456" />
+                <TopUp />
               </StickyUtilityBar>
 
               {/* `items-end`, not `items-start`: Figma has these two cards at

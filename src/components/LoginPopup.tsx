@@ -40,9 +40,18 @@ import LoginPoster from "./LoginPoster";
 // `overflow-hidden` -- neither file needs its own internal clip-path.
 const DEPTH = { accent: 5, chip3: 11 } as const;
 
-export default function LoginPopup({ className }: { className?: string }) {
+export default function LoginPopup({
+  className,
+  onClose,
+  onLoginSuccess,
+}: {
+  className?: string;
+  onClose?: () => void;
+  onLoginSuccess?: () => void;
+}) {
   const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
+  const canLogin = account.trim() !== "" && password.trim() !== "";
   const [tilt, setTilt] = useState({ x: 0, y: 0 }); // each in [-0.5, 0.5]
 
   function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
@@ -90,6 +99,7 @@ export default function LoginPopup({ className }: { className?: string }) {
       <button
         type="button"
         aria-label="關閉"
+        onClick={onClose}
         className="absolute left-[39.44px] top-[39.38px] size-[25px]"
       >
         <img alt="" src={withBasePath("/item/loggin-popup/close.svg")} className="size-full" />
@@ -110,7 +120,7 @@ export default function LoginPopup({ className }: { className?: string }) {
                 value={account}
                 onChange={(e) => setAccount(e.target.value)}
                 placeholder="請輸入您的帳號"
-                className="absolute inset-0 bg-transparent pl-[48px] pr-[15px] text-[10px] leading-[18px] tracking-[0.15px] text-[#3e4140] outline-none placeholder:text-[#a2a2a2]"
+                className="absolute inset-0 bg-transparent pl-[48px] pr-[15px] text-[12px] leading-[18px] tracking-[0.15px] text-[#3e4140] outline-none placeholder:text-[10px] placeholder:text-[#a2a2a2]"
               />
             </div>
 
@@ -122,7 +132,7 @@ export default function LoginPopup({ className }: { className?: string }) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="請輸入您的6-12位英文字母及數字"
-                  className="absolute inset-0 bg-transparent pl-[48px] pr-[15px] text-[10px] leading-[18px] tracking-[0.15px] text-[#3e4140] outline-none placeholder:text-[#a2a2a2]"
+                  className="absolute inset-0 bg-transparent pl-[48px] pr-[15px] text-[12px] leading-[18px] tracking-[0.15px] text-[#3e4140] outline-none placeholder:text-[10px] placeholder:text-[#a2a2a2]"
                 />
               </div>
               <button type="button" className="whitespace-nowrap text-[10px] leading-[18px] tracking-[0.15px] text-[#8d54d8]">
@@ -143,13 +153,15 @@ export default function LoginPopup({ className }: { className?: string }) {
             </button>
             <button
               type="button"
-              className="flex w-[140px] items-center justify-between overflow-hidden rounded-bl-[20px] rounded-br-[20px] rounded-tr-[20px] bg-[#23f3d5] px-[15px] py-[10px]"
+              disabled={!canLogin}
+              onClick={onLoginSuccess}
+              className="flex w-[140px] items-center justify-between overflow-hidden rounded-bl-[20px] rounded-br-[20px] rounded-tr-[20px] bg-[#23f3d5] px-[15px] py-[10px] disabled:cursor-not-allowed"
             >
               <span className="whitespace-nowrap text-[12px] font-bold leading-[18px] tracking-[0.15px] text-[#3e4140]">登入</span>
               <AnimatedArrowSpecial hovered size={25} color="#3e4140" />
             </button>
           </div>
-          <button type="button" className="whitespace-nowrap text-[12px] leading-[18px] tracking-[0.15px] text-[#a2a2a2]">
+          <button type="button" onClick={onClose} className="whitespace-nowrap text-[12px] leading-[18px] tracking-[0.15px] text-[#a2a2a2]">
             進去逛逛
           </button>
         </div>
