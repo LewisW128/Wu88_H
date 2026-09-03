@@ -33,7 +33,15 @@ import LoginModal from "./LoginModal";
 // two OUTER children instead (matching each state's own Figma gap value)
 // give exactly one gap's worth of space at rest, since the collapsed
 // middle child contributes nothing between them.
-const MOCK_MEMBER = { avatar: "/assets/profile/avatar-placeholder.png", name: "Jessica", level: "Lv.35", balance: "10M" };
+// Avatar's own 34px display is a much more extreme downscale than
+// ProfileCard's ~316px use of this same source photo -- browsers don't
+// sharpen when scaling raster images down that far, so the fine detail
+// (hair strands, soft studio lighting) just reads as blur at icon size.
+// avatar-placeholder-thumb.png is a pre-cropped-to-square, pre-sharpened
+// 200px thumbnail of the exact same photo, made for small contexts like
+// this one -- ProfileCard keeps the full-res original since it needs the
+// detail at its own larger size.
+const MOCK_MEMBER = { avatar: "/assets/profile/avatar-placeholder-thumb.png", name: "Jessica", level: "Lv.35", balance: "10M" };
 
 export default function TopUp() {
   const [showLogin, setShowLogin] = useState(false);
