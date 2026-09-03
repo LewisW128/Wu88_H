@@ -109,6 +109,17 @@ function GradientHeadline({ text, gradientId }: { text: string; gradientId: stri
 // Figma's centered position) -- falls through to that shared branch
 // below rather than needing its own.
 //
+// The character herself was restyled into the site's cyberpunk look via
+// Higgsfield (reference photo -> Soul 2.0 for a consistent-identity
+// full-body re-render in the new outfit, then a Flux Kontext edit pass to
+// swap what she's holding for a treasure chest, generated straight
+// against a plain white backdrop for a clean cutout) and pasted into
+// Figma as this variant's own source photo -- same pre-cutout RGBA
+// pipeline as every other hero here, just authored with AI tools instead
+// of a studio shoot. Box (348,-12, 1536x1024) is Figma's own updated
+// layer position, not the previous still's -- re-measured after the
+// swap rather than assumed unchanged.
+//
 // Promotions: same skeleton again -- an animated chest-of-loot scene (see
 // its own sprite comment below) behind a "PROMOTIONS" headline. Figma's own
 // source for this headline is a flat white-50% fill with 20px tracking, no
@@ -233,7 +244,7 @@ export default function ContainerBg({ variant = "home" }: ContainerBgProps) {
         <img
           alt=""
           src={withBasePath("/assets/container-bg/home-hero-energy-girl.webp")}
-          className="pointer-events-none absolute right-0 top-0 h-[827px] w-[1437px] object-cover"
+          className="pointer-events-none absolute left-[348px] top-[-12px] h-[1024px] w-[1536px] object-cover"
         />
       ) : (
         <div
