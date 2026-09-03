@@ -113,11 +113,11 @@ function GradientHeadline({ text, gradientId }: { text: string; gradientId: stri
 // this variant's own source photo -- same pre-cutout RGBA pipeline as
 // every other hero here, just authored with AI tools instead of a studio
 // shoot. Box (348,-12, 1536x1024) is Figma's own updated layer position,
-// re-measured after the swap rather than assumed unchanged. Now an idle-
-// sway sprite loop too (see its own render branch below and globals.css'
+// re-measured after the swap rather than assumed unchanged. Now a sprite
+// loop too (see its own render branch below and globals.css'
 // home-energy-hero-sprite comment) -- Figma's own source is still just
 // the one still, but the Casino/Sport treatment of animating a locked-off
-// idle sway from it applied just as well here once asked for.
+// loop from it applied just as well here once asked for.
 //
 // Promotions: same skeleton again -- an animated chest-of-loot scene (see
 // its own sprite comment below) behind a "PROMOTIONS" headline. Figma's own
