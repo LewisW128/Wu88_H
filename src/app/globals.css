@@ -244,11 +244,14 @@ body {
    the Figma still's own black-filled-alpha background and reproduced
    Casino's exact black-edge fringing bug; re-generating from a white
    backdrop fixed it, same as Promotions). The raw 5s clip has energetic
-   moments (hair swinging across the face, wide-open laughing) that don't
-   read as "confident smile at camera" on their own, so the 20 sprite
-   frames are hand-picked from a denser 61-frame sample rather than
-   evenly spaced -- chosen for a full arm/shoulder range of motion while
-   keeping her face visible and smiling in every one. Individually
+   moments (hair swinging across the face, wide-open laughing, the arm
+   raised well above her head) that either don't read as "confident smile
+   at camera" or read as more motion than wanted, so the 20 sprite frames
+   are hand-picked from a denser 61-frame sample rather than evenly
+   spaced -- deliberately staying inside the gentler half of that clip's
+   own range of motion (per request, toned down from an earlier full-
+   swing pass) while keeping her face visible and smiling in every one.
+   Individually
    background-removed per frame, played back as a 6x6 sprite sheet. Only
    20 frames, not 31 -- fewer round trips through upload/remove-
    background/download for a short loop, not a full 31-frame action
