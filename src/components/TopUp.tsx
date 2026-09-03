@@ -5,6 +5,7 @@ import { useState } from "react";
 import { withBasePath } from "../lib/asset";
 import Avatar from "./Avatar";
 import AnimatedArrowSpecial, { useArrowPulse } from "./AnimatedArrowSpecial";
+import { useAuth } from "./AuthProvider";
 import LoginModal from "./LoginModal";
 
 // Figma "TopUp" component (Components Library). Two independent instances,
@@ -21,11 +22,16 @@ import LoginModal from "./LoginModal";
 // natural width smoothly (a plain width/max-width transition can't without
 // hardcoding a guessed px value).
 //
-// No real auth system exists yet, so `loggedIn` is local, self-contained
-// state: "登入" opens LoginModal, and successfully logging in (both fields
-// filled, see LoginPopup's own comment) just flips this widget's own view
-// -- it doesn't touch any other component. Mock account data ("Jessica")
-// matches the same mock member profile/page.tsx already uses elsewhere.
+// No real auth system exists yet, so `loggedIn` lives in AuthProvider --
+// a plain React Context, not a real session -- rather than this
+// component's own local state: "登入" opens LoginModal, and successfully
+// logging in (both fields filled, see LoginPopup's own comment) flips it
+// there. It has to live above this component (root layout) rather than
+// here, since each page mounts its own separate TopUp instance -- local
+// state reset back to guest the moment a click (e.g. this avatar's own
+// link) navigated to a different page's TopUp. Mock account data
+// ("Jessica") matches the same mock member profile/page.tsx already uses
+// elsewhere.
 //
 // No `gap` on the outer flex: with 3 children where the middle one
 // collapses to a real 0px wide box (not just visually hidden), `gap`
@@ -41,11 +47,16 @@ import LoginModal from "./LoginModal";
 // 200px thumbnail of the exact same photo, made for small contexts like
 // this one -- ProfileCard keeps the full-res original since it needs the
 // detail at its own larger size.
+//
+// Avatar's own default ring/badge is its multi-color gradient (reserved
+// for higher-tier members elsewhere, e.g. WinList's top rows) -- this
+// mock member's own level is low, so the avatar here uses a flat
+// #23f3d5 ring + badge instead, per request.
 const MOCK_MEMBER = { avatar: "/assets/profile/avatar-placeholder-thumb.png", name: "Jessica", level: "Lv.35", balance: "10M" };
 
 export default function TopUp() {
   const [showLogin, setShowLogin] = useState(false);
-  const [loggedIn, setLoggedIn] = useState(false);
+  const { loggedIn, setLoggedIn } = useAuth();
   const topUpArrow = useArrowPulse();
 
   return (
@@ -55,9 +66,13 @@ export default function TopUp() {
       }`}
     >
       {loggedIn ? (
-        <div className="mr-[40px] flex shrink-0 items-center transition-[margin] duration-300 group-hover:mr-[20px]">
-          <Avatar photo={withBasePath(MOCK_MEMBER.avatar)} size={34} />
-        </div>
+        <Link
+          href="/profile"
+          aria-label="會員中心"
+          className="mr-[40px] flex shrink-0 items-center transition-[margin] duration-300 group-hover:mr-[20px]"
+        >
+          <Avatar photo={withBasePath(MOCK_MEMBER.avatar)} size={34} ringColor="#23f3d5" badgeColor="#23f3d5" />
+        </Link>
       ) : (
         <div className="mr-[38px] flex shrink-0 items-center gap-[10px] transition-[margin] duration-300 group-hover:mr-[20px]">
           <Link
