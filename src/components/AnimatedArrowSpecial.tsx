@@ -1,9 +1,41 @@
+import { useRef, useState } from "react";
+
 export type AnimatedArrowSpecialProps = {
   hovered: boolean;
   size?: number;
   color?: string;
   className?: string;
 };
+
+// The full undraw takes 400ms below (corner 0-200ms, shaft 200-400ms,
+// same stagger as the draw-in) -- kept as its own constant so the pulse's
+// "wait for the disappear to finish before redrawing" timeout can't drift
+// out of sync with the paths' own transition timing.
+const UNDRAW_MS = 400;
+
+// For buttons where the arrow should read as visible/static at rest (not
+// hidden until the first hover -- Figma's own static export always shows
+// it) but still get this glyph's draw flourish as a hover cue: starts
+// `hovered` true (visible, no animation on mount since there's no prior
+// state for the CSS transition to animate from), then a hover fully
+// undraws it and only once that's finished starts drawing it back in --
+// a real sequential "disappear, then take shape" pulse (not a persistent
+// hidden/shown toggle, and not an instant reversal mid-undraw, which just
+// reads as the line flickering rather than two distinct steps). Register/
+// Login (LoginPopup) and 儲值 (TopUp) all share this same pulse instead of
+// duplicating the two-state-flip dance at each call site.
+export function useArrowPulse() {
+  const [hovered, setHovered] = useState(true);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  function pulse() {
+    clearTimeout(timeoutRef.current);
+    setHovered(false);
+    timeoutRef.current = setTimeout(() => setHovered(true), UNDRAW_MS);
+  }
+
+  return { hovered, pulse };
+}
 
 // Figma "Arrow_Special" (the diagonal "open" arrow used on every card's
 // Play button, Tag, QuickLinks, etc.) is really just two paths: a corner

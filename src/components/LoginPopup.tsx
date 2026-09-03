@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { withBasePath } from "../lib/asset";
-import AnimatedArrowSpecial from "./AnimatedArrowSpecial";
+import AnimatedArrowSpecial, { useArrowPulse } from "./AnimatedArrowSpecial";
 import LoginPoster from "./LoginPoster";
 
 // Figma "Loggin Popup" (00_WU88-H-COMPONENTS LIBRARY node 951:10131): the
@@ -53,6 +53,8 @@ export default function LoginPopup({
   const [password, setPassword] = useState("");
   const canLogin = account.trim() !== "" && password.trim() !== "";
   const [tilt, setTilt] = useState({ x: 0, y: 0 }); // each in [-0.5, 0.5]
+  const registerArrow = useArrowPulse();
+  const loginArrow = useArrowPulse();
 
   function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -146,19 +148,20 @@ export default function LoginPopup({
           <div className="flex items-center gap-[20px]">
             <button
               type="button"
+              onMouseEnter={registerArrow.pulse}
               className="flex w-[140px] items-center justify-between overflow-hidden rounded-bl-[20px] rounded-br-[20px] rounded-tr-[20px] bg-[#8d54d8] px-[15px] py-[10px]"
             >
               <span className="whitespace-nowrap text-[12px] font-bold leading-[18px] tracking-[0.15px] text-white">註冊</span>
-              <AnimatedArrowSpecial hovered size={25} color="white" />
+              <AnimatedArrowSpecial hovered={registerArrow.hovered} size={25} color="white" />
             </button>
             <button
               type="button"
-              disabled={!canLogin}
-              onClick={onLoginSuccess}
-              className="flex w-[140px] items-center justify-between overflow-hidden rounded-bl-[20px] rounded-br-[20px] rounded-tr-[20px] bg-[#23f3d5] px-[15px] py-[10px] disabled:cursor-not-allowed"
+              onClick={() => canLogin && onLoginSuccess?.()}
+              onMouseEnter={loginArrow.pulse}
+              className="flex w-[140px] items-center justify-between overflow-hidden rounded-bl-[20px] rounded-br-[20px] rounded-tr-[20px] bg-[#23f3d5] px-[15px] py-[10px]"
             >
               <span className="whitespace-nowrap text-[12px] font-bold leading-[18px] tracking-[0.15px] text-[#3e4140]">登入</span>
-              <AnimatedArrowSpecial hovered size={25} color="#3e4140" />
+              <AnimatedArrowSpecial hovered={loginArrow.hovered} size={25} color="#3e4140" />
             </button>
           </div>
           <button type="button" onClick={onClose} className="whitespace-nowrap text-[12px] leading-[18px] tracking-[0.15px] text-[#a2a2a2]">
