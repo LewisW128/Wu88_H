@@ -12,6 +12,8 @@ export type ProductCardProps = {
   views: string;
   wins: string;
   labels?: ProductLabelType[];
+  // Defaults true -- Figma's own hover state (node 631:5929) always shows
+  // the like/share pair, no caller currently opts out.
   like?: boolean;
   // "L" (225px, Casino page's grid) vs "S" (200px, homepage's 推薦遊戲 row) --
   // Figma exports these as two separate mask assets (photo-mask-l.svg /
@@ -35,7 +37,7 @@ export type ProductCardProps = {
 // the full card, revealing a category tag + view/win counts under the
 // title; the Play button inverts (dark fill + light ring, teal arrow); and
 // a second icon button appears below the like button.
-export default function ProductCard({ image, title, category, views, wins, labels = ["HOT"], like = false, size = "S" }: ProductCardProps) {
+export default function ProductCard({ image, title, category, views, wins, labels = ["HOT"], like = true, size = "S" }: ProductCardProps) {
   const [liked, setLiked] = useState(false);
   const [hovered, setHovered] = useState(false);
 
