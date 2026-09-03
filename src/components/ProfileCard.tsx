@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { withBasePath } from "../lib/asset";
-import AnimatedArrowSpecial from "./AnimatedArrowSpecial";
+import AnimatedArrowSpecial, { useArrowPulse } from "./AnimatedArrowSpecial";
+import { useAuth } from "./AuthProvider";
+import LoginModal from "./LoginModal";
 import Switch from "./Switch";
 import TwinklingDots from "./TwinklingDots";
 
@@ -18,10 +20,16 @@ export type ProfileCardProps =
 // fixed 614px beside VipCard (614+614+20 gap = this page's usual 1249px
 // content width -- VipCard doesn't exist for a guest, so there's nothing
 // to share the row with), and shows the real name/email/ID; logged-out
-// spans the full row width and shows 註冊/登錄 buttons instead, with both
-// privacy toggles rendered `disabled` (there's nothing to toggle before
-// you've logged in). The avatar itself swaps a real cropped photo for a
-// generic person-outline icon centered in the same mask shape.
+// spans the full row width and shows 註冊/登入 buttons instead (per a
+// Figma update -- was 登錄, now matches the "登入" label TopUp/LoginPopup
+// already use everywhere else; also picked up the asymmetric
+// bl/br/tr-[20px] pill shape those buttons already use, replacing this
+// card's own stale uniform rounded-[15px]), with both privacy toggles
+// rendered `disabled` (there's nothing to toggle before you've logged
+// in). "登入" opens the same LoginModal TopUp's own guest button does --
+// there's no reason this card's own button should be inert when a real
+// login flow already exists. The avatar itself swaps a real cropped photo
+// for a generic person-outline icon centered in the same mask shape.
 //
 // Paint order matters and mirrors Figma's own layer order exactly: the
 // info panel is painted first, then the avatar on top of it (so the
@@ -34,7 +42,11 @@ export type ProfileCardProps =
 // animated component the home hero uses -- scaled down to this card's own
 // ~226x216 box via a plain CSS size override on its SVG, rather than a
 // second static digital-dots asset (per the user's own call to reuse the
-// hero's version here instead of re-exporting a new one).
+// hero's version here instead of re-exporting a new one). Positioned at
+// left-[95px] (not the ~-18px it briefly drifted to) to match Figma's own
+// `calc(50% - 26.63px)` against this box's 243.268px width -- confirmed
+// identical in both the logged-in and guest Figma refs, so it's one
+// shared position rather than something that needs to branch per state.
 //
 // The three ribbon streaks are the same path geometry either way, but
 // Figma recolors them from teal to gray for the guest state (small:
@@ -44,6 +56,10 @@ export type ProfileCardProps =
 export default function ProfileCard(props: ProfileCardProps) {
   const [hideProfile, setHideProfile] = useState(false);
   const [hideNickname, setHideNickname] = useState(false);
+  const { setLoggedIn } = useAuth();
+  const [showLogin, setShowLogin] = useState(false);
+  const registerArrow = useArrowPulse();
+  const loginArrow = useArrowPulse();
 
   return (
     <div className={`relative h-[303px] overflow-hidden rounded-[25px] bg-white ${props.loggedIn ? "flex-1" : "w-full"}`}>
@@ -64,14 +80,23 @@ export default function ProfileCard(props: ProfileCardProps) {
             <p className="whitespace-nowrap text-[10px] leading-[18px] tracking-[0.15px] text-[#a2a2a2]">ID {props.memberId}</p>
           </div>
         ) : (
-          <div className="absolute left-[945px] top-[19px] flex items-center gap-[10px]">
-            <button type="button" className="flex h-[40px] items-center gap-[20px] overflow-hidden rounded-[15px] bg-[#8d54d8] p-[10px]">
+          <div className="absolute left-[944px] top-[19px] flex items-center gap-[20px]">
+            <button
+              type="button"
+              onMouseEnter={registerArrow.pulse}
+              className="flex h-[40px] w-[127px] items-center justify-between overflow-hidden rounded-bl-[20px] rounded-br-[20px] rounded-tr-[20px] bg-[#8d54d8] px-[15px] py-[10px]"
+            >
               <span className="whitespace-nowrap text-[12px] font-bold leading-[18px] tracking-[0.15px] text-white">註冊</span>
-              <AnimatedArrowSpecial hovered size={25} color="white" />
+              <AnimatedArrowSpecial hovered={registerArrow.hovered} size={25} color="white" />
             </button>
-            <button type="button" className="flex h-[40px] items-center gap-[20px] overflow-hidden rounded-[15px] bg-[#23f3d5] p-[10px]">
-              <span className="whitespace-nowrap text-[12px] font-bold leading-[18px] tracking-[0.15px] text-[#3e4140]">登錄</span>
-              <AnimatedArrowSpecial hovered size={25} color="#3e4140" />
+            <button
+              type="button"
+              onClick={() => setShowLogin(true)}
+              onMouseEnter={loginArrow.pulse}
+              className="flex h-[40px] w-[127px] items-center justify-between overflow-hidden rounded-bl-[20px] rounded-br-[20px] rounded-tr-[20px] bg-[#23f3d5] px-[15px] py-[10px]"
+            >
+              <span className="whitespace-nowrap text-[12px] font-bold leading-[18px] tracking-[0.15px] text-[#3e4140]">登入</span>
+              <AnimatedArrowSpecial hovered={loginArrow.hovered} size={25} color="#3e4140" />
             </button>
           </div>
         )}
@@ -110,7 +135,7 @@ export default function ProfileCard(props: ProfileCardProps) {
             <img alt="" src={withBasePath("/assets/profile/guest-avatar-icon.svg")} className="pointer-events-none absolute inset-[7.7%_7.5%]" />
           </div>
         )}
-        <TwinklingDots className="pointer-events-none absolute left-[-18px] top-[93.19px] h-[215.53px] w-[226px]" />
+        <TwinklingDots className="pointer-events-none absolute left-[95px] top-[93.19px] h-[215.53px] w-[226px]" />
       </div>
 
       <img
@@ -123,6 +148,8 @@ export default function ProfileCard(props: ProfileCardProps) {
         src={withBasePath(props.loggedIn ? "/assets/profile/ribbon-large.svg" : "/assets/profile/ribbon-large-guest.svg")}
         className="absolute left-[8px] top-[220px] h-[223px] w-[299px]"
       />
+
+      {showLogin && <LoginModal onClose={() => setShowLogin(false)} onLoginSuccess={() => { setLoggedIn(true); setShowLogin(false); }} />}
     </div>
   );
 }
