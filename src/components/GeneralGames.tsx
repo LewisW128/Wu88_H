@@ -16,6 +16,14 @@ function buildFadeMask(canLeft: boolean, canRight: boolean) {
 
 export type GeneralGamesProps = {
   games: ProductCardProps[];
+  // Profile page's own logged-in use of this exact row is conceptually
+  // "your favorited games", not a generic site-wide recommendation --
+  // Figma's guest state for that same slot is titled "收藏的遊戲" (see
+  // FavoriteGamesEmpty), so the logged-in version reuses that title/icon
+  // here instead of "電子遊戲推薦"/icon-general-games.svg. Every other
+  // caller (home/casino/sports/promotions) leaves these at their defaults.
+  title?: string;
+  icon?: string;
 };
 
 // Figma "推薦遊戲" section (title renamed to "電子遊戲推薦" per request --
@@ -28,15 +36,15 @@ export type GeneralGamesProps = {
 // /casino with the 電子遊戲 (slot) tab pre-selected via `?tab=slot` --
 // see CasinoGameGrid's `initialTab` prop -- rather than just being a
 // decorative label like it was before.
-export default function GeneralGames({ games }: GeneralGamesProps) {
+export default function GeneralGames({ games, title = "電子遊戲推薦", icon = "/assets/section-header/icon-general-games.svg" }: GeneralGamesProps) {
   const { ref: scrollRef, canScroll, scrollByStep } = useEdgeScroll<HTMLDivElement>([games]);
   const router = useRouter();
 
   return (
     <div className="flex w-full flex-col items-start gap-[15px]">
       <SectionHeader
-        icon="/assets/section-header/icon-general-games.svg"
-        title="電子遊戲推薦"
+        icon={icon}
+        title={title}
         canLeft={canScroll.left}
         canRight={canScroll.right}
         onLeft={() => scrollByStep(-SCROLL_STEP)}

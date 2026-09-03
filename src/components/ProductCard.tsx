@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { withBasePath } from "../lib/asset";
 import AnimatedArrowSpecial from "./AnimatedArrowSpecial";
+import { useAuth } from "./AuthProvider";
+import { useFavorites } from "./FavoritesProvider";
+import LoginModal from "./LoginModal";
 import ProductLabel, { type ProductLabelType } from "./ProductLabel";
 
 export type ProductCardProps = {
@@ -37,9 +40,32 @@ export type ProductCardProps = {
 // the full card, revealing a category tag + view/win counts under the
 // title; the Play button inverts (dark fill + light ring, teal arrow); and
 // a second icon button appears below the like button.
+//
+// The like button's own on/off state lives in FavoritesProvider (keyed by
+// `title`), not local state -- /profile's own "收藏的遊戲" row reads that
+// same shared set to show only games actually liked somewhere on the site,
+// so liking a game here has to be visible from there too.
+//
+// Liking requires being logged in (per request) -- a guest clicking it
+// gets the same LoginModal TopUp's own 登入 opens, instead of the click
+// just silently doing nothing or (worse) letting a guest build up likes
+// that would vanish the moment they actually logged in. It does NOT
+// auto-apply the like once they log in; they just click it again now that
+// the button works.
 export default function ProductCard({ image, title, category, views, wins, labels = ["HOT"], like = true, size = "S" }: ProductCardProps) {
-  const [liked, setLiked] = useState(false);
+  const { loggedIn, setLoggedIn } = useAuth();
+  const { liked: likedTitles, toggleLiked } = useFavorites();
+  const liked = likedTitles.has(title);
   const [hovered, setHovered] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+
+  function handleLikeClick() {
+    if (!loggedIn) {
+      setShowLogin(true);
+      return;
+    }
+    toggleLiked(title);
+  }
 
   const width = size === "L" ? 225 : 200;
   const maskAsset = size === "L" ? "photo-mask-l.svg" : "photo-mask.svg";
@@ -112,7 +138,7 @@ export default function ProductCard({ image, title, category, views, wins, label
             type="button"
             aria-label="like"
             aria-pressed={liked}
-            onClick={() => setLiked((prev) => !prev)}
+            onClick={handleLikeClick}
             className={`absolute right-[10px] top-[10px] size-[35px] ${
               liked ? "block" : "hidden rounded-[10px] bg-white/80 backdrop-blur-[2px] group-hover:block"
             }`}
@@ -129,6 +155,8 @@ export default function ProductCard({ image, title, category, views, wins, label
           </div>
         </>
       )}
+
+      {showLogin && <LoginModal onClose={() => setShowLogin(false)} onLoginSuccess={() => { setLoggedIn(true); setShowLogin(false); }} />}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { DEFAULT_RING_COLOR } from "./Avatar";
 import { useAuth } from "./AuthProvider";
 import FavoriteGamesEmpty from "./FavoriteGamesEmpty";
+import { useFavorites } from "./FavoritesProvider";
 import Footer from "./Footer";
 import GeneralGames from "./GeneralGames";
 import Language from "./Language";
@@ -86,9 +87,11 @@ const talkingBarPrivateMessages: TalkSectionProps[] = [
 ];
 
 // Figma "General Games" (05_WU88-H-PC-Profile-Page node 451:16762, seen
-// live at 428:17332): the same 電子遊戲推薦 row every other page shows --
-// not a profile-specific game list.
-const generalGames: ProductCardProps[] = [
+// live at 428:17332) reused here as the pool of games that CAN show up in
+// 收藏的遊戲 -- not rendered directly (see the `favoritedGames` filter
+// below), since this row is specifically the ones actually liked, not a
+// generic recommendation list.
+const favoritableGames: ProductCardProps[] = [
   { image: "/assets/product-card/zombie-photo.png", title: "殭屍大戰", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"] },
   { image: "/assets/general-games/dungeon.png", title: "暗黑地下城", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "NEW"] },
   { image: "/assets/general-games/zeus.png", title: "宙斯創世", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"] },
@@ -124,21 +127,24 @@ const promotions: (PromotionCardProps & { key: string })[] = [
 // logging in here left everything below TopUp stuck showing the guest view
 // even after a successful login.
 //
-// `?guest=1` (passed down as `forceGuest`) still exists as a way to land
-// on this page already logged out -- there's no logout action anywhere
-// yet, so without it the only way to preview the guest state is to never
-// have logged in this session. It logs out ON LOAD (once, via the effect
-// below) rather than pinning guest permanently, so a real login started
-// from this same page still takes effect live instead of being silently
-// overridden by the param that got you here.
+// `?guest=1` (passed down as `forceGuest`) still exists as a quick way to
+// land on this page already logged out without using the sidebar's own
+// 登出 button first. It logs out ON LOAD (once, via the effect below)
+// rather than pinning guest permanently, so a real login started from this
+// same page still takes effect live instead of being silently overridden
+// by the param that got you here.
 //
 // Figma's guest page keeps the same row order as logged-in, just with
-// different content per row: the 電子遊戲推薦 row becomes a "收藏的遊戲"
-// empty-favorites card (FavoriteGamesEmpty, node 455:23414) since there's
-// nothing to recommend without an account yet, 投注紀錄 keeps its 4-card
-// layout but shows placeholder "---"/"0" values (node 459:85252) instead
-// of real numbers, and 優惠活動 is unchanged -- it's generic marketing
-// content, not member data, so it shows for guests exactly as logged-in.
+// different content per row: 電子遊戲推薦 becomes "收藏的遊戲" (node
+// 455:23414) -- reused here for BOTH the guest empty state and a logged-in
+// member who hasn't liked anything yet (`favoritedGames.length === 0`),
+// since neither has anything real to show there; a logged-in member who
+// has liked something sees an actual GeneralGames grid instead, filtered
+// to just those titles (see `favoritedGames` below and ProductCard/
+// FavoritesProvider's own comments). 投注紀錄 keeps its 4-card layout but
+// shows placeholder "---"/"0" values (node 459:85252) instead of real
+// numbers, and 優惠活動 is unchanged -- it's generic marketing content,
+// not member data, so it shows for guests exactly as logged-in.
 export default function ProfileContent({ forceGuest }: { forceGuest: boolean }) {
   const { loggedIn, setLoggedIn } = useAuth();
 
@@ -150,6 +156,9 @@ export default function ProfileContent({ forceGuest }: { forceGuest: boolean }) 
   }, [forceGuest]);
 
   const isGuest = !loggedIn;
+
+  const { liked } = useFavorites();
+  const favoritedGames = favoritableGames.filter((game) => liked.has(game.title));
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-[#f4f4f4]">
@@ -199,7 +208,11 @@ export default function ProfileContent({ forceGuest }: { forceGuest: boolean }) 
                 )}
               </div>
 
-              {isGuest ? <FavoriteGamesEmpty /> : <GeneralGames games={generalGames} />}
+              {isGuest || favoritedGames.length === 0 ? (
+                <FavoriteGamesEmpty />
+              ) : (
+                <GeneralGames games={favoritedGames} title="收藏的遊戲" icon="/assets/section-header/icon-favorite-games.svg" />
+              )}
 
               <Statistics
                 stats={
