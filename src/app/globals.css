@@ -244,17 +244,20 @@ body {
    a full dance read as too much (and separately had the reaching arm
    frozen in place while the rest of her body moved, its own bug fixed
    by explicitly prompting the arm to move WITH the body); a plain idle
-   sway read as too little ("not just standing there breathing"). This
-   version choreographs a clearly visible rhythmic side-to-side body sway
-   with the reaching arm lowering and swinging with that rhythm through
-   the middle of the loop, then rising back into the reaching pose near
-   the loop point -- landing back where slide 2's frame started for a
-   seamless cut to slide 1's own idle-sway hero. The clip stays well-
-   behaved throughout (unlike the full-dance take, no hair-across-the-
-   face or wide-open-laughing frames to dodge), so the 20 sprite frames
-   are evenly sampled across all 61 frames of a 12fps extraction instead
-   of hand-picked. Individually background-removed per frame, played back
-   as a 6x6 sprite sheet. Only 20 frames, not 31 -- fewer round trips
+   sway read as too little ("not just standing there breathing"); a
+   sway-with-the-arm-lowering-and-re-reaching cut was close but didn't
+   showcase the chest itself. This version keeps the same visible
+   rhythmic side-to-side sway, but the beat is her actively presenting
+   the treasure chest to camera (lifting/turning it into view) through
+   the middle of the loop, then easing gradually back into the original
+   reaching pose near the loop point -- a smooth glide back, not a snap,
+   landing where the loop started for a seamless cut to slide 1's own
+   idle-sway hero. The clip stays well-behaved throughout (unlike the
+   full-dance take, no hair-across-the-face or wide-open-laughing frames
+   to dodge), so the 20 sprite frames are evenly sampled across all 61
+   frames of a 12fps extraction instead of hand-picked. Individually
+   background-removed per frame, played back as a 6x6 sprite sheet. Only
+   20 frames, not 31 -- fewer round trips
    through upload/remove-background/download for a short loop, not a
    full 31-frame action sequence like Promotions' chest-opening -- so the
    math here is /20 (5% per step), not /31, and only the first 20 of the
