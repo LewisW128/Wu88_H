@@ -232,3 +232,43 @@ body {
   96.7742% { background-position: 0px -5120px; }
   100% { background-position: 0px 0px; }
 }
+
+/* Home-energy hero (ContainerBg, variant="home-energy"): the daily-login
+   carousel slide's character, restyled cyberpunk (see ContainerBg.tsx's
+   own comment) then animated the same way as the other three hero
+   sprites -- a Kling idle-sway loop from that still, generated against a
+   WHITE source from the start (this variant never had casino's black-
+   fringing bug to work around; the white-source fix just came from
+   the start this time), individually background-removed per frame, and
+   played back as a 6x6 sprite sheet. Only 20 frames, not 31 -- fewer
+   round trips through upload/remove-background/download for a still
+   subtle idle sway, not a full 31-frame action sequence like Promotions'
+   chest-opening -- so the math here is /20 (5% per step), not /31, and
+   only the first 20 of the 36 grid cells are ever visible. Offsets are in
+   the hero box's own 1536x1024 units (matching HOME_ENERGY_SPRITE_FRAME_W/H's
+   backgroundSize scaling in ContainerBg.tsx), not the sprite's native
+   1176x784 pixels -- see home-hero-sprite's own comment for why that
+   distinction matters. */
+@keyframes home-energy-hero-sprite {
+  0% { background-position: 0px 0px; }
+  5% { background-position: -1536px 0px; }
+  10% { background-position: -3072px 0px; }
+  15% { background-position: -4608px 0px; }
+  20% { background-position: -6144px 0px; }
+  25% { background-position: -7680px 0px; }
+  30% { background-position: 0px -1024px; }
+  35% { background-position: -1536px -1024px; }
+  40% { background-position: -3072px -1024px; }
+  45% { background-position: -4608px -1024px; }
+  50% { background-position: -6144px -1024px; }
+  55% { background-position: -7680px -1024px; }
+  60% { background-position: 0px -2048px; }
+  65% { background-position: -1536px -2048px; }
+  70% { background-position: -3072px -2048px; }
+  75% { background-position: -4608px -2048px; }
+  80% { background-position: -6144px -2048px; }
+  85% { background-position: -7680px -2048px; }
+  90% { background-position: 0px -3072px; }
+  95% { background-position: -1536px -3072px; }
+  100% { background-position: 0px 0px; }
+}

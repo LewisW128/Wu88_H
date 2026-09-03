@@ -100,25 +100,24 @@ function GradientHeadline({ text, gradientId }: { text: string; gradientId: stri
 //
 // Home-energy: the home page's second hero slide (style=02_Container02,
 // Figma node 894:103893), for the daily-login energy-refill carousel
-// panel -- same glow blobs + digital dots as the other home slide, but a
-// plain static cutout photo instead of an idle-sway sprite loop (Figma's
-// own source here really is just the one still, not a 31-frame sequence
-// like every other hero -- no animation to reproduce, it just wasn't
-// asked for). Same digital-dots offset as the default home slide too
-// (913px left in both, once you subtract this box's own half-width from
-// Figma's centered position) -- falls through to that shared branch
-// below rather than needing its own.
+// panel -- same glow blobs + digital dots as the other home slide. Same
+// digital-dots offset as the default home slide too (913px left in both,
+// once you subtract this box's own half-width from Figma's centered
+// position) -- falls through to that shared branch below rather than
+// needing its own.
 //
 // The character herself was restyled into the site's cyberpunk look via
 // Higgsfield (reference photo -> Soul 2.0 for a consistent-identity
 // full-body re-render in the new outfit, then a Flux Kontext edit pass to
-// swap what she's holding for a treasure chest, generated straight
-// against a plain white backdrop for a clean cutout) and pasted into
-// Figma as this variant's own source photo -- same pre-cutout RGBA
-// pipeline as every other hero here, just authored with AI tools instead
-// of a studio shoot. Box (348,-12, 1536x1024) is Figma's own updated
-// layer position, not the previous still's -- re-measured after the
-// swap rather than assumed unchanged.
+// swap what she's holding for a treasure chest) and pasted into Figma as
+// this variant's own source photo -- same pre-cutout RGBA pipeline as
+// every other hero here, just authored with AI tools instead of a studio
+// shoot. Box (348,-12, 1536x1024) is Figma's own updated layer position,
+// re-measured after the swap rather than assumed unchanged. Now an idle-
+// sway sprite loop too (see its own render branch below and globals.css'
+// home-energy-hero-sprite comment) -- Figma's own source is still just
+// the one still, but the Casino/Sport treatment of animating a locked-off
+// idle sway from it applied just as well here once asked for.
 //
 // Promotions: same skeleton again -- an animated chest-of-loot scene (see
 // its own sprite comment below) behind a "PROMOTIONS" headline. Figma's own
@@ -153,6 +152,14 @@ const HOME_SPRITE_FRAME_W = 893;
 const HOME_SPRITE_FRAME_H = 1046;
 const PROMO_SPRITE_FRAME_W = 1536;
 const PROMO_SPRITE_FRAME_H = 1024;
+// Only 20 frames (not 31) -- a subtle idle sway loop, not a full action
+// sequence, so it didn't need as many round trips through upload/remove-
+// background/download. Own duration constant since SPRITE_DURATION_S is
+// pinned to the shared 31-frame count.
+const HOME_ENERGY_SPRITE_FRAME_COUNT = 20;
+const HOME_ENERGY_SPRITE_DURATION_S = HOME_ENERGY_SPRITE_FRAME_COUNT / 6;
+const HOME_ENERGY_SPRITE_FRAME_W = 1536;
+const HOME_ENERGY_SPRITE_FRAME_H = 1024;
 export default function ContainerBg({ variant = "home" }: ContainerBgProps) {
   const isCasino = variant === "casino";
   const isSport = variant === "sport";
@@ -241,10 +248,26 @@ export default function ContainerBg({ variant = "home" }: ContainerBgProps) {
           />
         </>
       ) : isHomeEnergy ? (
-        <img
-          alt=""
-          src={withBasePath("/assets/container-bg/home-hero-energy-girl.webp")}
-          className="pointer-events-none absolute left-[348px] top-[-12px] h-[1024px] w-[1536px] object-cover"
+        // Sprite replaces the plain static photo: 20 frames of a confident,
+        // charismatic idle sway facing the camera (see globals.css's own
+        // comment on why 20, not 31, and why the source had to be
+        // regenerated against a white backdrop before extracting frames --
+        // the first pass used the Figma still's own black-filled-alpha
+        // background and reproduced Casino's exact black-edge fringing bug
+        // that Promotions already worked around). Native frame res
+        // (1176x784) shares the exact same 1.5 aspect as this box
+        // (1536x1024), so stretching straight to the box size introduces
+        // no distortion -- same box Figma's own updated layer reported.
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-[348px] top-[-12px]"
+          style={{
+            width: HOME_ENERGY_SPRITE_FRAME_W,
+            height: HOME_ENERGY_SPRITE_FRAME_H,
+            backgroundImage: `url(${withBasePath("/animation/home-energy-hero-sprite.webp")})`,
+            backgroundSize: `${HOME_ENERGY_SPRITE_FRAME_W * 6}px ${HOME_ENERGY_SPRITE_FRAME_H * 6}px`,
+            animation: `home-energy-hero-sprite ${HOME_ENERGY_SPRITE_DURATION_S}s steps(1, end) infinite`,
+          }}
         />
       ) : (
         <div
