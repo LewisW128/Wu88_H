@@ -12,11 +12,9 @@ import {
 } from "../components/HomeHeroCarousel";
 import HotGames from "../components/HotGames";
 import Language from "../components/Language";
-import { type ProductCardProps } from "../components/ProductCard";
 import { type PromotionCardProps } from "../components/PromotionCard";
 import Promotions from "../components/Promotions";
 import QuickLinks from "../components/QuickLinks";
-import type { RankedProductCardProps } from "../components/RankedProductCard";
 import ScaleToFit from "../components/ScaleToFit";
 import Search from "../components/Search";
 import Sidebar from "../components/Sidebar";
@@ -28,6 +26,7 @@ import TopBar from "../components/TopBar";
 import TopUp from "../components/TopUp";
 import WinList from "../components/WinList";
 import type { RankSectionProps } from "../components/RankSection";
+import { hotGames, generalGames } from "../lib/games";
 
 const winListRows: RankSectionProps[] = [
   { avatar: "/assets/win-list/avatar-0.png", name: "@Jessica", levelLabel: "Lv.40", levelBackground: "#8d54d8", bet: "200", win: "+ 10,000,000", odds: "0.00x", thumb: "/assets/win-list/game-0.png" },
@@ -100,37 +99,6 @@ const topBarAnnouncements = winListRows.map((row) => ({
   name: row.name.replace(/^@/, ""),
   amount: `USDT${row.win.replace(/^\+\s*/, "")}`,
 }));
-
-// Figma "Hot Games" (node 1136:88905): a numbered rank row, 01-10.
-const hotGames: RankedProductCardProps[] = [
-  { rank: "01", image: "/assets/hot-games/rank1-super-sports.png", title: "SUPER 體育", category: "體育", views: "10,000", wins: "1,000", labels: ["HOT"] },
-  { rank: "02", image: "/assets/hot-games/rank2-gold-hunt.png", title: "掏金歷險", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT"] },
-  { rank: "03", image: "/assets/hot-games/rank3-aladdin.png", title: "阿拉丁", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT"] },
-  { rank: "04", image: "/assets/hot-games/rank4-dragon-legend.png", title: "魔龍傳奇", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "NEW", "WU88"] },
-  { rank: "05", image: "/assets/hot-games/rank5-penguin.png", title: "企鵝打磚塊", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"] },
-  { rank: "06", image: "/assets/hot-games/rank6-empire.png", title: "帝國崛起", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "NEW", "WU88"] },
-  { rank: "07", image: "/assets/hot-games/rank7-fishing.png", title: "瘋狂釣魚", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"] },
-  { rank: "08", image: "/assets/hot-games/rank8-pirates.png", title: "神鬼奇航", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"] },
-  { rank: "09", image: "/assets/hot-games/rank9-mahjong.png", title: "龍虎鬥麻將", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "NEW", "WU88"] },
-  { rank: "10", image: "/assets/hot-games/rank10-racing.png", title: "瘋狂賽車", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"] },
-];
-
-// Figma "General Games" / 推薦遊戲 (node 1066:144380). The first slot reuses
-// the same zombie-photo demo art as everywhere else in this project, and
-// four more slots reuse Hot Games' own art -- Figma repeats those exact
-// same game instances across both sections rather than using new photos.
-const generalGames: ProductCardProps[] = [
-  { image: "/assets/product-card/zombie-photo.png", title: "殭屍大戰", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"] },
-  { image: "/assets/general-games/dungeon.png", title: "暗黑地下城", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "NEW"] },
-  { image: "/assets/general-games/zeus.png", title: "宙斯創世", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"] },
-  { image: "/assets/general-games/dragon-heir.png", title: "龍的傳人", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "NEW"] },
-  { image: "/assets/general-games/yakuza.png", title: "人中之龍", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"] },
-  { image: "/assets/hot-games/rank2-gold-hunt.png", title: "掏金歷險", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "NEW"] },
-  { image: "/assets/hot-games/rank3-aladdin.png", title: "阿拉丁", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "NEW"] },
-  { image: "/assets/hot-games/rank5-penguin.png", title: "企鵝打磚塊", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"] },
-  { image: "/assets/hot-games/rank6-empire.png", title: "帝國崛起", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT"] },
-  { image: "/assets/general-games/swordsmith.png", title: "鑄劍大師", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT"] },
-];
 
 // Figma "Form Bar" (node 883:125584): 7 category shortcuts, the same
 // looping-video notched card as the homepage's own "輪盤" GameCard demo --

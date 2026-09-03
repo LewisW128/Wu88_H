@@ -9,7 +9,6 @@ import Footer from "./Footer";
 import GeneralGames from "./GeneralGames";
 import Language from "./Language";
 import MinPanelHeight from "./MinPanelHeight";
-import type { ProductCardProps } from "./ProductCard";
 import ProfileCard from "./ProfileCard";
 import type { PromotionCardProps } from "./PromotionCard";
 import Promotions from "./Promotions";
@@ -25,6 +24,7 @@ import type { TalkSectionProps } from "./TalkSection";
 import TopBar from "./TopBar";
 import TopUp from "./TopUp";
 import VipCard from "./VipCard";
+import { ALL_GAMES } from "../lib/games";
 
 const winListRows = [
   { name: "@Jessica", win: "+ 10,000,000" },
@@ -86,24 +86,6 @@ const talkingBarPrivateMessages: TalkSectionProps[] = [
   { avatar: "/assets/talk-section/avatar-jackson.png", name: "@ Jackson", levelLabel: "Lv.100", levelBackground: DEFAULT_RING_COLOR, timestamp: "3 分鐘前", text: "剛剛那個遊戲的連結可以給我嗎？", variant: "other" },
 ];
 
-// Figma "General Games" (05_WU88-H-PC-Profile-Page node 451:16762, seen
-// live at 428:17332) reused here as the pool of games that CAN show up in
-// 收藏的遊戲 -- not rendered directly (see the `favoritedGames` filter
-// below), since this row is specifically the ones actually liked, not a
-// generic recommendation list.
-const favoritableGames: ProductCardProps[] = [
-  { image: "/assets/product-card/zombie-photo.png", title: "殭屍大戰", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"] },
-  { image: "/assets/general-games/dungeon.png", title: "暗黑地下城", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "NEW"] },
-  { image: "/assets/general-games/zeus.png", title: "宙斯創世", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"] },
-  { image: "/assets/general-games/dragon-heir.png", title: "龍的傳人", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "NEW"] },
-  { image: "/assets/general-games/yakuza.png", title: "人中之龍", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"] },
-  { image: "/assets/hot-games/rank2-gold-hunt.png", title: "掏金歷險", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "NEW"] },
-  { image: "/assets/hot-games/rank3-aladdin.png", title: "阿拉丁", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "NEW"] },
-  { image: "/assets/hot-games/rank5-penguin.png", title: "企鵝打磚塊", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"] },
-  { image: "/assets/hot-games/rank6-empire.png", title: "帝國崛起", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT"] },
-  { image: "/assets/general-games/swordsmith.png", title: "鑄劍大師", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT"] },
-];
-
 // Figma "Promotions" (node 451:18295, seen live at 428:17332): same 優惠活動
 // row as the homepage's own -- one Large countdown card plus three General
 // cards.
@@ -158,7 +140,7 @@ export default function ProfileContent({ forceGuest }: { forceGuest: boolean }) 
   const isGuest = !loggedIn;
 
   const { liked } = useFavorites();
-  const favoritedGames = favoritableGames.filter((game) => liked.has(game.title));
+  const favoritedGames = ALL_GAMES.filter((game) => liked.has(game.title));
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-[#f4f4f4]">
