@@ -5,6 +5,7 @@ const LINKS = [
   { label: "賭場", href: "/casino" },
   { label: "體育", href: "/sports" },
   { label: "會員中心", href: "/profile" },
+  { label: "高鐵訂票", href: "https://irs.thsrc.com.tw/IMINT/", external: true },
 ];
 
 // Figma node 900:9523's stroke is the WU88 rainbow (the same gradient as
@@ -19,28 +20,42 @@ const LINKS = [
 const BORDER_GRADIENT =
   "linear-gradient(89deg, #01fab0 0%, #14e8b8 7%, #48bace 20%, #9a71f1 39%, #b65afd 45%, #8d54d8 68%, #6f4fbd 88%, #644eb3 100%)";
 
-// Figma "Frame 1277": three pill shortcuts, each a label plus the same
-// diagonal Arrow_Special glyph used on every card's play button elsewhere
-// in this design. The border is a gradient, so a plain Tailwind
-// `border-[color]` can't express it -- built instead as two stacked
-// backgrounds (a solid white fill clipped to the padding box, the
-// gradient clipped to the border box, real border made transparent),
-// since `border-image` would work color-wise but ignores `border-radius`
-// entirely and square off this pill's rounded corners.
+// Figma "Frame 1277": pill shortcuts, each a label plus the same diagonal
+// Arrow_Special glyph used on every card's play button elsewhere in this
+// design. The border is a gradient, so a plain Tailwind `border-[color]`
+// can't express it -- built instead as two stacked backgrounds (a solid
+// white fill clipped to the padding box, the gradient clipped to the
+// border box, real border made transparent), since `border-image` would
+// work color-wise but ignores `border-radius` entirely and square off
+// this pill's rounded corners.
+//
+// The trailing "高鐵訂票" entry is external (Taiwan High Speed Rail's own
+// booking site), unlike the other three in-app routes, so it renders as a
+// plain new-tab anchor instead of a Next.js Link.
 export default function QuickLinks() {
   return (
     <div className="flex items-center gap-[10px]">
-      {LINKS.map(({ label, href }) => (
-        <Link
-          key={label}
-          href={href}
-          className="flex w-[120px] items-center justify-between rounded-[15px] border border-transparent px-[10px] py-[5px]"
-          style={{ background: `linear-gradient(white, white) padding-box, ${BORDER_GRADIENT} border-box` }}
-        >
-          <p className="whitespace-nowrap text-[14px] font-medium leading-[20px] tracking-[0.15px] text-[#3e4140]">{label}</p>
-          <img alt="" src={withBasePath("/assets/product-card/arrow-special.svg")} className="size-[25px]" />
-        </Link>
-      ))}
+      {LINKS.map(({ label, href, external }) => {
+        const pillClassName =
+          "flex w-[120px] items-center justify-between rounded-[15px] border border-transparent px-[10px] py-[5px]";
+        const pillStyle = { background: `linear-gradient(white, white) padding-box, ${BORDER_GRADIENT} border-box` };
+        const content = (
+          <>
+            <p className="whitespace-nowrap text-[14px] font-medium leading-[20px] tracking-[0.15px] text-[#3e4140]">{label}</p>
+            <img alt="" src={withBasePath("/assets/product-card/arrow-special.svg")} className="size-[25px]" />
+          </>
+        );
+
+        return external ? (
+          <a key={label} href={href} target="_blank" rel="noopener noreferrer" className={pillClassName} style={pillStyle}>
+            {content}
+          </a>
+        ) : (
+          <Link key={label} href={href} className={pillClassName} style={pillStyle}>
+            {content}
+          </Link>
+        );
+      })}
     </div>
   );
 }
