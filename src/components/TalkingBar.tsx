@@ -186,6 +186,13 @@ export default function TalkingBar({ messages, friends, simulatedMessages = [] }
   const [panelHeight, setPanelHeight] = useState(DEFAULT_PANEL_HEIGHT);
   const trackHeight = panelHeight - BOTTOM_CHROME;
   const [thumb, setThumb] = useState({ height: trackHeight, top: 0 });
+  // The top fade (fade-mask.svg) reads as "more content above, scroll up
+  // to see it" -- appropriate once the list actually overflows and can
+  // scroll, but showing it over a short friend list that already fits
+  // entirely on screen made the very first (and only) card look broken,
+  // permanently half-faded for no reason. Same overflow check the
+  // scrollbar thumb below already does, just also gating the mask.
+  const [needsScroll, setNeedsScroll] = useState(false);
 
   useEffect(() => {
     function update() {
@@ -226,8 +233,10 @@ export default function TalkingBar({ messages, friends, simulatedMessages = [] }
       const { scrollTop, scrollHeight, clientHeight } = el;
       if (scrollHeight <= clientHeight) {
         setThumb({ height: trackHeight, top: 0 });
+        setNeedsScroll(false);
         return;
       }
+      setNeedsScroll(true);
       const height = Math.max(24, (clientHeight / scrollHeight) * trackHeight);
       const maxTop = trackHeight - height;
       const top = (scrollTop / (scrollHeight - clientHeight)) * maxTop;
@@ -300,10 +309,12 @@ export default function TalkingBar({ messages, friends, simulatedMessages = [] }
           // ever actually visible through it. Keeping its own coordinate
           // space at the original fixed 1038px avoids re-warping this
           // shape the same way the panel background just was.
-          maskImage: `url("${withBasePath("/assets/talk-section/fade-mask.svg")}")`,
-          maskSize: "275px 1038px",
-          maskPosition: "-20px -125px",
-          maskRepeat: "no-repeat",
+          ...(needsScroll && {
+            maskImage: `url("${withBasePath("/assets/talk-section/fade-mask.svg")}")`,
+            maskSize: "275px 1038px",
+            maskPosition: "-20px -125px",
+            maskRepeat: "no-repeat",
+          }),
         }}
       >
         {showFriendList
