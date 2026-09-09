@@ -222,7 +222,10 @@ export default function AccountWallet() {
 
         <div className="relative rounded-tl-[60px] bg-white">
           <MinPanelHeight className="relative z-10 grid" style={{ gridTemplateColumns: "164px minmax(0, 1fr) 295px" }}>
-            <div className="sticky top-[79px] z-10 self-start justify-self-start pl-[30px]">
+            {/* top-[58px], matching StickyUtilityBar/TalkingBar's own
+                sticky offset -- see ProfileContent's own comment on this
+                same fix. */}
+            <div className="sticky top-[58px] z-10 self-start justify-self-start pl-[30px]">
               <ProfileSidebar />
             </div>
 

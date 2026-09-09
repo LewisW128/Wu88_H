@@ -90,7 +90,7 @@ function NavIcon({
 // comment) instead of this page needing its own separate notion of being
 // logged in.
 export default function ProfileSidebar() {
-  const { setLoggedIn } = useAuth();
+  const { loggedIn, setLoggedIn } = useAuth();
 
   return (
     <div className="flex w-[94px] flex-col items-center gap-[30px]">
@@ -116,12 +116,18 @@ export default function ProfileSidebar() {
           label="錢包"
           href="/profile/wallet"
         />
-        <NavIcon
-          icon="/assets/sidebar/profile-nav/records.svg"
-          activeIcon="/assets/sidebar/profile-nav/records-active.svg"
-          label="個人資訊"
-          href="/profile/account"
-        />
+        {/* /profile/account itself already bounces a guest straight back
+            to /profile (see AccountSettings' own comment) -- hiding the
+            icon too means a guest never sees an option that would just
+            redirect them away the moment they clicked it. */}
+        {loggedIn && (
+          <NavIcon
+            icon="/assets/sidebar/profile-nav/records.svg"
+            activeIcon="/assets/sidebar/profile-nav/records-active.svg"
+            label="個人資訊"
+            href="/profile/account"
+          />
+        )}
         <NavIcon icon="/assets/sidebar/profile-nav/trophy.svg" label="排行榜" />
       </div>
 

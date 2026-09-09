@@ -206,7 +206,13 @@ export default function ProfileContent({ forceGuest }: { forceGuest: boolean }) 
             sports. Content starts right below the utility row. */}
         <div className="relative rounded-tl-[60px] bg-white">
           <MinPanelHeight className="relative z-10 grid" style={{ gridTemplateColumns: "164px minmax(0, 1fr) 295px" }}>
-            <div className="sticky top-[79px] z-10 self-start justify-self-start pl-[30px]">
+            {/* top-[58px] matches StickyUtilityBar/TalkingBar's own sticky
+                offset (Top_bar's 38px height + the 20px gap below it) --
+                previously top-[79px], ~20px lower than either, which left
+                ProfileSidebar's own back button visibly sitting below the
+                search/language/儲值 row and TalkingBar's channel switch
+                instead of level with them. */}
+            <div className="sticky top-[58px] z-10 self-start justify-self-start pl-[30px]">
               <ProfileSidebar />
             </div>
 
