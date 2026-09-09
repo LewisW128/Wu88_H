@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { withBasePath } from "../lib/asset";
 import AnimatedArrowSpecial from "./AnimatedArrowSpecial";
 
@@ -12,6 +12,57 @@ export type PromotionCardCountdown = {
   minutes: string;
   seconds: string;
 };
+
+// Only ever used as a hook-call fallback when no `countdown` prop is
+// passed (General/Small cards, which never render the pill anyway) --
+// never actually displayed.
+const DEFAULT_COUNTDOWN_SEED: PromotionCardCountdown = { days: "08", hours: "08", minutes: "12", seconds: "32" };
+
+function countdownToSeconds({ days, hours, minutes, seconds }: PromotionCardCountdown): number {
+  return (Number(days) || 0) * 86400 + (Number(hours) || 0) * 3600 + (Number(minutes) || 0) * 60 + (Number(seconds) || 0);
+}
+
+const pad2 = (n: number) => String(n).padStart(2, "0");
+
+// A recurring countdown derived purely from wall-clock time (Date.now()
+// modulo the cycle length), not a fixed calendar deadline -- there's no
+// real promo end-date behind "08 天 08 時 12 分 32 秒", just a repeating
+// "counts down, hits zero, starts over" timer (per the user's own
+// request: 隨時間倒數，直到歸零再重來). Deriving it this way, rather than
+// tracking "time since mount" or persisting a target end-time, also
+// means every place this same promo appears (PromotionCard's own "usdt"
+// entry AND GuestPromoCard's copy of the identical countdown) shows the
+// same synchronized value at any given real moment for free, with no
+// shared state needed between them.
+export function useCountdown(seed: PromotionCardCountdown): PromotionCardCountdown {
+  const cycleMs = countdownToSeconds(seed) * 1000;
+  // SSR-safe: starts at the exact seed values (matching what used to be
+  // the permanently-static display) on both the server render and the
+  // first client render, then corrects to the real live value once
+  // mounted -- same reasoning as this project's other wall-clock/
+  // localStorage-driven state (Day Rewards, the count-up numbers on
+  // Statistics, etc.).
+  const [remainingMs, setRemainingMs] = useState(cycleMs);
+
+  useEffect(() => {
+    function update() {
+      const elapsed = Date.now() % cycleMs;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setRemainingMs(cycleMs - elapsed);
+    }
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, [cycleMs]);
+
+  const totalSeconds = Math.ceil(remainingMs / 1000);
+  return {
+    days: pad2(Math.floor(totalSeconds / 86400)),
+    hours: pad2(Math.floor((totalSeconds % 86400) / 3600)),
+    minutes: pad2(Math.floor((totalSeconds % 3600) / 60)),
+    seconds: pad2(totalSeconds % 60),
+  };
+}
 
 export type PromotionCardProps = {
   size?: PromotionCardSize;
@@ -72,6 +123,12 @@ export function TimeUnit({ value, unit }: { value: string; unit: string }) {
 export default function PromotionCard({ size = "General", image, lines, countdown }: PromotionCardProps) {
   const config = SIZE_CONFIG[size];
   const [hovered, setHovered] = useState(false);
+  // Hooks can't be called conditionally, so this runs every render
+  // regardless of `size`/whether `countdown` was passed -- its result is
+  // simply unused below when there's no countdown pill to show. Falls
+  // back to the caller-agnostic default seed rather than e.g. skipping
+  // with a zero-length cycle, which would divide by zero.
+  const liveCountdown = useCountdown(countdown ?? DEFAULT_COUNTDOWN_SEED);
   const maskStyle = {
     maskImage: `url("${withBasePath(config.mask)}")`,
     maskSize: `${config.width}px 210px`,
@@ -137,10 +194,10 @@ export default function PromotionCard({ size = "General", image, lines, countdow
             {size === "Large" && countdown && (
               <div className="flex flex-col items-start rounded-[10px] bg-white/50 px-[10px] py-[5px] backdrop-blur-[10px]">
                 <div className="flex w-[327px] items-center justify-between whitespace-nowrap tracking-[0.15px]">
-                  <TimeUnit value={countdown.days} unit="天" />
-                  <TimeUnit value={countdown.hours} unit="時" />
-                  <TimeUnit value={countdown.minutes} unit="分" />
-                  <TimeUnit value={countdown.seconds} unit="秒" />
+                  <TimeUnit value={liveCountdown.days} unit="天" />
+                  <TimeUnit value={liveCountdown.hours} unit="時" />
+                  <TimeUnit value={liveCountdown.minutes} unit="分" />
+                  <TimeUnit value={liveCountdown.seconds} unit="秒" />
                 </div>
               </div>
             )}
