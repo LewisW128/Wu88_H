@@ -89,14 +89,22 @@ function RewardCard({ day, reward, icon, claimed = false }: RewardCardProps) {
 // glyph is already baked into swirl.svg itself (its own `Rewards` group,
 // identical to peace-icon.svg's shape) alongside the teal blob and
 // sparkle stars -- adding one anyway just doubled up the same diamond.
-function RewardCardLargeContent({ day, reward }: { day: string; reward: string }) {
+// `priceLeft` defaults to the card's true center (74.5px, rest state has
+// nothing in the way). The hover layer overrides it to 44.5px -- Figma's
+// own hover price sits at `left: calc(50% - 30px)` rather than dead
+// center, shifted clear of the notch/button in the bottom-right corner so
+// the text doesn't render underneath it.
+function RewardCardLargeContent({ day, reward, priceLeft = "74.5px" }: { day: string; reward: string; priceLeft?: string }) {
   return (
     <>
       <div className="absolute inset-x-0 top-0 flex h-[44px] items-center justify-center bg-[#8d54d8]">
         <p className="whitespace-nowrap text-[16px] font-bold leading-[24px] tracking-[0.15px] text-[#67e4d2]">{day}</p>
       </div>
       <img alt="" src={withBasePath("/assets/day-rewards/swirl.svg")} className="absolute left-1/2 top-[65px] h-[78px] w-[88.779px] -translate-x-1/2" />
-      <p className="absolute left-1/2 top-[152px] -translate-x-1/2 whitespace-nowrap text-[20px] font-black leading-[32px] tracking-[0.35px] text-[#3e4140]">
+      <p
+        className="absolute -translate-x-1/2 whitespace-nowrap text-[20px] font-black leading-[32px] tracking-[0.35px] text-[#3e4140]"
+        style={{ left: priceLeft, top: "152px" }}
+      >
         {reward}
       </p>
     </>
@@ -133,7 +141,7 @@ function RewardCardLarge({ day, reward }: { day: string; reward: string }) {
       </div>
 
       <div className="absolute inset-0 bg-white opacity-0 transition-opacity duration-200 group-hover:opacity-100" style={{ clipPath: REWARD_HOVER_CLIP_PATH }}>
-        <RewardCardLargeContent day={day} reward={reward} />
+        <RewardCardLargeContent day={day} reward={reward} priceLeft="44.5px" />
       </div>
       <img
         alt=""
