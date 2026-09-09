@@ -67,7 +67,12 @@ function RewardCard({ day, reward, icon, claimed = false }: RewardCardProps) {
 // current day you can actually claim, set apart from the rest of the row
 // -- see REWARD_BORDER_GRADIENT's own comment for why this isn't a flat
 // #01fab0 border despite that being what get_design_context reported) and
-// a purple day-label bar instead of the normal cards' dark gray.
+// a purple day-label bar instead of the normal cards' dark gray. Its
+// center icon is swirl.svg alone -- unlike the normal cards, Figma never
+// layers a separate REWARD_ICON_SRC image on top here, since the diamond
+// glyph is already baked into swirl.svg itself (its own `Rewards` group,
+// identical to peace-icon.svg's shape) alongside the teal blob and
+// sparkle stars -- adding one anyway just doubled up the same diamond.
 function RewardCardLarge({ day, reward }: { day: string; reward: string }) {
   return (
     <div
@@ -77,8 +82,7 @@ function RewardCardLarge({ day, reward }: { day: string; reward: string }) {
       <div className="absolute inset-x-0 top-0 flex h-[44px] items-center justify-center bg-[#8d54d8]">
         <p className="whitespace-nowrap text-[16px] font-bold leading-[24px] tracking-[0.15px] text-[#67e4d2]">{day}</p>
       </div>
-      <img alt="" src={withBasePath("/assets/day-rewards/swirl.svg")} className="absolute left-1/2 top-[65px] w-[88.779px] -translate-x-1/2" />
-      <img alt="" src={withBasePath("/assets/day-rewards/peace-icon.svg")} className="absolute left-1/2 top-[85px] size-[60px] -translate-x-1/2" />
+      <img alt="" src={withBasePath("/assets/day-rewards/swirl.svg")} className="absolute left-1/2 top-[65px] h-[78px] w-[88.779px] -translate-x-1/2" />
       <p className="absolute left-1/2 top-[152px] -translate-x-1/2 whitespace-nowrap text-[20px] font-black leading-[32px] tracking-[0.35px] text-[#3e4140]">
         {reward}
       </p>
