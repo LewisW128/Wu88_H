@@ -90,11 +90,27 @@ function RewardCard({ day, reward, icon, claimed = false }: RewardCardProps) {
 // identical to peace-icon.svg's shape) alongside the teal blob and
 // sparkle stars -- adding one anyway just doubled up the same diamond.
 // `priceLeft` defaults to the card's true center (74.5px, rest state has
-// nothing in the way). The hover layer overrides it to 44.5px -- Figma's
-// own hover price sits at `left: calc(50% - 30px)` rather than dead
-// center, shifted clear of the notch/button in the bottom-right corner so
-// the text doesn't render underneath it.
-function RewardCardLargeContent({ day, reward, priceLeft = "74.5px" }: { day: string; reward: string; priceLeft?: string }) {
+// nothing in the way and gets the full 149px to itself, so no width cap --
+// left as `whitespace-nowrap` with the text always shown in full). The
+// hover layer overrides it to 44.5px -- Figma's own hover price sits at
+// `left: calc(50% - 30px)` rather than dead center, shifted clear of the
+// notch/button in the bottom-right corner so the text doesn't render
+// underneath it -- and passes `priceMaxWidth` to cap how far it can grow
+// back toward that corner: past 84px (clearing the notch boundary around
+// x=89) it truncates with an ellipsis instead of drifting under the
+// button, per the user's own call once "+99W" was confirmed as the
+// widest case Figma actually shows here.
+function RewardCardLargeContent({
+  day,
+  reward,
+  priceLeft = "74.5px",
+  priceMaxWidth,
+}: {
+  day: string;
+  reward: string;
+  priceLeft?: string;
+  priceMaxWidth?: string;
+}) {
   return (
     <>
       <div className="absolute inset-x-0 top-0 flex h-[44px] items-center justify-center bg-[#8d54d8]">
@@ -102,8 +118,8 @@ function RewardCardLargeContent({ day, reward, priceLeft = "74.5px" }: { day: st
       </div>
       <img alt="" src={withBasePath("/assets/day-rewards/swirl.svg")} className="absolute left-1/2 top-[65px] h-[78px] w-[88.779px] -translate-x-1/2" />
       <p
-        className="absolute -translate-x-1/2 whitespace-nowrap text-[20px] font-black leading-[32px] tracking-[0.35px] text-[#3e4140]"
-        style={{ left: priceLeft, top: "152px" }}
+        className="absolute -translate-x-1/2 overflow-hidden text-ellipsis whitespace-nowrap text-[20px] font-black leading-[32px] tracking-[0.35px] text-[#3e4140]"
+        style={{ left: priceLeft, top: "152px", maxWidth: priceMaxWidth }}
       >
         {reward}
       </p>
@@ -141,7 +157,7 @@ function RewardCardLarge({ day, reward }: { day: string; reward: string }) {
       </div>
 
       <div className="absolute inset-0 bg-white opacity-0 transition-opacity duration-200 group-hover:opacity-100" style={{ clipPath: REWARD_HOVER_CLIP_PATH }}>
-        <RewardCardLargeContent day={day} reward={reward} priceLeft="44.5px" />
+        <RewardCardLargeContent day={day} reward={reward} priceLeft="44.5px" priceMaxWidth="84px" />
       </div>
       <img
         alt=""
