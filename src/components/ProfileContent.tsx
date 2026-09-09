@@ -223,14 +223,15 @@ export default function ProfileContent({ forceGuest }: { forceGuest: boolean }) 
               )}
 
               <Statistics
-                balance={isGuest ? undefined : "10,000,000"}
+                guest={isGuest}
+                balance={isGuest ? "---" : "10,000,000"}
                 stats={
                   isGuest
                     ? [
-                        { icon: "/assets/statistics/icon-diamond.svg", value: "---", label: "總投注", trend: false },
-                        { icon: "/assets/statistics/icon-win.svg", value: "---", label: "總獲利", trend: false },
-                        { icon: "/assets/statistics/icon-trophy.svg", value: "0", label: "排名", trend: false },
-                        { icon: "/assets/statistics/icon-fraction.svg", value: "---", label: "平均勝率", trend: false },
+                        { icon: "/assets/statistics/icon-diamond.svg", value: "---", label: "總投注" },
+                        { icon: "/assets/statistics/icon-win.svg", value: "---", label: "總獲利" },
+                        { icon: "/assets/statistics/icon-trophy.svg", value: "---", label: "排名" },
+                        { icon: "/assets/statistics/icon-fraction.svg", value: "---", label: "平均勝率" },
                       ]
                     : [
                         { icon: "/assets/statistics/icon-diamond.svg", value: "10,000", label: "總投注" },
