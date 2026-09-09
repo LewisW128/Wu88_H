@@ -201,57 +201,115 @@ function RewardCardLarge({ day, reward, onClaim }: { day: string; reward: string
   );
 }
 
-// The streak's own "which day is next to claim" state. Advances by one
-// ONLY when the current day's own claim button is actually clicked --
-// there's no date/calendar check, so leaving today's card unclaimed
-// leaves it exactly as-is (still the highlighted large card) no matter
-// how many real days pass; it only ever becomes the small dimmed/
-// checkmarked "claimed" look, and hands the large slot to the next day,
-// once you click that bottom-right icon. Persisted to localStorage (not
-// the AuthProvider Context) since it needs to survive a real page
-// reload/revisit, unlike the rest of this project's mock login state.
-// Starts at day 2 -- day 1 ships pre-claimed, matching the row Figma
-// itself shows by default.
-const CURRENT_DAY_STORAGE_KEY = "wu88-day-rewards-current-day";
+// The last day this row's own row of cards actually spans -- Figma's row
+// stops at DAY 6 and hands off to the "七日壓軸好禮" character art for day
+// 7, so there's no card to unlock or claim beyond this regardless of how
+// many real days have passed.
+const LAST_CARD_DAY = 6;
+const MS_PER_DAY = 86400000;
+const ANCHOR_STORAGE_KEY = "wu88-day-rewards-anchor";
+const CLAIMED_STORAGE_KEY = "wu88-day-rewards-claimed";
 
-function useCurrentDay() {
-  const [currentDay, setCurrentDay] = useState(2);
+function startOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+}
+
+// Real calendar days elapsed since `anchorMs` (itself already a
+// start-of-day timestamp), not a raw 24h-period count -- so a claim made
+// at 11pm still counts "tomorrow" as unlocked the moment it's past
+// midnight, not 24 hours later.
+function daysSinceAnchor(anchorMs: number, now: Date) {
+  return Math.round((startOfDay(now) - anchorMs) / MS_PER_DAY);
+}
+
+// Real date-driven unlock, not click-driven: a day only becomes
+// claimable once its own calendar day actually arrives (`unlockedDay`),
+// so there's no way to claim ahead of today ("不能領取隔日"). Missing a
+// day doesn't forfeit it, though -- `claimed` is a set, not a boundary,
+// so any unlocked-but-unclaimed day (today's or an earlier missed one)
+// stays claimable ("前一日沒領可以補領"). `currentDay` (the one card that
+// actually gets the large/claimable treatment) is derived as the
+// EARLIEST unclaimed day within what's unlocked, so catching up after
+// missing several days happens one card at a time rather than unlocking
+// every missed day's claim button simultaneously -- there's only ever
+// one large-card slot in this row to begin with.
+//
+// Both pieces persist to localStorage (not the AuthProvider Context)
+// since they need to survive a real page reload/revisit, unlike the
+// rest of this project's mock login state. First-ever visit seeds the
+// anchor as yesterday and day 1 as already claimed, so day 2 is what's
+// unlocked today -- matching the row's own established default look
+// (day 1 claimed, day 2 current) instead of starting cold on day 1.
+function useDayRewardsState() {
+  const [claimed, setClaimed] = useState<Set<number>>(() => new Set([1]));
+  const [unlockedDay, setUnlockedDay] = useState(2);
 
   useEffect(() => {
-    const stored = Number(localStorage.getItem(CURRENT_DAY_STORAGE_KEY));
-    // A lazy useState(() => localStorage...) initializer would dodge the
-    // set-state-in-effect rule below, but this tree is server-rendered
-    // too (a "use client" component still gets SSR'd in the App Router),
-    // and localStorage isn't available there -- the effect is what keeps
-    // the first client render matching the server's own default-day-2
-    // markup instead of risking a hydration mismatch, only correcting it
-    // once mounted. This is exactly the "sync from an external system"
-    // case the rule's own docs carve out, just a one-time read rather
-    // than a live subscription.
+    // Same reasoning as this file's earlier version of this effect: a
+    // lazy useState initializer would dodge the set-state-in-effect rule
+    // below, but this tree is server-rendered too and localStorage isn't
+    // available there, so the effect is what keeps the first client
+    // render matching the server's own default markup instead of
+    // risking a hydration mismatch, only correcting it once mounted.
+    let anchor = Number(localStorage.getItem(ANCHOR_STORAGE_KEY));
+    if (!anchor) {
+      anchor = startOfDay(new Date()) - MS_PER_DAY;
+      localStorage.setItem(ANCHOR_STORAGE_KEY, String(anchor));
+    }
+
+    let claimedDays: number[] = [1];
+    try {
+      const stored = localStorage.getItem(CLAIMED_STORAGE_KEY);
+      if (stored) claimedDays = JSON.parse(stored);
+    } catch {
+      claimedDays = [1];
+    }
+
+    const today = Math.min(LAST_CARD_DAY, Math.max(1, 1 + daysSinceAnchor(anchor, new Date())));
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (stored >= 1) setCurrentDay(stored);
+    setUnlockedDay(today);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setClaimed(new Set(claimedDays));
   }, []);
 
-  const claim = () => {
-    setCurrentDay((day) => {
-      const next = day + 1;
-      localStorage.setItem(CURRENT_DAY_STORAGE_KEY, String(next));
+  // Derived, not its own state: computing it fresh from `claimed` +
+  // `unlockedDay` every render means there's no separate value that
+  // could ever drift out of sync with them. `null` once every unlocked
+  // day is already claimed -- today's done, nothing to show as current
+  // until tomorrow actually unlocks the next one.
+  let currentDay: number | null = null;
+  for (let day = 1; day <= unlockedDay; day++) {
+    if (!claimed.has(day)) {
+      currentDay = day;
+      break;
+    }
+  }
+
+  const claim = (day: number) => {
+    setClaimed((prev) => {
+      const next = new Set(prev);
+      next.add(day);
+      localStorage.setItem(CLAIMED_STORAGE_KEY, JSON.stringify([...next]));
       return next;
     });
   };
 
-  return { currentDay, claim };
+  return { claimed, currentDay, claim };
 }
 
 // Figma "Day Rewards" (05_WU88-H-PC-Profile-Page node 601:14802, seen live
 // on the logged-in page at 428:17332, node 610:57263 for the instance
-// itself): a 7-day login-streak row -- every day before `currentDay` sits
-// claimed (dimmed, checkmarked), `currentDay` itself gets the larger
-// highlighted card with the claim button, and every day after it sits as
-// a plain not-yet-reached card. No DAY 7 card once `currentDay` passes 6
-// -- Figma's own row stops at DAY 6, and the "七日壓軸好禮" (7-day grand
-// prize) character art on the right stands in for day 7 rather than a
-// card, so once day 6 is claimed the row just shows all 6 as claimed.
+// itself): a 7-day login-streak row -- every claimed day sits dimmed/
+// checkmarked, the earliest still-unlocked-but-unclaimed day (if any)
+// gets the larger highlighted card with the claim button, and every day
+// after that sits as a plain not-yet-reached card. In practice `claimed`
+// never actually ends up with gaps -- the claim button only ever exists
+// on that one earliest-pending card to begin with, so there's no way to
+// reach a later day before an earlier missed one -- but see
+// useDayRewardsState's own comment for why it's modeled as a set rather
+// than a single boundary regardless. No DAY 7 card -- Figma's own row
+// stops at DAY 6, and the "七日壓軸好禮" (7-day grand prize) character art
+// on the right stands in for day 7 rather than a card.
 //
 // The character art overlaps the last reward card by 50px (a negative
 // right margin on the card row, not overlap math on the art itself) --
@@ -264,7 +322,7 @@ function useCurrentDay() {
 // used identically on both /profile and /promotions.
 export default function DayRewards() {
   const { loggedIn } = useAuth();
-  const { currentDay, claim } = useCurrentDay();
+  const { claimed, currentDay, claim } = useDayRewardsState();
   if (!loggedIn) return null;
 
   return (
@@ -277,9 +335,9 @@ export default function DayRewards() {
         <div className="flex w-full items-center gap-[20px]">
           {REWARD_DAYS.map(({ day, reward, icon }) =>
             day === currentDay ? (
-              <RewardCardLarge key={day} day={`DAY ${day}`} reward={reward} onClaim={claim} />
+              <RewardCardLarge key={day} day={`DAY ${day}`} reward={reward} onClaim={() => claim(day)} />
             ) : (
-              <RewardCard key={day} day={`DAY ${day}`} reward={reward} icon={icon} claimed={day < currentDay} />
+              <RewardCard key={day} day={`DAY ${day}`} reward={reward} icon={icon} claimed={claimed.has(day)} />
             ),
           )}
         </div>
