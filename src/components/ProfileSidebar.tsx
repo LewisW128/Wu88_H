@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { withBasePath } from "../lib/asset";
 import { useAuth } from "./AuthProvider";
 
@@ -12,12 +13,33 @@ function Divider() {
 // (frosted-white bg + blur, same as MainSelections' own state-on/off) --
 // no separate background wrapper needed here, just the image itself.
 //
-// `href` renders a real Link (帳戶設定/錢包 now have actual pages); the
-// rest stay plain buttons -- still decorative until their own pages exist.
-function NavIcon({ icon, label, href, onClick }: { icon: string; label: string; href?: string; onClick?: () => void }) {
+// `href` renders a real Link (會員中心/錢包/個人資訊 now have actual pages);
+// the rest stay plain buttons -- still decorative until their own pages
+// exist. `activeIcon` swaps in the glowing on-state export once the
+// current route actually matches `href` -- Figma's own rail shows a
+// DIFFERENT icon highlighted on each of the 3 real pages (confirmed by
+// fetching each page's own sidebar frame separately: 會員中心 glows on
+// /profile, 錢包 on /profile/wallet, 個人資訊 on /profile/account), not one
+// icon permanently pinned "on" regardless of where you actually are.
+function NavIcon({
+  icon,
+  activeIcon,
+  label,
+  href,
+  onClick,
+}: {
+  icon: string;
+  activeIcon?: string;
+  label: string;
+  href?: string;
+  onClick?: () => void;
+}) {
+  const pathname = usePathname();
+  const isActive = !!href && !!activeIcon && pathname === href;
+
   const content = (
     <>
-      <img alt="" src={withBasePath(icon)} className="h-[89px] w-[93px]" />
+      <img alt="" src={withBasePath(isActive ? activeIcon! : icon)} className="h-[89px] w-[93px]" />
       <span className="pointer-events-none absolute left-full top-1/2 ml-[13.5px] -translate-y-1/2 whitespace-nowrap rounded-[15px] bg-[#3e4140] px-[11px] py-[9px] text-[14px] font-medium leading-[20px] tracking-[0.15px] text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100">
         {label}
       </span>
@@ -80,11 +102,26 @@ export default function ProfileSidebar() {
         <img alt="" src={withBasePath("/assets/sidebar/back-arrow.svg")} className="size-[25px]" />
       </Link>
 
-      <NavIcon icon="/assets/sidebar/profile-nav/home-active.svg" label="會員中心" href="/profile" />
+      <NavIcon
+        icon="/assets/sidebar/profile-nav/home.svg"
+        activeIcon="/assets/sidebar/profile-nav/home-active.svg"
+        label="會員中心"
+        href="/profile"
+      />
 
       <div className="flex w-full flex-col items-start gap-[20px]">
-        <NavIcon icon="/assets/sidebar/profile-nav/wallet.svg" label="錢包" href="/profile/wallet" />
-        <NavIcon icon="/assets/sidebar/profile-nav/records.svg" label="個人資訊" href="/profile/account" />
+        <NavIcon
+          icon="/assets/sidebar/profile-nav/wallet.svg"
+          activeIcon="/assets/sidebar/profile-nav/wallet-active.svg"
+          label="錢包"
+          href="/profile/wallet"
+        />
+        <NavIcon
+          icon="/assets/sidebar/profile-nav/records.svg"
+          activeIcon="/assets/sidebar/profile-nav/records-active.svg"
+          label="個人資訊"
+          href="/profile/account"
+        />
         <NavIcon icon="/assets/sidebar/profile-nav/trophy.svg" label="排行榜" />
       </div>
 
