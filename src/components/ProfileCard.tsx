@@ -15,21 +15,24 @@ export type ProfileCardProps =
 // Figma "Frame 1304": the profile header, in two states --
 // logged-in (05_WU88-H-PC-Profile-Page node 444:42438, seen live at
 // 428:17332) and logged-out/guest (node 455:23386, seen live at
-// 455:23317). Same avatar-with-ribbons treatment either way, but the
-// info panel differs in both width and content: logged-in sits at a
-// fixed 614px beside VipCard (614+614+20 gap = this page's usual 1249px
-// content width -- VipCard doesn't exist for a guest, so there's nothing
-// to share the row with), and shows the real name/email/ID; logged-out
-// spans the full row width and shows 註冊/登入 buttons instead (per a
-// Figma update -- was 登錄, now matches the "登入" label TopUp/LoginPopup
-// already use everywhere else; also picked up the asymmetric
-// bl/br/tr-[20px] pill shape those buttons already use, replacing this
-// card's own stale uniform rounded-[15px]), with both privacy toggles
-// rendered `disabled` (there's nothing to toggle before you've logged
-// in). "登入" opens the same LoginModal TopUp's own guest button does --
-// there's no reason this card's own button should be inert when a real
-// login flow already exists. The avatar itself swaps a real cropped photo
-// for a generic person-outline icon centered in the same mask shape.
+// 455:23317). Same avatar-with-ribbons treatment either way, and now the
+// SAME flex-1 614px width too -- Figma's guest state used to span the
+// whole row solo, but now sits beside its own promo card (the same
+// "usdt" Large PromotionCard from the Promotions row, node 595:15300)
+// the exact way VipCard sits beside the logged-in state, just with a
+// wider 32px gap between them instead of the usual 20px (see
+// ProfileContent's own comment). The info panel's content still differs:
+// logged-in shows the real name/email/ID; logged-out shows 註冊/登入
+// buttons instead (per a Figma update -- was 登錄, now matches the "登入"
+// label TopUp/LoginPopup already use everywhere else; also picked up the
+// asymmetric bl/br/tr-[20px] pill shape those buttons already use,
+// replacing this card's own stale uniform rounded-[15px]), with both
+// privacy toggles rendered `disabled` (there's nothing to toggle before
+// you've logged in). "登入" opens the same LoginModal TopUp's own guest
+// button does -- there's no reason this card's own button should be
+// inert when a real login flow already exists. The avatar itself swaps a
+// real cropped photo for a generic person-outline icon centered in the
+// same mask shape.
 //
 // Paint order matters and mirrors Figma's own layer order exactly: the
 // info panel is painted first, then the avatar on top of it (so the
@@ -62,7 +65,7 @@ export default function ProfileCard(props: ProfileCardProps) {
   const loginArrow = useArrowPulse();
 
   return (
-    <div className={`relative h-[303px] overflow-hidden rounded-[25px] bg-white ${props.loggedIn ? "flex-1" : "w-full"}`}>
+    <div className="relative h-[303px] flex-1 overflow-hidden rounded-[25px] bg-white">
       <div className="absolute left-0 right-0 top-[67px] h-[236px] overflow-hidden rounded-[25px] border border-[#f4f4f4] bg-white">
         <img
           alt=""
@@ -80,7 +83,7 @@ export default function ProfileCard(props: ProfileCardProps) {
             <p className="whitespace-nowrap text-[10px] leading-[18px] tracking-[0.15px] text-[#a2a2a2]">ID {props.memberId}</p>
           </div>
         ) : (
-          <div className="absolute left-[944px] top-[19px] flex items-center gap-[20px]">
+          <div className="absolute left-[319px] top-[19px] flex items-center gap-[20px]">
             <button
               type="button"
               onMouseEnter={registerArrow.pulse}

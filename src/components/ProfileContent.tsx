@@ -11,7 +11,7 @@ import GeneralGames from "./GeneralGames";
 import Language from "./Language";
 import MinPanelHeight from "./MinPanelHeight";
 import ProfileCard from "./ProfileCard";
-import type { PromotionCardProps } from "./PromotionCard";
+import PromotionCard, { type PromotionCardProps } from "./PromotionCard";
 import Promotions from "./Promotions";
 import QuickLinks from "./QuickLinks";
 import ScaleToFit from "./ScaleToFit";
@@ -176,13 +176,24 @@ export default function ProfileContent({ forceGuest }: { forceGuest: boolean }) 
               </StickyUtilityBar>
 
               {/* `items-end`, not `items-start`: Figma has these two cards at
-                  different heights (ProfileCard 303px vs VipCard 236px) but
-                  the SAME bottom edge (76+303 = 143+236 = 379) -- VipCard's
-                  own top sits 67px lower than ProfileCard's, not shorter-
-                  and-top-aligned. */}
-              <div className="flex w-full items-end gap-[20px]">
+                  different heights (ProfileCard 303px vs its sibling's
+                  236px) but the SAME bottom edge (76+303 = 143+236 = 379) --
+                  the sibling's own top sits 67px lower than ProfileCard's,
+                  not shorter-and-top-aligned. Guest pairs ProfileCard with
+                  the same "usdt" Large PromotionCard the Promotions row
+                  uses (node 595:15300, seen live at 455:23317) -- new since
+                  the last pass here, previously ProfileCard just spanned
+                  the row alone -- with a wider 32px gap than the logged-in
+                  ProfileCard/VipCard pairing's usual 20px (614+594+32=1240
+                  vs 614+614+20=1248, both approximating this page's own
+                  ~1249px content width; Figma's own numbers, not rounded
+                  to match each other). */}
+              <div className={`flex w-full items-end ${isGuest ? "gap-[32px]" : "gap-[20px]"}`}>
                 {isGuest ? (
-                  <ProfileCard loggedIn={false} />
+                  <>
+                    <ProfileCard loggedIn={false} />
+                    <PromotionCard {...promotions[0]} />
+                  </>
                 ) : (
                   <>
                     <ProfileCard loggedIn avatar="/assets/profile/avatar-placeholder.png" name="JESSICA" email="JESSICA123@gmail.com" memberId="1234567890" />
