@@ -8,15 +8,20 @@ import { withBasePath } from "../lib/asset";
 // screenshot/rendered design before trusting a border color literally, not
 // just here.
 //
-// Direction matters and was wrong on the first pass: the user's own
-// reference (a direct screenshot of this exact card) shows purple at the
-// TOP of the card fading to teal/green at the BOTTOM -- `0deg` (gradient
-// axis pointing "to top") puts the array's own 0% stop (#01fab0, teal) at
-// the bottom and 100% (#644eb3, dark purple) at the top, matching that.
-// `180deg` (what shipped first) put it backwards -- teal top, purple
-// bottom.
+// Direction has needed two corrections against the user's own references
+// (direct screenshots of this exact card, not the flattened solid color
+// get_design_context reports): first that it's purple at the TOP fading to
+// teal/green at the BOTTOM, not the reverse; then that the axis itself is
+// on the diagonal, not straight down -- a screenshot of Figma's own
+// gradient-handle overlay shows the line running from upper-left to
+// lower-right, steeper than the 45° diagonal (measured off that overlay:
+// ~29° off vertical, i.e. ~150.8deg toward the lower-right end). `-30deg`
+// (equivalently 330deg) points the gradient axis toward the upper-left,
+// which is where the 100% stop (#644eb3, dark purple) lands -- so purple
+// sits upper-left and the array's own 0% stop (#01fab0, teal) lands
+// lower-right, matching both which corner is which color and the tilt.
 const REWARD_BORDER_GRADIENT =
-  "linear-gradient(0deg, #01fab0 0%, #14e8b8 7%, #48bace 20%, #9a71f1 39%, #b65afd 45%, #8d54d8 68%, #6f4fbd 88%, #644eb3 100%)";
+  "linear-gradient(-30deg, #01fab0 0%, #14e8b8 7%, #48bace 20%, #9a71f1 39%, #b65afd 45%, #8d54d8 68%, #6f4fbd 88%, #644eb3 100%)";
 
 type RewardIcon = "peace" | "more" | "box" | "30percent" | "container";
 
