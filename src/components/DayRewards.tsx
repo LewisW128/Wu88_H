@@ -1,9 +1,34 @@
 import { withBasePath } from "../lib/asset";
 
+// Same brand gradient QuickLinks/Avatar already use for their own gradient
+// borders/rings (just this project's usual stop palette at a fresh angle).
+// get_design_context's own plain-code extraction flattens a gradient
+// stroke down to its first stop as a flat color (#01fab0 here) since
+// Tailwind's `border-*` utilities can't express a gradient -- worth double
+// checking against the actual screenshot/rendered design before trusting
+// a border color literally, not just here.
+const REWARD_BORDER_GRADIENT =
+  "linear-gradient(180deg, #01fab0 0%, #14e8b8 7%, #48bace 20%, #9a71f1 39%, #b65afd 45%, #8d54d8 68%, #6f4fbd 88%, #644eb3 100%)";
+
+type RewardIcon = "peace" | "more" | "box" | "30percent" | "container";
+
+// Each day's own reward icon, provided directly (D:\works\09_WU88-H\
+// source\public\icons\rewards\Style=*.svg) rather than reused generically
+// across cards -- an earlier pass here wrongly recycled just two Figma
+// exports (a gem + a wallet) across all of DAY 3/4/5/6, which didn't match
+// the design at all once compared side by side.
+const REWARD_ICON_SRC: Record<RewardIcon, string> = {
+  peace: "peace-icon",
+  more: "reward-more",
+  box: "reward-box",
+  "30percent": "reward-30percent",
+  container: "reward-container",
+};
+
 type RewardCardProps = {
   day: string;
   reward: string;
-  icon: "gem" | "wallet";
+  icon: RewardIcon;
   claimed?: boolean;
 };
 
@@ -25,7 +50,7 @@ function RewardCard({ day, reward, icon, claimed = false }: RewardCardProps) {
       </p>
       <img
         alt=""
-        src={withBasePath(`/assets/day-rewards/${icon === "gem" ? "reward-icon-1" : "reward-icon-2"}.svg`)}
+        src={withBasePath(`/assets/day-rewards/${REWARD_ICON_SRC[icon]}.svg`)}
         className="absolute left-1/2 top-1/2 size-[51px] -translate-x-1/2 -translate-y-1/2"
       />
       {claimed && (
@@ -38,12 +63,17 @@ function RewardCard({ day, reward, icon, claimed = false }: RewardCardProps) {
   );
 }
 
-// Figma's own "Large" RewardBox variant: 149x192, a teal-green outline
-// (the current day you can actually claim, set apart from the rest of the
-// row) and a purple day-label bar instead of the normal cards' dark gray.
+// Figma's own "Large" RewardBox variant: 149x192, a gradient outline (the
+// current day you can actually claim, set apart from the rest of the row
+// -- see REWARD_BORDER_GRADIENT's own comment for why this isn't a flat
+// #01fab0 border despite that being what get_design_context reported) and
+// a purple day-label bar instead of the normal cards' dark gray.
 function RewardCardLarge({ day, reward }: { day: string; reward: string }) {
   return (
-    <div className="relative h-[192px] w-[149px] shrink-0 overflow-hidden rounded-[25px] border-2 border-[#01fab0] bg-white">
+    <div
+      className="relative h-[192px] w-[149px] shrink-0 overflow-hidden rounded-[25px] border-2 border-transparent"
+      style={{ background: `linear-gradient(white, white) padding-box, ${REWARD_BORDER_GRADIENT} border-box` }}
+    >
       <div className="absolute inset-x-0 top-0 flex h-[44px] items-center justify-center bg-[#8d54d8]">
         <p className="whitespace-nowrap text-[16px] font-bold leading-[24px] tracking-[0.15px] text-[#67e4d2]">{day}</p>
       </div>
@@ -78,12 +108,12 @@ export default function DayRewards() {
           <p className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#444242]">每日獎勵</p>
         </div>
         <div className="flex w-full items-center gap-[20px]">
-          <RewardCard day="DAY 1" reward="+99 K" icon="gem" claimed />
+          <RewardCard day="DAY 1" reward="+99 K" icon="peace" claimed />
           <RewardCardLarge day="DAY 1" reward="+99W" />
-          <RewardCard day="DAY 3" reward="+10 M" icon="gem" />
-          <RewardCard day="DAY 4" reward="+50 M" icon="wallet" />
-          <RewardCard day="DAY 5" reward="30% 返水" icon="gem" />
-          <RewardCard day="DAY 6" reward="+8 B" icon="wallet" />
+          <RewardCard day="DAY 3" reward="+10 M" icon="more" />
+          <RewardCard day="DAY 4" reward="+50 M" icon="box" />
+          <RewardCard day="DAY 5" reward="30% 返水" icon="30percent" />
+          <RewardCard day="DAY 6" reward="+8 B" icon="container" />
         </div>
       </div>
 
