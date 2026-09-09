@@ -1,5 +1,6 @@
 import { DEFAULT_RING_COLOR } from "../../components/Avatar";
 import ContainerBg from "../../components/ContainerBg";
+import DayRewards from "../../components/DayRewards";
 import Footer from "../../components/Footer";
 import Language from "../../components/Language";
 import MinPanelHeight from "../../components/MinPanelHeight";
@@ -167,6 +168,15 @@ export default function PromotionsPage() {
               <div className="mt-[384px]">
                 <Promotions promotions={topPromotions} showMore={false} />
               </div>
+
+              {/* Figma "Day Rewards" (node 171:20138): same 每日獎勵 7-day
+                  login-streak row already built for /profile -- reused
+                  as-is, no page-specific props, sitting between the
+                  Promotions row and 所有優惠 grid at the plain gap-[25px]
+                  this column already applies between every child (801 ->
+                  826 above it, 1117.6 -> 1143 below it, both ~25px in
+                  Figma's own numbers). */}
+              <DayRewards />
 
               <PromotionsGrid categories={PROMOTIONS_CATEGORIES} />
 
