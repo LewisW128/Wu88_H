@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useAuth } from "./AuthProvider";
 import { withBasePath } from "../lib/asset";
 
@@ -41,6 +42,26 @@ const REWARD_ICON_SRC: Record<RewardIcon, string> = {
   container: "reward-container",
 };
 
+// The full 7-day cycle's own reward per day, keyed by day number rather
+// than hardcoded per JSX line, so the row can render as "claimed" / "the
+// current claimable card" / "still to come" for whichever day is actually
+// current instead of only ever supporting DAY 2 as the highlighted slot.
+// Day 7 has no card at all -- Figma's row stops at DAY 6 and hands off to
+// the "七日壓軸好禮" character art instead, so this table does too. Day 2's
+// `icon` (used once it's claimed and shrinks out of the large slot) has no
+// dedicated asset from the user's own icon folder the way days 1/3/4/5/6
+// do -- it reuses "peace" as the closest match, since that's literally the
+// same diamond glyph swirl.svg (the large card's own icon) already bakes
+// in for the current day.
+const REWARD_DAYS: { day: number; reward: string; icon: RewardIcon }[] = [
+  { day: 1, reward: "+99 K", icon: "peace" },
+  { day: 2, reward: "+99W", icon: "peace" },
+  { day: 3, reward: "+10 M", icon: "more" },
+  { day: 4, reward: "+50 M", icon: "box" },
+  { day: 5, reward: "30% 返水", icon: "30percent" },
+  { day: 6, reward: "+8 B", icon: "container" },
+];
+
 type RewardCardProps = {
   day: string;
   reward: string;
@@ -50,10 +71,13 @@ type RewardCardProps = {
 
 // Figma "Reward_box" (129x167): a plain white card with a faint teal blob
 // pattern (card-frame.svg) behind a dark day-label bar, the reward amount,
-// and a big centered icon. The already-claimed DAY 1 card is the same box
-// plus two overlays Figma layers on top -- a translucent blurred white
-// wash to dim it, and a gradient checkmark badge in place of the icon --
-// rather than a separate asset, so claimed/unclaimed stay the same shape.
+// and a big centered icon. The already-claimed variant (Components
+// Library node 1005:10321) is the same box plus: the reward icon itself
+// blurred (2.5px) rather than left crisp, a translucent blurred white wash
+// scoped to `top-[35px]` down (i.e. everything BELOW the day-bar, not
+// `inset-0` -- the day-bar itself stays sharp/legible, unwashed), and the
+// gradient checkmark badge on top -- same asset as the border/hover
+// gradient elsewhere in this file, already correct, nothing to swap there.
 function RewardCard({ day, reward, icon, claimed = false }: RewardCardProps) {
   return (
     <div className="relative h-[167px] w-[129px] shrink-0 overflow-hidden rounded-[20px] border border-[#f4f4f4] bg-white">
@@ -67,11 +91,11 @@ function RewardCard({ day, reward, icon, claimed = false }: RewardCardProps) {
       <img
         alt=""
         src={withBasePath(`/assets/day-rewards/${REWARD_ICON_SRC[icon]}.svg`)}
-        className="absolute left-1/2 top-1/2 size-[51px] -translate-x-1/2 -translate-y-1/2"
+        className={`absolute left-1/2 top-1/2 size-[51px] -translate-x-1/2 -translate-y-1/2 ${claimed ? "blur-[2.5px]" : ""}`}
       />
       {claimed && (
         <>
-          <div className="absolute inset-0 bg-white/50 backdrop-blur-[2px]" />
+          <div className="absolute inset-x-0 top-[35px] h-[132px] bg-white/50 backdrop-blur-[2px]" />
           <img alt="" src={withBasePath("/assets/day-rewards/icon-check.svg")} className="absolute left-[41px] top-[64px] size-[45px]" />
         </>
       )}
@@ -146,7 +170,7 @@ function RewardCardLargeContent({
 const REWARD_HOVER_CLIP_PATH =
   'path("M149,111.917C149,122.963 140.046,131.917 129,131.917H109.105C98.0593,131.917 89.105,140.872 89.105,151.917V172C89.105,183.046 80.1507,192 69.105,192H20C8.95431,192 0,183.046 0,172V20C0,8.95431 8.9543,0 20,0H129C140.046,0 149,8.9543 149,20V111.917Z")';
 
-function RewardCardLarge({ day, reward }: { day: string; reward: string }) {
+function RewardCardLarge({ day, reward, onClaim }: { day: string; reward: string; onClaim: () => void }) {
   return (
     <div className="group relative h-[192px] w-[149px] shrink-0">
       <div
@@ -168,6 +192,7 @@ function RewardCardLarge({ day, reward }: { day: string; reward: string }) {
       <button
         type="button"
         aria-label="claim"
+        onClick={onClaim}
         className="absolute bottom-0 right-0 hidden size-[50px] items-center justify-center rounded-full bg-[#3e4140] backdrop-blur-[10px] group-hover:flex"
       >
         <img alt="" src={withBasePath("/assets/day-rewards/icon-receive.svg")} className="size-[27.761px]" />
@@ -176,14 +201,57 @@ function RewardCardLarge({ day, reward }: { day: string; reward: string }) {
   );
 }
 
+// The streak's own "which day is next to claim" state. Advances by one
+// ONLY when the current day's own claim button is actually clicked --
+// there's no date/calendar check, so leaving today's card unclaimed
+// leaves it exactly as-is (still the highlighted large card) no matter
+// how many real days pass; it only ever becomes the small dimmed/
+// checkmarked "claimed" look, and hands the large slot to the next day,
+// once you click that bottom-right icon. Persisted to localStorage (not
+// the AuthProvider Context) since it needs to survive a real page
+// reload/revisit, unlike the rest of this project's mock login state.
+// Starts at day 2 -- day 1 ships pre-claimed, matching the row Figma
+// itself shows by default.
+const CURRENT_DAY_STORAGE_KEY = "wu88-day-rewards-current-day";
+
+function useCurrentDay() {
+  const [currentDay, setCurrentDay] = useState(2);
+
+  useEffect(() => {
+    const stored = Number(localStorage.getItem(CURRENT_DAY_STORAGE_KEY));
+    // A lazy useState(() => localStorage...) initializer would dodge the
+    // set-state-in-effect rule below, but this tree is server-rendered
+    // too (a "use client" component still gets SSR'd in the App Router),
+    // and localStorage isn't available there -- the effect is what keeps
+    // the first client render matching the server's own default-day-2
+    // markup instead of risking a hydration mismatch, only correcting it
+    // once mounted. This is exactly the "sync from an external system"
+    // case the rule's own docs carve out, just a one-time read rather
+    // than a live subscription.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (stored >= 1) setCurrentDay(stored);
+  }, []);
+
+  const claim = () => {
+    setCurrentDay((day) => {
+      const next = day + 1;
+      localStorage.setItem(CURRENT_DAY_STORAGE_KEY, String(next));
+      return next;
+    });
+  };
+
+  return { currentDay, claim };
+}
+
 // Figma "Day Rewards" (05_WU88-H-PC-Profile-Page node 601:14802, seen live
 // on the logged-in page at 428:17332, node 610:57263 for the instance
-// itself): a 7-day login-streak row, new since the last pass at this page
-// -- DAY 1 already claimed (dimmed, checkmarked) sits beside the current
-// day's own larger highlighted card, then DAY 3-6 waiting to be unlocked.
-// No DAY 2/7 card -- Figma's own row skips straight from the two DAY 1
-// cards to DAY 3, and the "七日壓軸好禮" (7-day grand prize) character art
-// on the right stands in for day 7 rather than a card.
+// itself): a 7-day login-streak row -- every day before `currentDay` sits
+// claimed (dimmed, checkmarked), `currentDay` itself gets the larger
+// highlighted card with the claim button, and every day after it sits as
+// a plain not-yet-reached card. No DAY 7 card once `currentDay` passes 6
+// -- Figma's own row stops at DAY 6, and the "七日壓軸好禮" (7-day grand
+// prize) character art on the right stands in for day 7 rather than a
+// card, so once day 6 is claimed the row just shows all 6 as claimed.
 //
 // The character art overlaps the last reward card by 50px (a negative
 // right margin on the card row, not overlap math on the art itself) --
@@ -196,6 +264,7 @@ function RewardCardLarge({ day, reward }: { day: string; reward: string }) {
 // used identically on both /profile and /promotions.
 export default function DayRewards() {
   const { loggedIn } = useAuth();
+  const { currentDay, claim } = useCurrentDay();
   if (!loggedIn) return null;
 
   return (
@@ -206,12 +275,13 @@ export default function DayRewards() {
           <p className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#444242]">每日獎勵</p>
         </div>
         <div className="flex w-full items-center gap-[20px]">
-          <RewardCard day="DAY 1" reward="+99 K" icon="peace" claimed />
-          <RewardCardLarge day="DAY 2" reward="+99W" />
-          <RewardCard day="DAY 3" reward="+10 M" icon="more" />
-          <RewardCard day="DAY 4" reward="+50 M" icon="box" />
-          <RewardCard day="DAY 5" reward="30% 返水" icon="30percent" />
-          <RewardCard day="DAY 6" reward="+8 B" icon="container" />
+          {REWARD_DAYS.map(({ day, reward, icon }) =>
+            day === currentDay ? (
+              <RewardCardLarge key={day} day={`DAY ${day}`} reward={reward} onClaim={claim} />
+            ) : (
+              <RewardCard key={day} day={`DAY ${day}`} reward={reward} icon={icon} claimed={day < currentDay} />
+            ),
+          )}
         </div>
       </div>
 
