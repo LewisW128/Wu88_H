@@ -1,14 +1,22 @@
 import { withBasePath } from "../lib/asset";
 
 // Same brand gradient QuickLinks/Avatar already use for their own gradient
-// borders/rings (just this project's usual stop palette at a fresh angle).
-// get_design_context's own plain-code extraction flattens a gradient
-// stroke down to its first stop as a flat color (#01fab0 here) since
-// Tailwind's `border-*` utilities can't express a gradient -- worth double
-// checking against the actual screenshot/rendered design before trusting
-// a border color literally, not just here.
+// borders/rings (just this project's usual stop palette). get_design_context's
+// own plain-code extraction flattens a gradient stroke down to its first
+// stop as a flat color (#01fab0 here) since Tailwind's `border-*` utilities
+// can't express a gradient -- worth double checking against the actual
+// screenshot/rendered design before trusting a border color literally, not
+// just here.
+//
+// Direction matters and was wrong on the first pass: the user's own
+// reference (a direct screenshot of this exact card) shows purple at the
+// TOP of the card fading to teal/green at the BOTTOM -- `0deg` (gradient
+// axis pointing "to top") puts the array's own 0% stop (#01fab0, teal) at
+// the bottom and 100% (#644eb3, dark purple) at the top, matching that.
+// `180deg` (what shipped first) put it backwards -- teal top, purple
+// bottom.
 const REWARD_BORDER_GRADIENT =
-  "linear-gradient(180deg, #01fab0 0%, #14e8b8 7%, #48bace 20%, #9a71f1 39%, #b65afd 45%, #8d54d8 68%, #6f4fbd 88%, #644eb3 100%)";
+  "linear-gradient(0deg, #01fab0 0%, #14e8b8 7%, #48bace 20%, #9a71f1 39%, #b65afd 45%, #8d54d8 68%, #6f4fbd 88%, #644eb3 100%)";
 
 type RewardIcon = "peace" | "more" | "box" | "30percent" | "container";
 
