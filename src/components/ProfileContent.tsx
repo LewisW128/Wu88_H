@@ -8,10 +8,11 @@ import FavoriteGamesEmpty from "./FavoriteGamesEmpty";
 import { useFavorites } from "./FavoritesProvider";
 import Footer from "./Footer";
 import GeneralGames from "./GeneralGames";
+import GuestPromoCard from "./GuestPromoCard";
 import Language from "./Language";
 import MinPanelHeight from "./MinPanelHeight";
 import ProfileCard from "./ProfileCard";
-import PromotionCard, { type PromotionCardProps } from "./PromotionCard";
+import { type PromotionCardProps } from "./PromotionCard";
 import Promotions from "./Promotions";
 import QuickLinks from "./QuickLinks";
 import ScaleToFit from "./ScaleToFit";
@@ -180,19 +181,22 @@ export default function ProfileContent({ forceGuest }: { forceGuest: boolean }) 
                   236px) but the SAME bottom edge (76+303 = 143+236 = 379) --
                   the sibling's own top sits 67px lower than ProfileCard's,
                   not shorter-and-top-aligned. Guest pairs ProfileCard with
-                  the same "usdt" Large PromotionCard the Promotions row
-                  uses (node 595:15300, seen live at 455:23317) -- new since
-                  the last pass here, previously ProfileCard just spanned
-                  the row alone -- with a wider 32px gap than the logged-in
-                  ProfileCard/VipCard pairing's usual 20px (614+594+32=1240
-                  vs 614+614+20=1248, both approximating this page's own
-                  ~1249px content width; Figma's own numbers, not rounded
-                  to match each other). */}
+                  GuestPromoCard (node 595:15300, seen live at 455:23317) --
+                  new since the last pass here, previously ProfileCard just
+                  spanned the row alone -- with a wider 32px gap than the
+                  logged-in ProfileCard/VipCard pairing's usual 20px
+                  (614+594+32=1240 vs 614+614+20=1248, both approximating
+                  this page's own ~1249px content width; Figma's own
+                  numbers, not rounded to match each other). Despite
+                  sharing its exact countdown copy with the Promotions
+                  row's own "usdt" entry, GuestPromoCard is its own
+                  component, not a PromotionCard reuse -- see its own
+                  comment for why. */}
               <div className={`flex w-full items-end ${isGuest ? "gap-[32px]" : "gap-[20px]"}`}>
                 {isGuest ? (
                   <>
                     <ProfileCard loggedIn={false} />
-                    <PromotionCard {...promotions[0]} />
+                    <GuestPromoCard />
                   </>
                 ) : (
                   <>

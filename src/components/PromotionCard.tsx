@@ -41,11 +41,17 @@ const SIZE_CONFIG = {
   },
 } as const;
 
-function TextsLine() {
+// Exported for GuestPromoCard -- the guest profile page pairs ProfileCard
+// with a Promotion instance (node 595:15300) that shares this exact
+// countdown-pill markup but isn't the notched Products/GameCard family
+// this component itself is (plain rounded card, a bleeding object-contain
+// photo instead of a masked crop), so it can't just reuse PromotionCard
+// wholesale the way the Promotions row's own "usdt" entry does elsewhere.
+export function TextsLine() {
   return <img alt="" src={withBasePath("/assets/product-card/texts-line.svg")} className="w-[10px] self-stretch" />;
 }
 
-function TimeUnit({ value, unit }: { value: string; unit: string }) {
+export function TimeUnit({ value, unit }: { value: string; unit: string }) {
   return (
     <div className="flex items-end gap-[5px]">
       <p className="text-[14px] font-bold leading-[20px] text-[#23f3d5]">{value}</p>
