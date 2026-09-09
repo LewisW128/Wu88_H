@@ -11,13 +11,30 @@ function Divider() {
 // Every one of these icon assets is already a pre-composited 93x89 card
 // (frosted-white bg + blur, same as MainSelections' own state-on/off) --
 // no separate background wrapper needed here, just the image itself.
-function NavIcon({ icon, label, onClick }: { icon: string; label: string; onClick?: () => void }) {
-  return (
-    <button type="button" aria-label={label} onClick={onClick} className="group relative flex h-[89px] w-[93px] shrink-0 items-center justify-center">
+//
+// `href` renders a real Link (帳戶設定/錢包 now have actual pages); the
+// rest stay plain buttons -- still decorative until their own pages exist.
+function NavIcon({ icon, label, href, onClick }: { icon: string; label: string; href?: string; onClick?: () => void }) {
+  const content = (
+    <>
       <img alt="" src={withBasePath(icon)} className="h-[89px] w-[93px]" />
       <span className="pointer-events-none absolute left-full top-1/2 ml-[13.5px] -translate-y-1/2 whitespace-nowrap rounded-[15px] bg-[#3e4140] px-[11px] py-[9px] text-[14px] font-medium leading-[20px] tracking-[0.15px] text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100">
         {label}
       </span>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} aria-label={label} className="group relative flex h-[89px] w-[93px] shrink-0 items-center justify-center">
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <button type="button" aria-label={label} onClick={onClick} className="group relative flex h-[89px] w-[93px] shrink-0 items-center justify-center">
+      {content}
     </button>
   );
 }
@@ -63,11 +80,11 @@ export default function ProfileSidebar() {
         <img alt="" src={withBasePath("/assets/sidebar/back-arrow.svg")} className="size-[25px]" />
       </Link>
 
-      <NavIcon icon="/assets/sidebar/profile-nav/home-active.svg" label="會員中心" />
+      <NavIcon icon="/assets/sidebar/profile-nav/home-active.svg" label="會員中心" href="/profile" />
 
       <div className="flex w-full flex-col items-start gap-[20px]">
-        <NavIcon icon="/assets/sidebar/profile-nav/wallet.svg" label="錢包" />
-        <NavIcon icon="/assets/sidebar/profile-nav/records.svg" label="投注紀錄" />
+        <NavIcon icon="/assets/sidebar/profile-nav/wallet.svg" label="錢包" href="/profile/wallet" />
+        <NavIcon icon="/assets/sidebar/profile-nav/records.svg" label="個人資訊" href="/profile/account" />
         <NavIcon icon="/assets/sidebar/profile-nav/trophy.svg" label="排行榜" />
       </div>
 

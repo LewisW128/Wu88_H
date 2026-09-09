@@ -1,0 +1,10 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="25" height="25" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Actions">
+<path id="Rectangle 48" d="M18 20L19.4947 21.7544C19.7738 22.0819 20.2262 22.0819 20.5053 21.7544L22 20" stroke="#F02692" stroke-width="2" stroke-linecap="round"/>
+<path id="Line 22" d="M20 21L20 17" stroke="#F02692" stroke-width="2" stroke-linecap="round"/>
+<g id="Group 1090">
+<path id="Polygon 1" d="M12.879 20.3331C12.1634 21.1983 10.837 21.1983 10.1213 20.3331L3.32982 12.1231C2.86104 11.5564 2.78673 10.7606 3.14247 10.1169L5.45981 5.92388C5.77485 5.35385 6.37472 5 7.02601 5L15.9744 5C16.6257 5 17.2255 5.35386 17.5406 5.92389L19.8579 10.1169C20.2137 10.7606 20.1393 11.5564 19.6706 12.1231L12.879 20.3331Z" stroke="#3E4140" stroke-width="2"/>
+<path id="Polygon 2" d="M7.84082 11.8945H15.1592L11.5 16.5518L7.84082 11.8945Z" fill="#3E4140" stroke="#3E4140" stroke-width="1.78947"/>
+</g>
+</g>
+</svg>

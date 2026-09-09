@@ -1,0 +1,12 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="25" height="25" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Actions">
+<circle id="Ellipse 27" cx="19" cy="17" r="5" fill="#23F3D5"/>
+<g id="Group 1090">
+<path id="Polygon 1" d="M17.625 12.9335L19.1996 10.9298C19.6866 10.3101 19.7642 9.46218 19.3978 8.76434L16.9333 4.07028C16.5877 3.4122 15.9058 3 15.1625 3L5.83751 3C5.09423 3 4.41226 3.4122 4.06674 4.07028L1.60219 8.76434C1.2358 9.46218 1.31343 10.3101 1.80043 10.9298L9 20.0913" stroke="#3E4140" stroke-width="2" stroke-linecap="round"/>
+<path id="Polygon 2" d="M6.8 11.6H14.2004L10.5002 16.5336L6.8 11.6Z" fill="#3E4140" stroke="#3E4140" stroke-width="2"/>
+</g>
+<rect id="Rectangle 46" x="23" y="16" width="7" height="10" rx="1.52632" transform="rotate(90 23 16)" stroke="#3E4140" stroke-width="2"/>
+<path id="Line 45" d="M22.5 20H19.5" stroke="#3E4140" stroke-linecap="round"/>
+<path id="Line 46" d="M17 20H18" stroke="#3E4140" stroke-linecap="round"/>
+</g>
+</svg>
