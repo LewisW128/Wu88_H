@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import Avatar from "./Avatar";
 import AnimatedArrowSpecial from "./AnimatedArrowSpecial";
+import { useAuth } from "./AuthProvider";
 import LevelBadge from "./LevelBadge";
 import TalkSection, { type TalkSectionProps } from "./TalkSection";
 import { useScale } from "./ScaleToFit";
@@ -36,12 +37,15 @@ const STATUS_DOT_COLOR: Record<Friend["status"], string> = {
   offline: "#a2a2a2",
 };
 
-// A stable reference for "no messages yet" -- `selectedFriend?.messages ??
-// []` would create a brand-new array every render, which as an effect
-// dependency below re-fires that effect every render, which calls
-// setState, which re-renders, forever (an infinite "Maximum update depth
-// exceeded" loop caught live while testing this).
+// Stable references for "nothing here yet" -- `selectedFriend?.messages ??
+// []` (or a guest's `friends` list) would create a brand-new array every
+// render, which as an effect dependency below re-fires that effect every
+// render, which calls setState, which re-renders, forever (an infinite
+// "Maximum update depth exceeded" loop caught live while testing this --
+// twice, once per array, since the same `?? []`/`? x : []` shape is easy
+// to reach for again without remembering why the first one broke).
 const NO_MESSAGES: TalkSectionProps[] = [];
+const NO_FRIENDS: Friend[] = [];
 
 // Default/fallback panel height (matches the Figma frame's own 1038px), used
 // before the real viewport height is known and if measurement ever fails.
@@ -171,6 +175,12 @@ function FriendCard({ friend, onClick }: { friend: Friend; onClick: () => void }
 // of "all" selected with the switch as inert decoration.
 export default function TalkingBar({ messages, friends, simulatedMessages = [] }: TalkingBarProps) {
   const clipId = useId();
+  const { loggedIn } = useAuth();
+  // There's nobody to have a friends list with before you have an
+  // account -- the 私人訊息 channel itself still opens for a guest (the
+  // group chat above it is public either way), it just has nothing in it,
+  // same as DayRewards gating itself on this same state elsewhere.
+  const visibleFriends = loggedIn ? friends : NO_FRIENDS;
   const [channel, setChannel] = useState<Channel>("all");
   const [liveMessages, setLiveMessages] = useState(messages);
   // Which friend's thread is open, if any -- null means "私人訊息" is
@@ -178,7 +188,7 @@ export default function TalkingBar({ messages, friends, simulatedMessages = [] }
   // Persists across switching to "all" and back rather than resetting, so
   // tabbing away from a conversation and back doesn't lose your place.
   const [selectedFriendId, setSelectedFriendId] = useState<string | null>(null);
-  const selectedFriend = channel === "private" ? (friends.find((f) => f.id === selectedFriendId) ?? null) : null;
+  const selectedFriend = channel === "private" ? (visibleFriends.find((f) => f.id === selectedFriendId) ?? null) : null;
   const showFriendList = channel === "private" && !selectedFriend;
   const activeMessages = channel === "all" ? liveMessages : (selectedFriend?.messages ?? NO_MESSAGES);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -250,7 +260,7 @@ export default function TalkingBar({ messages, friends, simulatedMessages = [] }
       el.removeEventListener("scroll", update);
       window.removeEventListener("resize", update);
     };
-  }, [activeMessages, showFriendList, friends, trackHeight]);
+  }, [activeMessages, showFriendList, visibleFriends, trackHeight]);
 
   return (
     <div className="relative w-[275px] shrink-0" style={{ height: panelHeight }}>
@@ -318,7 +328,7 @@ export default function TalkingBar({ messages, friends, simulatedMessages = [] }
         }}
       >
         {showFriendList
-          ? friends.map((friend) => <FriendCard key={friend.id} friend={friend} onClick={() => setSelectedFriendId(friend.id)} />)
+          ? visibleFriends.map((friend) => <FriendCard key={friend.id} friend={friend} onClick={() => setSelectedFriendId(friend.id)} />)
           : activeMessages.map((message, i) => <TalkSection key={i} {...message} />)}
       </div>
 
@@ -347,14 +357,21 @@ export default function TalkingBar({ messages, friends, simulatedMessages = [] }
           >
             <img alt="" src={withBasePath("/assets/sidebar/back-arrow.svg")} className="size-[20px]" />
           </button>
-        ) : (
+        ) : loggedIn ? (
           <div className="absolute left-[30px] top-[20px]">
             <Avatar photo={withBasePath("/assets/talk-section/avatar-jessica.png")} size={45} badge={false} ringColor="#01fab0" />
             <div className="absolute bottom-0 right-0 size-[11px] rounded-full border-2 border-white" style={{ background: STATUS_DOT_COLOR.online }} />
           </div>
+        ) : (
+          // Same generic silhouette the guest ProfileCard itself uses
+          // (no ring/status dot -- there's no real account or online
+          // state to show yet).
+          <div className="absolute left-[30px] top-[20px] flex size-[45px] items-center justify-center overflow-hidden rounded-full bg-[#f4f4f4]">
+            <img alt="" src={withBasePath("/assets/profile/guest-avatar-icon.svg")} className="size-[28px]" />
+          </div>
         ))}
 
-      {showFriendList && (
+      {showFriendList && loggedIn && (
         <button
           type="button"
           aria-label="新增好友"
