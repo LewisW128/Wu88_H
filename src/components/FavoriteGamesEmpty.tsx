@@ -1,4 +1,10 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { withBasePath } from "../lib/asset";
+import { useAuth } from "./AuthProvider";
+import LoginModal from "./LoginModal";
 
 // Figma "General Games" instance on the Profile page's guest state
 // (05_WU88-H-PC-Profile-Page node 455:23414, title "收藏的遊戲"): the same
@@ -10,7 +16,27 @@ import { withBasePath } from "../lib/asset";
 // itself already sources each from) since it's the same 200x266 card shape
 // with the same bottom-right notch, just with a plain gray fill instead of
 // a photo and a "+" glyph instead of the arrow.
+//
+// The "+" button itself has nowhere real to add a favorite FROM -- there's
+// no dedicated "browse games" picker built. A guest gets the same
+// LoginModal every other guest-gated action on this page already opens
+// (ProductCard's own like button, ProfileCard's 登入); once logged in, it
+// just sends you to the homepage to go find something to actually like,
+// same spirit as ProductCard's like button not auto-applying anything on
+// its own.
 export default function FavoriteGamesEmpty() {
+  const { loggedIn, setLoggedIn } = useAuth();
+  const [showLogin, setShowLogin] = useState(false);
+  const router = useRouter();
+
+  function handleAddClick() {
+    if (!loggedIn) {
+      setShowLogin(true);
+      return;
+    }
+    router.push("/");
+  }
+
   const maskStyle = {
     maskImage: `url("${withBasePath("/assets/product-card/photo-mask.svg")}")`,
     maskSize: "200px 266px",
@@ -47,11 +73,22 @@ export default function FavoriteGamesEmpty() {
         <button
           type="button"
           aria-label="收藏遊戲"
+          onClick={handleAddClick}
           className="absolute -bottom-[0.19px] -right-[0.19px] flex size-[50px] items-center justify-center rounded-full bg-[#f4f4f4] p-[10px] backdrop-blur-[10px]"
         >
           <img alt="" src={withBasePath("/assets/game-card/icon-add.svg")} className="size-[16.66px]" />
         </button>
       </div>
+
+      {showLogin && (
+        <LoginModal
+          onClose={() => setShowLogin(false)}
+          onLoginSuccess={() => {
+            setLoggedIn(true);
+            setShowLogin(false);
+          }}
+        />
+      )}
     </div>
   );
 }
