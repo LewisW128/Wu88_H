@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { DEFAULT_RING_COLOR } from "./Avatar";
 import { useAuth } from "./AuthProvider";
+import DayRewards from "./DayRewards";
 import FavoriteGamesEmpty from "./FavoriteGamesEmpty";
 import { useFavorites } from "./FavoritesProvider";
 import Footer from "./Footer";
@@ -190,6 +191,13 @@ export default function ProfileContent({ forceGuest }: { forceGuest: boolean }) 
                 )}
               </div>
 
+              {/* Figma (node 601:14802, seen live at 428:17332) only shows
+                  this 7-day login-streak row on the logged-in page -- the
+                  guest page's own frame (455:23317) has no such instance,
+                  which tracks: there's nothing to have logged in 7 days
+                  straight for yet. */}
+              {!isGuest && <DayRewards />}
+
               {isGuest || favoritedGames.length === 0 ? (
                 <FavoriteGamesEmpty />
               ) : (
@@ -197,6 +205,7 @@ export default function ProfileContent({ forceGuest }: { forceGuest: boolean }) 
               )}
 
               <Statistics
+                balance={isGuest ? undefined : "10,000,000"}
                 stats={
                   isGuest
                     ? [
