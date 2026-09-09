@@ -1,3 +1,6 @@
+"use client";
+
+import { useAuth } from "./AuthProvider";
 import { withBasePath } from "../lib/asset";
 
 // Same brand gradient QuickLinks/Avatar already use for their own gradient
@@ -86,12 +89,9 @@ function RewardCard({ day, reward, icon, claimed = false }: RewardCardProps) {
 // glyph is already baked into swirl.svg itself (its own `Rewards` group,
 // identical to peace-icon.svg's shape) alongside the teal blob and
 // sparkle stars -- adding one anyway just doubled up the same diamond.
-function RewardCardLarge({ day, reward }: { day: string; reward: string }) {
+function RewardCardLargeContent({ day, reward }: { day: string; reward: string }) {
   return (
-    <div
-      className="relative h-[192px] w-[149px] shrink-0 overflow-hidden rounded-[25px] border-2 border-transparent"
-      style={{ background: `linear-gradient(white, white) padding-box, ${REWARD_BORDER_GRADIENT} border-box` }}
-    >
+    <>
       <div className="absolute inset-x-0 top-0 flex h-[44px] items-center justify-center bg-[#8d54d8]">
         <p className="whitespace-nowrap text-[16px] font-bold leading-[24px] tracking-[0.15px] text-[#67e4d2]">{day}</p>
       </div>
@@ -99,6 +99,55 @@ function RewardCardLarge({ day, reward }: { day: string; reward: string }) {
       <p className="absolute left-1/2 top-[152px] -translate-x-1/2 whitespace-nowrap text-[20px] font-black leading-[32px] tracking-[0.35px] text-[#3e4140]">
         {reward}
       </p>
+    </>
+  );
+}
+
+// Hover state (Components Library node 1010:9829): NOT just a button
+// appearing on top of an unchanged square card -- Figma's own hover export
+// carries two different "Subtract" shapes (1010:9875 fill, 1010:9843
+// stroke) where the bottom-right corner recedes into a stepped notch sized
+// to nest the claim button, so the card's own outline changes shape. The
+// notch's path is reused verbatim below as a clip-path (same technique,
+// and the same source shape family, as GameCard's own concave-notch clip
+// -- see CARD_CLIP_PATH there). Rather than animating one shared shape
+// between plain-rounded and notched, the rest/hover states are two full
+// layers that cross-fade via opacity (day bar/swirl/price repeated in
+// both) -- Figma itself treats hover as a separate variant of the
+// component, not a CSS transform of the same nodes, and border-radius/
+// border can't express a concave notch anyway. The notched border is a
+// downloaded SVG asset (hover-border.svg) rather than hand-built CSS: this
+// hover export's stroke came back as a real gradient (`stroke="url(#...)"`)
+// intact, unlike the rest state's flattened-to-a-flat-color one.
+const REWARD_HOVER_CLIP_PATH =
+  'path("M149,111.917C149,122.963 140.046,131.917 129,131.917H109.105C98.0593,131.917 89.105,140.872 89.105,151.917V172C89.105,183.046 80.1507,192 69.105,192H20C8.95431,192 0,183.046 0,172V20C0,8.95431 8.9543,0 20,0H129C140.046,0 149,8.9543 149,20V111.917Z")';
+
+function RewardCardLarge({ day, reward }: { day: string; reward: string }) {
+  return (
+    <div className="group relative h-[192px] w-[149px] shrink-0">
+      <div
+        className="absolute inset-0 overflow-hidden rounded-[25px] border-2 border-transparent opacity-100 transition-opacity duration-200 group-hover:opacity-0"
+        style={{ background: `linear-gradient(white, white) padding-box, ${REWARD_BORDER_GRADIENT} border-box` }}
+      >
+        <RewardCardLargeContent day={day} reward={reward} />
+      </div>
+
+      <div className="absolute inset-0 bg-white opacity-0 transition-opacity duration-200 group-hover:opacity-100" style={{ clipPath: REWARD_HOVER_CLIP_PATH }}>
+        <RewardCardLargeContent day={day} reward={reward} />
+      </div>
+      <img
+        alt=""
+        src={withBasePath("/assets/day-rewards/hover-border.svg")}
+        className="pointer-events-none absolute inset-0 size-full opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+      />
+
+      <button
+        type="button"
+        aria-label="claim"
+        className="absolute bottom-0 right-0 hidden size-[50px] items-center justify-center rounded-full bg-[#3e4140] backdrop-blur-[10px] group-hover:flex"
+      >
+        <img alt="" src={withBasePath("/assets/day-rewards/icon-receive.svg")} className="size-[27.761px]" />
+      </button>
     </div>
   );
 }
@@ -116,7 +165,15 @@ function RewardCardLarge({ day, reward }: { day: string; reward: string }) {
 // right margin on the card row, not overlap math on the art itself) --
 // same effect as LoginPoster's own layering, just via margin instead of
 // explicit offsets since Figma's own frame expresses it that way.
+//
+// A login streak is only meaningful once you're actually logged in, so
+// this gates itself on the shared AuthProvider state rather than leaving
+// each page to remember to wrap it in its own `isGuest` check -- it's
+// used identically on both /profile and /promotions.
 export default function DayRewards() {
+  const { loggedIn } = useAuth();
+  if (!loggedIn) return null;
+
   return (
     <div className="relative flex w-[1260px] items-start">
       <div className="z-10 -mr-[50px] flex w-[894px] flex-col items-start gap-[15px]">
@@ -126,7 +183,7 @@ export default function DayRewards() {
         </div>
         <div className="flex w-full items-center gap-[20px]">
           <RewardCard day="DAY 1" reward="+99 K" icon="peace" claimed />
-          <RewardCardLarge day="DAY 1" reward="+99W" />
+          <RewardCardLarge day="DAY 2" reward="+99W" />
           <RewardCard day="DAY 3" reward="+10 M" icon="more" />
           <RewardCard day="DAY 4" reward="+50 M" icon="box" />
           <RewardCard day="DAY 5" reward="30% 返水" icon="30percent" />

@@ -210,8 +210,11 @@ export default function ProfileContent({ forceGuest }: { forceGuest: boolean }) 
                   this 7-day login-streak row on the logged-in page -- the
                   guest page's own frame (455:23317) has no such instance,
                   which tracks: there's nothing to have logged in 7 days
-                  straight for yet. */}
-              {!isGuest && <DayRewards />}
+                  straight for yet. DayRewards gates itself on the shared
+                  AuthProvider state now (it's reused on /promotions too,
+                  which has no isGuest of its own to check), so this just
+                  renders it unconditionally. */}
+              <DayRewards />
 
               {isGuest || favoritedGames.length === 0 ? (
                 <FavoriteGamesEmpty />
