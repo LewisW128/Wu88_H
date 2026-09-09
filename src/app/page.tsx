@@ -20,7 +20,7 @@ import Search from "../components/Search";
 import Sidebar from "../components/Sidebar";
 import SocialLinks from "../components/SocialLinks";
 import StickyUtilityBar from "../components/StickyUtilityBar";
-import TalkingBar from "../components/TalkingBar";
+import TalkingBar, { type Friend } from "../components/TalkingBar";
 import type { TalkSectionProps } from "../components/TalkSection";
 import TopBar from "../components/TopBar";
 import TopUp from "../components/TopUp";
@@ -73,11 +73,54 @@ const talkingBarSimulatedMessages: TalkSectionProps[] = [
   { avatar: "/assets/talk-section/avatar-arick.png", name: "@ Arick", levelLabel: "Lv.53", levelBackground: "#ffcf00", timestamp: "剛剛", text: "我去試試看", variant: "other" },
 ];
 
-// A private 1-on-1 thread with Jackson, separate from the group chat above.
-const talkingBarPrivateMessages: TalkSectionProps[] = [
-  { avatar: "/assets/talk-section/avatar-jackson.png", name: "@ Jackson", levelLabel: "Lv.100", levelBackground: DEFAULT_RING_COLOR, timestamp: "5 分鐘前", text: "嗨，方便私訊聊嗎？", variant: "other" },
-  { avatar: "/assets/talk-section/avatar-jessica.png", name: "@ Jessica", timestamp: "4 分鐘前", text: "可以啊，怎麼了？", variant: "myself" },
-  { avatar: "/assets/talk-section/avatar-jackson.png", name: "@ Jackson", levelLabel: "Lv.100", levelBackground: DEFAULT_RING_COLOR, timestamp: "3 分鐘前", text: "剛剛那個遊戲的連結可以給我嗎？", variant: "other" },
+// The 私人訊息 channel's own friend list (Components Library node
+// 754:9317) -- picking a friend opens their own thread (node 998:10020)
+// instead of skipping straight to one hardcoded conversation the way the
+// old flat `privateMessages` prop did. Arick has no `lastMessage` (and an
+// empty thread) on purpose, matching Figma's own reference card, which
+// omits the message preview entirely -- reads as "a friend you haven't
+// messaged yet" rather than a missing value.
+const talkingBarFriends: Friend[] = [
+  {
+    id: "jackson",
+    name: "@ Jackson",
+    avatar: "/assets/talk-section/avatar-jackson.png",
+    levelLabel: "Lv.100",
+    levelBackground: DEFAULT_RING_COLOR,
+    status: "online",
+    timestamp: "3 分鐘前",
+    lastMessage: "剛剛那個遊戲的連結可以給我嗎？",
+    messages: [
+      { avatar: "/assets/talk-section/avatar-jackson.png", name: "@ Jackson", levelLabel: "Lv.100", levelBackground: DEFAULT_RING_COLOR, timestamp: "5 分鐘前", text: "嗨，方便私訊聊嗎？", variant: "other" },
+      { avatar: "/assets/talk-section/avatar-jessica.png", name: "@ Jessica", timestamp: "4 分鐘前", text: "可以啊，怎麼了？", variant: "myself" },
+      { avatar: "/assets/talk-section/avatar-jackson.png", name: "@ Jackson", levelLabel: "Lv.100", levelBackground: DEFAULT_RING_COLOR, timestamp: "3 分鐘前", text: "剛剛那個遊戲的連結可以給我嗎？", variant: "other" },
+    ],
+  },
+  {
+    id: "johnny",
+    name: "@ Johnny",
+    avatar: "/assets/talk-section/avatar-johnny.png",
+    levelLabel: "Lv.79",
+    levelBackground: "#79d4a2",
+    status: "away",
+    timestamp: "10 分鐘前",
+    lastMessage: "XXX電子 射龍門，一起來",
+    messages: [
+      { avatar: "/assets/talk-section/avatar-johnny.png", name: "@ Johnny", levelLabel: "Lv.79", levelBackground: "#79d4a2", timestamp: "12 分鐘前", text: "在嗎？想約你打幾把", variant: "other" },
+      { avatar: "/assets/talk-section/avatar-jessica.png", name: "@ Jessica", timestamp: "11 分鐘前", text: "在啊，玩什麼？", variant: "myself" },
+      { avatar: "/assets/talk-section/avatar-johnny.png", name: "@ Johnny", levelLabel: "Lv.79", levelBackground: "#79d4a2", timestamp: "10 分鐘前", text: "XXX電子 射龍門，一起來", variant: "other" },
+    ],
+  },
+  {
+    id: "arick",
+    name: "@ Arick",
+    avatar: "/assets/talk-section/avatar-arick.png",
+    levelLabel: "Lv.53",
+    levelBackground: "#ffcf00",
+    status: "offline",
+    timestamp: "1 小時前",
+    messages: [],
+  },
 ];
 
 const businessCards = [
@@ -286,7 +329,7 @@ export default function Home() {
                 (Hot Games/Form Bar cards touching it with zero clearance,
                 reading as the whole row feeling cramped against it). */}
             <div className="sticky top-[58px] z-10 ml-[20px] self-start">
-              <TalkingBar messages={talkingBarMessages} privateMessages={talkingBarPrivateMessages} simulatedMessages={talkingBarSimulatedMessages} />
+              <TalkingBar messages={talkingBarMessages} friends={talkingBarFriends} simulatedMessages={talkingBarSimulatedMessages} />
             </div>
           </div>
           </HeroCarouselProvider>

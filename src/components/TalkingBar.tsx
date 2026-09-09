@@ -1,9 +1,47 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import Avatar from "./Avatar";
+import AnimatedArrowSpecial from "./AnimatedArrowSpecial";
+import LevelBadge from "./LevelBadge";
 import TalkSection, { type TalkSectionProps } from "./TalkSection";
 import { useScale } from "./ScaleToFit";
 import { withBasePath } from "../lib/asset";
+
+export type Friend = {
+  id: string;
+  name: string;
+  avatar: string;
+  levelLabel: string;
+  // Also doubles as the avatar's own ring color, same as Talk_section's
+  // established convention (see TalkSection.tsx's own comment).
+  levelBackground: string;
+  // The online-status dot (Components Library node 754:9317's own
+  // Ellipse 46/47/48) is a THIRD color, independent of the level badge --
+  // Jackson's own dot is teal/online, Johnny's is orange/away, Arick's is
+  // gray/offline, none of which match their own level-badge colors.
+  status: "online" | "away" | "offline";
+  timestamp: string;
+  // Omitted entirely (not just blank) for a friend with no conversation
+  // yet -- Arick's own card in the Figma reference has no message preview
+  // at all, which reads naturally as "you haven't messaged them yet"
+  // rather than as a missing/loading value.
+  lastMessage?: string;
+  messages: TalkSectionProps[];
+};
+
+const STATUS_DOT_COLOR: Record<Friend["status"], string> = {
+  online: "#23f3d5",
+  away: "#f39923",
+  offline: "#a2a2a2",
+};
+
+// A stable reference for "no messages yet" -- `selectedFriend?.messages ??
+// []` would create a brand-new array every render, which as an effect
+// dependency below re-fires that effect every render, which calls
+// setState, which re-renders, forever (an infinite "Maximum update depth
+// exceeded" loop caught live while testing this).
+const NO_MESSAGES: TalkSectionProps[] = [];
 
 // Default/fallback panel height (matches the Figma frame's own 1038px), used
 // before the real viewport height is known and if measurement ever fails.
@@ -45,7 +83,13 @@ function panelPath(h: number) {
 
 export type TalkingBarProps = {
   messages: TalkSectionProps[];
-  privateMessages: TalkSectionProps[];
+  // The "私人訊息" channel's own entry point (Components Library node
+  // 754:9317, "All Friends"): a friend list, not a single conversation
+  // directly -- picking a friend (node 998:10020, "Eachother talk") is
+  // what actually opens their own thread, replacing the old flat
+  // `privateMessages` prop that skipped straight to one hardcoded
+  // conversation.
+  friends: Friend[];
   /** Extra messages appended one at a time to simulate the group chat staying
    * live -- cycles through this pool on an interval rather than a single
    * static snapshot. Only applies to the "all" channel. */
@@ -67,6 +111,52 @@ function ChannelButton({ active, icon, onClick, label }: { active: boolean; icon
   );
 }
 
+// Figma "Talk section" (Components Library, the friend-list row inside
+// node 754:9317's "All Friends" TalkingBar variant) -- distinct from
+// Talk_section (TalkSection.tsx), which is a chat MESSAGE row, not a
+// friend-list row. Fixed 71px tall even for a friend with no
+// `lastMessage` (Arick's own card in the reference), so the list stays
+// evenly spaced rather than each row hugging its own content height.
+// The corner arrow reuses AnimatedArrowSpecial (the same glyph family as
+// ProfileSidebar's own back-arrow.svg) instead of a new static asset,
+// statically fully-drawn (`hovered` pinned true) since this row isn't
+// itself hover-tracked -- only the click matters here.
+function FriendCard({ friend, onClick }: { friend: Friend; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="relative flex h-[71px] w-full shrink-0 items-start gap-[10px] rounded-[10px] border border-[#f4f4f4] bg-white/50 p-[10px] text-left"
+    >
+      <div className="relative shrink-0">
+        <Avatar photo={withBasePath(friend.avatar)} size={46} badge={false} ringColor={friend.levelBackground} />
+        <div
+          className="absolute bottom-0 right-0 size-[11px] rounded-full border-2 border-white"
+          style={{ background: STATUS_DOT_COLOR[friend.status] }}
+        />
+      </div>
+
+      <div className="flex min-w-0 flex-1 flex-col items-start gap-[5px]">
+        <div className="flex w-full items-center justify-between gap-[10px]">
+          <div className="flex min-w-0 items-center gap-[5px]">
+            <p className="whitespace-nowrap text-[12px] font-bold leading-[18px] tracking-[0.15px] text-[#3e4140]">{friend.name}</p>
+            <LevelBadge label={friend.levelLabel} background={friend.levelBackground} />
+          </div>
+          <p className="whitespace-nowrap text-[8px] leading-[18px] tracking-[0.15px] text-[#a2a2a2]">{friend.timestamp}</p>
+        </div>
+
+        {friend.lastMessage && (
+          <div className="max-w-full rounded-bl-[10px] rounded-br-[10px] rounded-tr-[10px] bg-[#f4f4f4] px-[10px] py-[4px]">
+            <p className="truncate text-[12px] leading-[18px] tracking-[0.15px] text-[#3e4140]">{friend.lastMessage}</p>
+          </div>
+        )}
+      </div>
+
+      <AnimatedArrowSpecial hovered size={12} color="#3e4140" className="absolute bottom-[9px] right-[10px] shrink-0" />
+    </button>
+  );
+}
+
 // Figma "TalkingBar" component (Components Library node 639:4086, the full
 // multi-person chat panel that Talk_section rows live inside). The panel's
 // own outline -- a rounded rect with a notch bitten out of the top-right
@@ -79,11 +169,18 @@ function ChannelButton({ active, icon, onClick, label }: { active: boolean; icon
 // channel switch (all-chat vs. private) is wired to real state that
 // actually swaps the rendered message list, not just a static screenshot
 // of "all" selected with the switch as inert decoration.
-export default function TalkingBar({ messages, privateMessages, simulatedMessages = [] }: TalkingBarProps) {
+export default function TalkingBar({ messages, friends, simulatedMessages = [] }: TalkingBarProps) {
   const clipId = useId();
   const [channel, setChannel] = useState<Channel>("all");
   const [liveMessages, setLiveMessages] = useState(messages);
-  const activeMessages = channel === "all" ? liveMessages : privateMessages;
+  // Which friend's thread is open, if any -- null means "私人訊息" is
+  // showing the friend list itself (node 754:9317), not a conversation.
+  // Persists across switching to "all" and back rather than resetting, so
+  // tabbing away from a conversation and back doesn't lose your place.
+  const [selectedFriendId, setSelectedFriendId] = useState<string | null>(null);
+  const selectedFriend = channel === "private" ? (friends.find((f) => f.id === selectedFriendId) ?? null) : null;
+  const showFriendList = channel === "private" && !selectedFriend;
+  const activeMessages = channel === "all" ? liveMessages : (selectedFriend?.messages ?? NO_MESSAGES);
   const scrollRef = useRef<HTMLDivElement>(null);
   const scale = useScale();
   const [panelHeight, setPanelHeight] = useState(DEFAULT_PANEL_HEIGHT);
@@ -144,7 +241,7 @@ export default function TalkingBar({ messages, privateMessages, simulatedMessage
       el.removeEventListener("scroll", update);
       window.removeEventListener("resize", update);
     };
-  }, [activeMessages, trackHeight]);
+  }, [activeMessages, showFriendList, friends, trackHeight]);
 
   return (
     <div className="relative w-[275px] shrink-0" style={{ height: panelHeight }}>
@@ -209,9 +306,9 @@ export default function TalkingBar({ messages, privateMessages, simulatedMessage
           maskRepeat: "no-repeat",
         }}
       >
-        {activeMessages.map((message, i) => (
-          <TalkSection key={i} {...message} />
-        ))}
+        {showFriendList
+          ? friends.map((friend) => <FriendCard key={friend.id} friend={friend} onClick={() => setSelectedFriendId(friend.id)} />)
+          : activeMessages.map((message, i) => <TalkSection key={i} {...message} />)}
       </div>
 
       <div
@@ -219,16 +316,55 @@ export default function TalkingBar({ messages, privateMessages, simulatedMessage
         style={{ top: 125 + thumb.top, height: thumb.height }}
       />
 
-      <div className="absolute bottom-[20px] left-[20px] flex h-[45px] w-[235px] items-center overflow-hidden rounded-[15px] bg-[#f4f4f4]/50 pl-[8px] pr-[4.5px] backdrop-blur-[15px]">
-        <p className="flex-1 whitespace-nowrap text-[10px] leading-[18px] tracking-[0.15px] text-[#a2a2a2]">輸入訊息</p>
+      {/* Own avatar (Components Library node 754:9317/998:10020's own
+          "AvatarMassage", always online -- it's you) sits here while
+          browsing the friend list; picking a friend swaps it for a back
+          button in the exact same spot so entering/leaving a thread never
+          shifts the message list's own carefully-tuned top/height math
+          below. Neither design shows a back affordance at all (Figma's
+          own mockup has no route to return once a friend's opened), so
+          reusing this fixed slot -- rather than adding a new header row
+          that would need its own space carved out of the panel -- was the
+          smallest way to make the flow actually navigable both ways. */}
+      {channel === "private" &&
+        (selectedFriend ? (
+          <button
+            type="button"
+            aria-label="返回好友列表"
+            onClick={() => setSelectedFriendId(null)}
+            className="absolute left-[30px] top-[20px] flex size-[45px] items-center justify-center rounded-full bg-[#3e4140]"
+          >
+            <img alt="" src={withBasePath("/assets/sidebar/back-arrow.svg")} className="size-[20px]" />
+          </button>
+        ) : (
+          <div className="absolute left-[30px] top-[20px]">
+            <Avatar photo={withBasePath("/assets/talk-section/avatar-jessica.png")} size={45} badge={false} ringColor="#01fab0" />
+            <div className="absolute bottom-0 right-0 size-[11px] rounded-full border-2 border-white" style={{ background: STATUS_DOT_COLOR.online }} />
+          </div>
+        ))}
+
+      {showFriendList && (
         <button
           type="button"
-          aria-label="send"
-          className="flex size-[28.674px] items-center justify-center rounded-[10px] bg-[#23f3d5] p-[6px] backdrop-blur-[6px]"
+          aria-label="新增好友"
+          className="absolute bottom-[20px] right-[20px] flex size-[45px] items-center justify-center rounded-full bg-[#3e4140]"
         >
-          <img alt="" src={withBasePath("/assets/talk-section/send-arrow.svg")} className="size-[16.667px]" />
+          <img alt="" src={withBasePath("/assets/talk-section/icon-add-friend.svg")} className="size-[15px]" />
         </button>
-      </div>
+      )}
+
+      {!showFriendList && (
+        <div className="absolute bottom-[20px] left-[20px] flex h-[45px] w-[235px] items-center overflow-hidden rounded-[15px] bg-[#f4f4f4]/50 pl-[8px] pr-[4.5px] backdrop-blur-[15px]">
+          <p className="flex-1 whitespace-nowrap text-[10px] leading-[18px] tracking-[0.15px] text-[#a2a2a2]">輸入訊息</p>
+          <button
+            type="button"
+            aria-label="send"
+            className="flex size-[28.674px] items-center justify-center rounded-[10px] bg-[#23f3d5] p-[6px] backdrop-blur-[6px]"
+          >
+            <img alt="" src={withBasePath("/assets/talk-section/send-arrow.svg")} className="size-[16.667px]" />
+          </button>
+        </div>
+      )}
 
       <div className="absolute right-0 top-0 flex h-[65px] w-[136px] items-center justify-between overflow-hidden rounded-full border-2 border-[#f4f4f4] bg-[#f4f4f4]/50 backdrop-blur-[15px]">
         <ChannelButton active={channel === "all"} icon="/assets/talk-section/message-all.svg" onClick={() => setChannel("all")} label="群組聊天" />
