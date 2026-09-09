@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "./AuthProvider";
 import Footer from "./Footer";
 import Language from "./Language";
 import MinPanelHeight from "./MinPanelHeight";
@@ -206,7 +209,23 @@ function AccountHeader() {
 // established "no real backend" pattern (TopUp's 儲值, ProfileCard's
 // 註冊, etc.) -- the edit pencils and VIP/dropdown chevrons are
 // decorative, not wired to any real edit flow.
+//
+// Unlike DayRewards/Statistics (which stay on the page and swap to a
+// placeholder look for guests), this whole page only makes sense once
+// you're actually logged in -- there's no guest variant in Figma, and
+// showing "JESSICA"'s real personal info to a guest would be wrong
+// regardless of how it's styled. Guests get bounced to /profile instead
+// of seeing a flash of this content first.
 export default function AccountSettings() {
+  const { loggedIn } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loggedIn) router.replace("/profile");
+  }, [loggedIn, router]);
+
+  if (!loggedIn) return null;
+
   return (
     <div className="flex min-h-screen flex-col items-center bg-[#f4f4f4]">
       <ScaleToFit>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import AnimatedArrowSpecial, { useArrowPulse } from "./AnimatedArrowSpecial";
+import { useAuth } from "./AuthProvider";
 import Footer from "./Footer";
 import Language from "./Language";
 import MinPanelHeight from "./MinPanelHeight";
@@ -185,7 +186,15 @@ function TransactionRow({ name, date, amount, color }: Transaction) {
 // underline actually moves), but since no design exists for what they'd
 // show, they render a plain "沒有任何資料" placeholder rather than
 // fabricating content Figma never specified.
+//
+// There's no real wallet to show before you have an account -- guests
+// see the same "---" placeholder treatment Statistics/DayRewards already
+// use elsewhere on /profile, and the transaction list stays empty
+// regardless of which tab is picked (not just 交易明細), since none of
+// this data is real for a guest either.
 export default function AccountWallet() {
+  const { loggedIn } = useAuth();
+  const isGuest = !loggedIn;
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("交易明細");
   const topUpArrow = useArrowPulse();
 
@@ -231,7 +240,9 @@ export default function AccountWallet() {
                   <div className="flex items-center gap-[10px]">
                     <img alt="" src={withBasePath("/assets/statistics/icon-balance.svg")} className="size-[25px]" />
                     <div className="h-[20px] w-px bg-[#f4f4f4]" />
-                    <p className="whitespace-nowrap text-[40px] font-black leading-[36px] tracking-[0.36px] text-[#3e4140]">10,000,000</p>
+                    <p className={`whitespace-nowrap text-[40px] font-black leading-[36px] tracking-[0.36px] ${isGuest ? "text-[#a2a2a2]" : "text-[#3e4140]"}`}>
+                      {isGuest ? "---" : "10,000,000"}
+                    </p>
                   </div>
                   <button
                     type="button"
@@ -245,10 +256,10 @@ export default function AccountWallet() {
               </div>
 
               <div className="flex w-full items-start gap-[20px]">
-                <StatCard icon="/assets/wallet/icon-income.svg" label="今日收入" value="+8,200" />
-                <StatCard icon="/assets/wallet/icon-expense.svg" label="今日支出" value="-1,500" valueColor="#f02692" />
-                <StatCard icon="/assets/wallet/icon-topup.svg" label="本月儲值" value="120,000" />
-                <StatCard icon="/assets/wallet/icon-rebate.svg" label="累計返水" value="3,480,000" />
+                <StatCard icon="/assets/wallet/icon-income.svg" label="今日收入" value={isGuest ? "---" : "+8,200"} valueColor={isGuest ? "#a2a2a2" : undefined} />
+                <StatCard icon="/assets/wallet/icon-expense.svg" label="今日支出" value={isGuest ? "---" : "-1,500"} valueColor={isGuest ? "#a2a2a2" : "#f02692"} />
+                <StatCard icon="/assets/wallet/icon-topup.svg" label="本月儲值" value={isGuest ? "---" : "120,000"} valueColor={isGuest ? "#a2a2a2" : undefined} />
+                <StatCard icon="/assets/wallet/icon-rebate.svg" label="累計返水" value={isGuest ? "---" : "3,480,000"} valueColor={isGuest ? "#a2a2a2" : undefined} />
               </div>
 
               <div className="flex w-full items-center gap-[36px] border-b border-[#f4f4f4]">
@@ -277,7 +288,7 @@ export default function AccountWallet() {
               </div>
 
               <div className="flex w-full flex-col items-start gap-[10px] rounded-bl-[50px] rounded-tr-[50px] border border-[#f4f4f4] bg-white/80 p-[20px] backdrop-blur-[10px]">
-                {activeTab === "交易明細" ? (
+                {!isGuest && activeTab === "交易明細" ? (
                   TRANSACTIONS.map((t, i) => <TransactionRow key={i} {...t} />)
                 ) : (
                   <p className="w-full py-[40px] text-center text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#a2a2a2]">沒有任何資料</p>
