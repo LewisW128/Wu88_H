@@ -88,7 +88,7 @@ export default function ProfileSidebar() {
         <NavIcon icon="/assets/sidebar/profile-nav/trophy.svg" label="排行榜" />
       </div>
 
-      <NavIcon icon="/assets/sidebar/profile-nav/help.svg" label="常見問題" />
+      <NavIcon icon="/assets/sidebar/profile-nav/help.svg" label="領獎中心" />
 
       <Divider />
 
