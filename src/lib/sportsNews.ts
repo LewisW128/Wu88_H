@@ -51,9 +51,15 @@ type RawItem = {
 // covers sports this page has no tab for (桌球/網球/橄欖球/霹靂舞/中國大師賽
 // etc.) -- "all" is every item that matched football/basketball/baseball,
 // not literally every item in the feed, so those never surface here.
+// "男籃"/"男足" (men's basketball/football) are how Taiwan/HK outlets
+// actually write these during the Asian Games etc. -- "女籃" was already
+// here but its men's counterpart wasn't, which meant every real "亞運男籃"
+// headline (there were several across all three feeds at once, not an
+// edge case) silently classified as "other" and never reached the
+// basketball tab despite basketball news genuinely existing that day.
 const CATEGORY_KEYWORDS: Record<Exclude<NewsCategory, "all">, string[]> = {
-  football: ["足球", "世足", "英超", "西甲", "德甲", "歐冠", "歐聯", "世界盃", "中華隊足球", "FIFA"],
-  basketball: ["籃球", "NBA", "SBL", "PLG", "TPBL", "女籃", "中華籃"],
+  football: ["足球", "世足", "英超", "西甲", "德甲", "歐冠", "歐聯", "世界盃", "中華隊足球", "FIFA", "男足"],
+  basketball: ["籃球", "NBA", "SBL", "PLG", "TPBL", "女籃", "男籃", "中華籃"],
   baseball: ["棒球", "MLB", "中職", "大聯盟", "日職", "統一獅", "中信兄弟", "樂天桃猿", "富邦悍將", "味全龍", "台鋼雄鷹"],
 };
 
