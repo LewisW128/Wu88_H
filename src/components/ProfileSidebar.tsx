@@ -123,7 +123,7 @@ export default function ProfileSidebar() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [railHeight, setRailHeight] = useState(DEFAULT_RAIL_HEIGHT);
   const [thumb, setThumb] = useState({ height: 0, top: 0 });
-  const [needsScroll, setNeedsScroll] = useState(false);
+  const [scrolledFromTop, setScrolledFromTop] = useState(false);
   const listHeight = Math.max(0, railHeight - BACK_BUTTON_SIZE - GAP);
 
   useEffect(() => {
@@ -144,12 +144,11 @@ export default function ProfileSidebar() {
     function update() {
       if (!el) return;
       const { scrollTop, scrollHeight, clientHeight } = el;
+      setScrolledFromTop(scrollTop > 0);
       if (scrollHeight <= clientHeight) {
         setThumb({ height: 0, top: 0 });
-        setNeedsScroll(false);
         return;
       }
-      setNeedsScroll(true);
       const height = Math.max(24, (clientHeight / scrollHeight) * clientHeight);
       const maxTop = clientHeight - height;
       const top = (scrollTop / (scrollHeight - clientHeight)) * maxTop;
@@ -166,29 +165,46 @@ export default function ProfileSidebar() {
   }, [listHeight, loggedIn]);
 
   return (
-    <div className="relative w-[94px]" style={{ height: railHeight }}>
+    // `items-center` (horizontal only) -- NOT `justify-center`. An earlier
+    // version here also centered the group VERTICALLY within the rail's
+    // own height, but per the user's own direct correction that's not
+    // wanted: only left-right centering, 返回 and the icon list still flow
+    // from the top the same as before.
+    <div className="relative flex w-[94px] flex-col items-center gap-[30px]" style={{ height: railHeight }}>
       <Link
         href="/"
         aria-label="返回"
-        className="absolute left-0 top-0 flex size-[64px] shrink-0 items-center justify-center rounded-full bg-[#3e4140]"
+        className="flex size-[64px] shrink-0 items-center justify-center rounded-full bg-[#3e4140]"
       >
         <img alt="" src={withBasePath("/assets/sidebar/back-arrow.svg")} className="size-[25px]" />
       </Link>
 
-      {/* Fades the first ~30px of the list into transparent (a plain CSS
+      {/* `max-height`, not a fixed `height` -- a fixed height equal to the
+          full remaining space would leave visible empty room INSIDE this
+          box whenever the icons don't actually fill it. `max-height` lets
+          it shrink to its own natural content size when short, and only
+          clamps (enabling the scroll+fade below) once the
+          real content actually exceeds the available room.
+          Fades the first ~16px of the list into transparent (a plain CSS
           gradient mask, not Talking_Bar's own fade-mask.svg -- that asset's
           shape is cut to Talking_Bar's own notched panel outline, meaningless
-          for this plain rectangular column) only once there's actually
-          something to scroll -- otherwise a fully-visible, non-scrolling
-          list would permanently fade its own first icon for no reason. */}
+          for this plain rectangular column) only once actually scrolled
+          away from the top (`scrolledFromTop`, not just `needsScroll`) --
+          `needsScroll` alone is true the instant there's ANY overflow,
+          which faded the very first icon permanently even at rest, before
+          scrolling away from it means anything. Keeping the fade zone
+          short (16px, not the original 30px) is the "push it up more" the
+          user asked for -- most of the icon in that top slot stays fully
+          visible, and only the sliver actually crossing the boundary
+          fades. */}
       <div
         ref={scrollRef}
-        className="no-scrollbar absolute left-0 top-[94px] flex w-full flex-col items-center gap-[30px] overflow-y-auto"
+        className="no-scrollbar flex w-full flex-col items-center gap-[30px] overflow-y-auto"
         style={{
-          height: listHeight,
-          ...(needsScroll && {
-            maskImage: "linear-gradient(to bottom, transparent, black 30px)",
-            WebkitMaskImage: "linear-gradient(to bottom, transparent, black 30px)",
+          maxHeight: listHeight,
+          ...(scrolledFromTop && {
+            maskImage: "linear-gradient(to bottom, transparent, black 16px)",
+            WebkitMaskImage: "linear-gradient(to bottom, transparent, black 16px)",
           }),
         }}
       >
@@ -238,20 +254,16 @@ export default function ProfileSidebar() {
         <NavIcon icon="/assets/sidebar/profile-nav/logout.svg" label="登出" onClick={() => setLoggedIn(false)} />
       </div>
 
-      {/* `right-[-40px]`, not `right-0` -- every page wraps this component
-          in the SAME `pl-[30px]` sticky container inside a 164px-wide grid
-          column (30 padding + this box's own 94px width = 124, 40px short
-          of that column's real 164px edge, where Figma's own Line8 divider
-          sits -- the reference the user pointed to for this scrollbar's
-          intended position). `right-0` sat the thumb flush against the
-          icon column's own tight edge instead, a good 40px to the left of
-          where it's actually supposed to be. `top: 94 + thumb.top` matches
-          the list's own top offset (64px back button + 30px gap) so the
-          thumb tracks the SCROLLABLE list, not the back button sitting
-          above it. */}
+      {/* `right-[-20px]`: a fixed 20px clear of the icon column's own right
+          edge, per the user's own direct spec -- not flush against it
+          (`right-0`) and not out at Figma's Line8 divider position either
+          (`right-[-40px]`, this file's own earlier guess before the user
+          gave the exact number). `top: 94 + thumb.top` matches the list's
+          own top offset (64px back button + 30px gap) so the thumb tracks
+          the SCROLLABLE list, not the back button sitting above it. */}
       {thumb.height > 0 && (
         <div
-          className="pointer-events-none absolute right-[-40px] w-[2px] rounded-full bg-[#23f3d5]"
+          className="pointer-events-none absolute right-[-20px] w-[2px] rounded-full bg-[#23f3d5]"
           style={{ top: 94 + thumb.top, height: thumb.height }}
         />
       )}
