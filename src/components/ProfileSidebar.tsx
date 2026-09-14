@@ -108,6 +108,14 @@ function NavIcon({
 const TOP_OFFSET = 58;
 const VIEWPORT_BOTTOM_GAP = 20;
 const DEFAULT_RAIL_HEIGHT = 900;
+// 返回 sits above the scrollable list, not inside it -- per the user's own
+// direct call, it has to stay pinned in place while everything below it
+// scrolls, the same way Talking_Bar's own channel-switch header (node
+// 754:9317) stays fixed above ITS scrolling message list rather than
+// scrolling away with the messages. `GAP` matches the column's own
+// established gap-[30px] rhythm between every other icon.
+const BACK_BUTTON_SIZE = 64;
+const GAP = 30;
 
 export default function ProfileSidebar() {
   const { loggedIn, setLoggedIn } = useAuth();
@@ -115,6 +123,8 @@ export default function ProfileSidebar() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [railHeight, setRailHeight] = useState(DEFAULT_RAIL_HEIGHT);
   const [thumb, setThumb] = useState({ height: 0, top: 0 });
+  const [needsScroll, setNeedsScroll] = useState(false);
+  const listHeight = Math.max(0, railHeight - BACK_BUTTON_SIZE - GAP);
 
   useEffect(() => {
     function update() {
@@ -136,8 +146,10 @@ export default function ProfileSidebar() {
       const { scrollTop, scrollHeight, clientHeight } = el;
       if (scrollHeight <= clientHeight) {
         setThumb({ height: 0, top: 0 });
+        setNeedsScroll(false);
         return;
       }
+      setNeedsScroll(true);
       const height = Math.max(24, (clientHeight / scrollHeight) * clientHeight);
       const maxTop = clientHeight - height;
       const top = (scrollTop / (scrollHeight - clientHeight)) * maxTop;
@@ -151,19 +163,35 @@ export default function ProfileSidebar() {
       el.removeEventListener("scroll", update);
       window.removeEventListener("resize", update);
     };
-  }, [railHeight, loggedIn]);
+  }, [listHeight, loggedIn]);
 
   return (
     <div className="relative w-[94px]" style={{ height: railHeight }}>
-      <div ref={scrollRef} className="no-scrollbar flex size-full flex-col items-center gap-[30px] overflow-y-auto">
-        <Link
-          href="/"
-          aria-label="返回"
-          className="flex size-[64px] shrink-0 items-center justify-center rounded-full bg-[#3e4140]"
-        >
-          <img alt="" src={withBasePath("/assets/sidebar/back-arrow.svg")} className="size-[25px]" />
-        </Link>
+      <Link
+        href="/"
+        aria-label="返回"
+        className="absolute left-0 top-0 flex size-[64px] shrink-0 items-center justify-center rounded-full bg-[#3e4140]"
+      >
+        <img alt="" src={withBasePath("/assets/sidebar/back-arrow.svg")} className="size-[25px]" />
+      </Link>
 
+      {/* Fades the first ~30px of the list into transparent (a plain CSS
+          gradient mask, not Talking_Bar's own fade-mask.svg -- that asset's
+          shape is cut to Talking_Bar's own notched panel outline, meaningless
+          for this plain rectangular column) only once there's actually
+          something to scroll -- otherwise a fully-visible, non-scrolling
+          list would permanently fade its own first icon for no reason. */}
+      <div
+        ref={scrollRef}
+        className="no-scrollbar absolute left-0 top-[94px] flex w-full flex-col items-center gap-[30px] overflow-y-auto"
+        style={{
+          height: listHeight,
+          ...(needsScroll && {
+            maskImage: "linear-gradient(to bottom, transparent, black 30px)",
+            WebkitMaskImage: "linear-gradient(to bottom, transparent, black 30px)",
+          }),
+        }}
+      >
         <NavIcon
           icon="/assets/sidebar/profile-nav/home.svg"
           activeIcon="/assets/sidebar/profile-nav/home-active.svg"
@@ -210,10 +238,21 @@ export default function ProfileSidebar() {
         <NavIcon icon="/assets/sidebar/profile-nav/logout.svg" label="登出" onClick={() => setLoggedIn(false)} />
       </div>
 
+      {/* `right-[-40px]`, not `right-0` -- every page wraps this component
+          in the SAME `pl-[30px]` sticky container inside a 164px-wide grid
+          column (30 padding + this box's own 94px width = 124, 40px short
+          of that column's real 164px edge, where Figma's own Line8 divider
+          sits -- the reference the user pointed to for this scrollbar's
+          intended position). `right-0` sat the thumb flush against the
+          icon column's own tight edge instead, a good 40px to the left of
+          where it's actually supposed to be. `top: 94 + thumb.top` matches
+          the list's own top offset (64px back button + 30px gap) so the
+          thumb tracks the SCROLLABLE list, not the back button sitting
+          above it. */}
       {thumb.height > 0 && (
         <div
-          className="pointer-events-none absolute right-0 w-[2px] rounded-full bg-[#23f3d5]"
-          style={{ top: thumb.top, height: thumb.height }}
+          className="pointer-events-none absolute right-[-40px] w-[2px] rounded-full bg-[#23f3d5]"
+          style={{ top: 94 + thumb.top, height: thumb.height }}
         />
       )}
     </div>
