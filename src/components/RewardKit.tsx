@@ -1,0 +1,206 @@
+import { withBasePath } from "../lib/asset";
+
+export type RewardKitLevelRow = { level: string; usdt: string };
+
+export type RewardKitData = {
+  name: string;
+  levelRange: string;
+  levelStart: number;
+  levelEnd: number;
+  image: string;
+  rewardTable: RewardKitLevelRow[];
+};
+
+function formatUsdt(n: number): string {
+  return `${Math.round(n).toLocaleString()} USDT`;
+}
+
+// Figma's own hover/selected export (node 667:15723, "等級 1-13：綠寶石寶箱")
+// only ever showed the real per-level USDT table for THIS ONE bracket
+// (Lv.1-13, 500 -> 200,000 USDT) -- its own description text calls it "Lv.
+// 1–13 累積儲值等級的暫定範例" (a tentative example), not final copy. The
+// other 7 brackets have no equivalent table in the file at all. Rather than
+// leaving them with no detail view, each continues the SAME relative
+// per-level growth shape as the one real table Figma provided (the ratio
+// between consecutive levels there, cycled to fit each bracket's own level
+// count), with every bracket's own starting value 3x the previous
+// bracket's -- a placeholder extrapolation of the one confirmed curve, not
+// independently invented numbers, but still needs real copy before ship.
+const KIT0_RATIOS = [2, 2, 1.75, 10 / 7, 1.6, 1.5, 5 / 3, 1.5, 5 / 3, 1.6, 1.5, 5 / 3];
+
+function buildRewardTable(levelStart: number, levelEnd: number, firstValue: number): RewardKitLevelRow[] {
+  const rows: RewardKitLevelRow[] = [];
+  let value = firstValue;
+  for (let lv = levelStart; lv <= levelEnd; lv++) {
+    rows.push({ level: `Lv.${lv}`, usdt: formatUsdt(value) });
+    value *= KIT0_RATIOS[(lv - levelStart) % KIT0_RATIOS.length];
+  }
+  return rows;
+}
+
+const KIT0_TABLE: RewardKitLevelRow[] = [500, 1000, 2000, 3500, 5000, 8000, 12000, 20000, 30000, 50000, 80000, 120000, 200000].map(
+  (usdt, i) => ({ level: `Lv.${i + 1}`, usdt: formatUsdt(usdt) }),
+);
+
+// Figma "Reward_Kit" (node 664:17202/17204-17210, seen live at 648:14692's
+// own "領獎中心" frame): 8 loot-crystal cards, one plain white notched frame
+// (card-frame.svg) behind each kit's own gem render. Figma's own exported
+// gem images were placeholders -- the real per-kit art lives at
+// D:\works\09_WU88-H\source\public\item\Bonus (per the user's own
+// correction) as one 150x150 crystal render per LEVEL BRACKET, matching
+// the Level_line row's own 7 milestones (1/14/28/41/54/67/82) one-to-one,
+// with the 8th kit covering the tail bracket up to level 100. Node
+// 664:17207 really does repeat 664:17202's own "綠寶石寶箱" label on a
+// different gem image -- kept as-is rather than "fixed" to a guessed
+// unique name, since that's what the design itself contains.
+export const REWARD_KITS: RewardKitData[] = [
+  { name: "綠寶石寶箱", levelRange: "Lv.1-13", levelStart: 1, levelEnd: 13, image: "/assets/rewards/lv-01-13.png", rewardTable: KIT0_TABLE },
+  { name: "琥珀石寶箱", levelRange: "Lv.14-27", levelStart: 14, levelEnd: 27, image: "/assets/rewards/lv-14-27.png", rewardTable: buildRewardTable(14, 27, 1500) },
+  { name: "摩根石寶箱", levelRange: "Lv.28-40", levelStart: 28, levelEnd: 40, image: "/assets/rewards/lv-28-40.png", rewardTable: buildRewardTable(28, 40, 4500) },
+  { name: "血鑽石寶箱", levelRange: "Lv.41-53", levelStart: 41, levelEnd: 53, image: "/assets/rewards/lv-41-53.png", rewardTable: buildRewardTable(41, 53, 13500) },
+  { name: "綠寶石寶箱", levelRange: "Lv.54-66", levelStart: 54, levelEnd: 66, image: "/assets/rewards/lv-54-66.png", rewardTable: buildRewardTable(54, 66, 40500) },
+  { name: "翡翠石寶箱", levelRange: "Lv.67-79", levelStart: 67, levelEnd: 79, image: "/assets/rewards/lv-67-79.png", rewardTable: buildRewardTable(67, 79, 121500) },
+  { name: "孔雀石寶箱", levelRange: "Lv.80-92", levelStart: 80, levelEnd: 92, image: "/assets/rewards/lv-80-92.png", rewardTable: buildRewardTable(80, 92, 364500) },
+  { name: "合金石寶箱", levelRange: "Lv.93-100", levelStart: 93, levelEnd: 100, image: "/assets/rewards/lv-93-100.png", rewardTable: buildRewardTable(93, 100, 1093500) },
+];
+
+// The little ribbon/medal glyph next to every kit's name (Figma "Actions",
+// node 662:16740 etc.) is built from plain border shapes plus one ellipse
+// image rather than a single icon export -- reproduced as-is here instead
+// of flattening it into a downloaded PNG, since Figma itself never exports
+// it as one image (get_design_context returns only the ellipse asset, with
+// the ribbon lines as real bordered divs).
+function RankRibbonIcon() {
+  return (
+    <div className="relative size-[17px] shrink-0 overflow-hidden">
+      <div className="absolute inset-[56%_4%_4%_56%]">
+        <img alt="" src={withBasePath("/assets/rewards/icon-badge-ellipse.svg")} className="absolute inset-0 block size-full max-w-none" />
+      </div>
+      <div className="absolute inset-[12%_8%_8%_8%]">
+        <div className="absolute inset-[12%_8%_36%_8%] rounded-tl-[2.04px] rounded-tr-[2.04px] rounded-bl-[1.36px] rounded-br-[1.36px] border-[1.36px] border-solid border-[#3e4140]" />
+        <div className="absolute inset-[12%_28%_36%_28%] border-[1.36px] border-solid border-[#3e4140]" />
+        <div className="absolute inset-[40%_40%_48%_40%] rounded-[2.526px] border-[1.36px] border-solid border-[#3e4140]" />
+        <div className="absolute inset-[56%_12%_8%_12%] flex items-center justify-center" style={{ containerType: "size" }}>
+          <div className="h-[100cqh] w-[100cqw] flex-none -rotate-180 -scale-x-100">
+            <div className="relative size-full rounded-tl-[1.36px] rounded-tr-[1.36px] border-[1.36px] border-solid border-[#3e4140]" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Figma's real selected export (node 667:15713, seen live inside 667:15687's
+// hover-state row): NOT a lift + gradient ring around the card (this file's
+// own earlier guess, made before that node existed here to check against) --
+// just the SAME notched card-frame shape with a different fill/stroke:
+// `card-frame-selected.svg` swaps the plain white-gradient fill for a radial
+// teal (#23F3D5) glow (transparent at the shape's own center, solid toward
+// its edges, bleeding past them since the source SVG itself sets
+// `overflow="visible"`) and a solid teal stroke in place of the unselected
+// state's #F4F4F4 one. Name/ribbon/"前 5,000 名" text stay exactly where
+// they are -- only this one background image swaps.
+export function RewardKitCard({ kit, selected, onSelect }: { kit: RewardKitData; selected: boolean; onSelect: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={selected}
+      className="relative block h-[262px] w-[216px] shrink-0 overflow-visible rounded-[20px] text-left"
+    >
+      <img
+        alt=""
+        src={withBasePath(selected ? "/assets/rewards/card-frame-selected.svg" : "/assets/rewards/card-frame.svg")}
+        className="absolute bottom-0 left-px h-[196px] w-[215px]"
+      />
+      <div className="absolute left-1/2 top-[-8px] size-[212px] -translate-x-1/2 overflow-hidden">
+        <img
+          alt={kit.levelRange}
+          src={withBasePath(kit.image)}
+          className="absolute left-1/2 top-1/2 size-[160px] -translate-x-1/2 -translate-y-1/2 object-contain"
+        />
+      </div>
+      <div className="absolute bottom-[20px] left-1/2 flex -translate-x-1/2 flex-col items-center gap-[5px]">
+        <div className="flex w-full items-center gap-[5px]">
+          <RankRibbonIcon />
+          <p className="whitespace-nowrap text-[12px] text-black">{kit.name}</p>
+        </div>
+        <div className="flex items-center gap-[5px] whitespace-nowrap">
+          <p className="text-[12px] text-[#a2a2a2]">前</p>
+          <p className="text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#23f3d5]">5,000</p>
+          <p className="text-[12px] text-[#a2a2a2]">名</p>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function RewardTableColumn({ rows }: { rows: RewardKitLevelRow[] }) {
+  return (
+    <div className="flex flex-col items-start">
+      {rows.map((row) => (
+        <div key={row.level} className="flex w-[172px] items-start gap-[10px] py-[4px]">
+          <p className="w-[40px] shrink-0 font-medium text-[#14d7bb]">{row.level}</p>
+          <p className="whitespace-nowrap font-bold text-[#3e4140]">{row.usdt}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Figma "Frame 1368" (node 667:15723, seen live at 667:15687's own hover/
+// selected page state): what a Reward_Kit card expands into once picked --
+// replaces the VIP-season title block above the card row (same slot,
+// same 40/150 top-left origin) rather than decorating the card itself.
+// Gem art reuses the SAME 150x150 production render the card's own icon
+// already uses (object-contain, centered) instead of Figma's own tall
+// 175x311 moody photo -- that photo was a per-bracket placeholder image
+// this project doesn't have a real equivalent of, unlike the small-card
+// icon (see RewardKit's own comment on why that swap happened at all).
+export function RewardKitDetailPanel({ kit }: { kit: RewardKitData }) {
+  const half = Math.ceil(kit.rewardTable.length / 2);
+  const left = kit.rewardTable.slice(0, half);
+  const right = kit.rewardTable.slice(half);
+
+  return (
+    <div className="flex items-start gap-[40px]">
+      {/* The real per-bracket asset (D:\works\09_WU88-H\source\public\item\
+          Bonus, per the user's own instructions) is a transparent RGBA PNG
+          with no background of its own -- an earlier version here added a
+          `bg-white` card behind it "just in case", which is exactly the
+          fabricated background the user's own file never had. No card, no
+          fill: just the real transparent image, undistorted, sized up to
+          230px (bigger than this layout slot's own 175px reserved width,
+          per the user's own direct request for a larger scale) -- still
+          comfortably under the 311px row height, so it never touches the
+          text panel's own top edge despite overflowing its column
+          horizontally. */}
+      <div className="relative flex h-[311px] w-[175px] shrink-0 items-center justify-center overflow-visible">
+        <img alt="" src={withBasePath(kit.image)} className="w-[230px] max-w-none object-contain" />
+      </div>
+
+      <div className="flex items-center rounded-tr-[50px] rounded-bl-[50px] rounded-br-[50px] border border-solid border-[#f4f4f4] bg-white/50 px-[40px] py-[20px] backdrop-blur-[10px]">
+        <div className="flex w-[361px] flex-col items-start gap-[20px]">
+          <div className="flex flex-col items-start gap-[10px] tracking-[0.15px]">
+            <p className="text-[14px] leading-[20px] text-[#3e4140]">
+              等級 <span className="text-[20px] font-bold leading-[32px] tracking-[0.35px] text-[#14d8bb]">{kit.levelStart}-{kit.levelEnd}</span>
+              ：{kit.name}，達成指定條件即可解鎖
+              <br />
+              限前 <span className="text-[#14d8bb]">5,000</span> 名領取。
+            </p>
+            <p className="text-[12px] leading-[18px] text-[#a2a2a2]">
+              以下為 Lv.{kit.levelStart}–{kit.levelEnd} 累積儲值等級的暫定範例。玩家的累積儲值金額達到對應門檻後，即可進入下一個等級，並逐步解鎖更高階的{kit.name}與成長回饋。前期等級門檻較容易達成，適合新手快速體驗升級節奏；中期開始提高累積需求，讓每次儲值都能明確推進進度；高階等級則提供更具挑戰性的長期目標，鼓勵玩家持續累積並朝 Lv.{kit.levelEnd} 邁進。等級越高，代表完成的累積里程碑越多，也能展現更高的會員身份與參與程度。下方金額皆以 USDT 計算，僅供版面與活動規劃參考，實際門檻、獎勵內容、發放條件及活動期間，仍應以最終公告與正式規則為準。請在儲值前確認目前累積進度與對應級別，避免因活動結算時間、資料更新或其他條件而影響資格判定。
+            </p>
+          </div>
+
+          <img alt="" src={withBasePath("/assets/rewards/detail-divider.svg")} className="h-px w-[359px]" />
+
+          <div className="flex items-start gap-[20px] text-[12px] leading-[18px] tracking-[0.15px]">
+            <RewardTableColumn rows={left} />
+            <RewardTableColumn rows={right} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -128,10 +128,15 @@ export default function ProfileSidebar() {
             href="/profile/account"
           />
         )}
-        <NavIcon icon="/assets/sidebar/profile-nav/trophy.svg" label="排行榜" />
+        <NavIcon
+          icon="/assets/sidebar/profile-nav/trophy.svg"
+          activeIcon="/assets/sidebar/profile-nav/trophy-active.svg"
+          label="領獎中心"
+          href="/profile/rewards"
+        />
       </div>
 
-      <NavIcon icon="/assets/sidebar/profile-nav/help.svg" label="領獎中心" />
+      <NavIcon icon="/assets/sidebar/profile-nav/help.svg" label="排行榜" />
 
       <Divider />
 
