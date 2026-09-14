@@ -68,14 +68,16 @@ export default function RewardsCenterContent() {
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-[#f4f4f4]">
-      {/* Plain fit-to-width, same as every other page's own ContainerBg hero
-          (home/casino/sports/promotions) -- no `fitHeight`. An earlier
-          version here scaled the whole page to also fit the real viewport
-          HEIGHT so nothing below the hero ever needed scrolling, but per
-          the user's own direct call this page should crop/scroll the same
-          way those other hero pages already do, not follow a special rule
-          of its own. */}
-      <ScaleToFit>
+      {/* `fitHeight={1355}` (Top_bar's 38px + the hero's own 1317px): per the
+          user's own explicit, repeated call -- this page must never scroll
+          at all, the Reward_Kit row always fully visible at the bottom and
+          ProfileSidebar never scrolling away -- unlike home/casino/sports/
+          promotions, which are ALWAYS meant to scroll past their own hero
+          for more content below. Fit-to-width alone (ScaleToFit's default,
+          what those other pages correctly use) leaves a short-but-wide
+          real window taller than the viewport, which is exactly the
+          scrolling this page isn't supposed to have. */}
+      <ScaleToFit fitHeight={1355}>
         <div className="sticky top-0 z-20">
           <TopBar onlineCount="900" totalReward="10,000,000" announcements={topBarAnnouncements} />
         </div>
@@ -127,7 +129,21 @@ export default function RewardsCenterContent() {
               `pointer-events-auto`, same as content's own visible children
               already do. */}
           <MinPanelHeight className="relative z-10 grid pointer-events-none" style={{ gridTemplateColumns: "164px minmax(0, 1fr) 295px" }}>
-            <div className="pointer-events-auto sticky top-[59px] z-10 self-start justify-self-start pl-[30px]">
+            {/* `relative`, not `sticky` -- this page never scrolls at all
+                (per the user's own explicit call: the sidebar must not
+                scroll away and the Reward_Kit row must always stay fully
+                visible at the bottom), so sticky's own "stay in place while
+                scrolling past" behavior is moot either way. More
+                importantly, `sticky` doesn't apply its own `top` offset
+                unconditionally the way `relative` does -- at rest it just
+                sits at its natural in-flow position -- which measured
+                ~8px, not the intended 59, and didn't match this page's
+                title row (`sticky top-[59px]` too, but landing at a
+                DIFFERENT real offset since its own natural flow position
+                differs). `relative` makes both land at the exact same
+                unconditional 59px offset, confirmed aligned within 0.3px
+                live. */}
+            <div className="pointer-events-auto relative top-[59px] z-10 self-start justify-self-start pl-[30px]">
               <ProfileSidebar />
             </div>
 
@@ -145,20 +161,11 @@ export default function RewardsCenterContent() {
                 actual visible child below opts back in with its own
                 `pointer-events-auto`. */}
             <div className="relative pointer-events-none">
-              {/* `sticky`, not `absolute` -- matching ProfileSidebar's own
-                  wrapper mechanism above (also `sticky top-[59px]`) is what
-                  actually keeps them visually aligned. `sticky` doesn't
-                  apply its own `top` offset unconditionally the way
-                  `absolute`/`relative` do (at rest, before any real
-                  scrolling, it just sits at its natural in-flow position),
-                  so pairing an `absolute` title row with a `sticky` sidebar
-                  -- two different positioning mechanisms both nominally
-                  "top: 59" -- landed at two different real offsets: the
-                  back button rendered visibly higher than this row. Both
-                  sharing the same `sticky` quirk here is what makes them
-                  land together, same as ProfileSidebar/StickyUtilityBar
-                  already do on every other page. */}
-              <div className="pointer-events-auto sticky top-[59px] z-10 flex w-full items-center justify-between">
+              {/* `relative`, matching ProfileSidebar's own wrapper -- see
+                  its comment on why `relative` (an unconditional offset)
+                  aligns correctly here where `sticky` (offset applied only
+                  once actually scrolled past) didn't. */}
+              <div className="pointer-events-auto relative top-[59px] z-10 flex w-full items-center justify-between">
                 <div className="flex items-center gap-[10px]">
                   <img alt="" src={withBasePath("/assets/rewards/icon-title.svg")} className="size-[25px]" />
                   <p className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#3e4140]">領獎中心</p>
@@ -220,7 +227,10 @@ export default function RewardsCenterContent() {
 
             </div>
 
-            <div className="pointer-events-auto sticky top-[58px] z-10 ml-[20px] self-start">
+            {/* `relative`, not `sticky` -- this page never scrolls (see
+                ProfileSidebar's own wrapper comment above), so there's
+                nothing for `sticky` to do here either. */}
+            <div className="pointer-events-auto relative top-[58px] z-10 ml-[20px] self-start">
               <TalkingBar messages={talkingBarMessages} friends={talkingBarFriends} simulatedMessages={talkingBarSimulatedMessages} />
             </div>
           </MinPanelHeight>
