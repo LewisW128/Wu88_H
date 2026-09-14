@@ -66,17 +66,33 @@ export function useMinPanelHeight(bottomGap = 20) {
 // any scale -- and this wrapper doesn't need to separately track/apply a
 // scaled height or width either, since zoom already makes the browser
 // treat this box as `DESIGN_WIDTH * scale` real pixels wide on its own.
-export default function ScaleToFit({ children }: { children: React.ReactNode }) {
+// `fitHeight` (design-space px): opt-in for a page that must never scroll
+// (RewardsCenterContent's own single-screen hero, matching Figma's literal
+// one-frame layout) -- also caps the scale so `fitHeight * scale` fits
+// `window.innerHeight`, not just width. Every other page leaves this unset
+// (defaults to no height constraint at all), so their own existing
+// fit-to-width-only behavior is completely unchanged -- a scrolling page
+// WANTS its real height to just flow past the viewport, not get squeezed
+// to fit it. Feeding the resulting combined scale through the same
+// ScaleContext (rather than layering some second independent zoom on top)
+// is what keeps Talking_Bar's own viewport-height math (`useMinPanelHeight`,
+// above) correct: it already converts real screen px to design-space by
+// dividing by this one context value, so a second uncoordinated scale
+// factor squeezing things further on top would throw that conversion off
+// and leave Talking_Bar sized for a scale it doesn't know happened.
+export default function ScaleToFit({ children, fitHeight }: { children: React.ReactNode; fitHeight?: number }) {
   const [scale, setScale] = useState(1);
 
   useEffect(() => {
     function update() {
-      setScale(Math.min(1, window.innerWidth / DESIGN_WIDTH));
+      const widthScale = window.innerWidth / DESIGN_WIDTH;
+      const heightScale = fitHeight ? window.innerHeight / fitHeight : Infinity;
+      setScale(Math.min(1, widthScale, heightScale));
     }
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
-  }, []);
+  }, [fitHeight]);
 
   // Below the design width, this stays a fixed DESIGN_WIDTH box that zoom
   // shrinks to fit -- unchanged from before. At or above it, scale is

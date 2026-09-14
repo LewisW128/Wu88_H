@@ -68,6 +68,13 @@ export default function RewardsCenterContent() {
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-[#f4f4f4]">
+      {/* Plain fit-to-width, same as every other page's own ContainerBg hero
+          (home/casino/sports/promotions) -- no `fitHeight`. An earlier
+          version here scaled the whole page to also fit the real viewport
+          HEIGHT so nothing below the hero ever needed scrolling, but per
+          the user's own direct call this page should crop/scroll the same
+          way those other hero pages already do, not follow a special rule
+          of its own. */}
       <ScaleToFit>
         <div className="sticky top-0 z-20">
           <TopBar onlineCount="900" totalReward="10,000,000" announcements={topBarAnnouncements} />
@@ -138,7 +145,20 @@ export default function RewardsCenterContent() {
                 actual visible child below opts back in with its own
                 `pointer-events-auto`. */}
             <div className="relative pointer-events-none">
-              <div className="pointer-events-auto absolute left-0 top-[59px] flex w-full items-center justify-between">
+              {/* `sticky`, not `absolute` -- matching ProfileSidebar's own
+                  wrapper mechanism above (also `sticky top-[59px]`) is what
+                  actually keeps them visually aligned. `sticky` doesn't
+                  apply its own `top` offset unconditionally the way
+                  `absolute`/`relative` do (at rest, before any real
+                  scrolling, it just sits at its natural in-flow position),
+                  so pairing an `absolute` title row with a `sticky` sidebar
+                  -- two different positioning mechanisms both nominally
+                  "top: 59" -- landed at two different real offsets: the
+                  back button rendered visibly higher than this row. Both
+                  sharing the same `sticky` quirk here is what makes them
+                  land together, same as ProfileSidebar/StickyUtilityBar
+                  already do on every other page. */}
+              <div className="pointer-events-auto sticky top-[59px] z-10 flex w-full items-center justify-between">
                 <div className="flex items-center gap-[10px]">
                   <img alt="" src={withBasePath("/assets/rewards/icon-title.svg")} className="size-[25px]" />
                   <p className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#3e4140]">領獎中心</p>
