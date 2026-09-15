@@ -468,7 +468,7 @@ export default function RewardsCenterContent() {
                 height by default (same as ProfileSidebar/Talking_Bar would
                 if they didn't already opt out with `self-start`). Left as
                 the default `auto`, that invisible box -- part of the grid's
-                own `z-10`, above the Reward_Kit row's `z-5` -- silently ate
+                own `z-10` -- silently ate
                 every click and wheel-scroll meant for the cards underneath
                 it, even though nothing was visibly there to click. Each
                 actual visible child below opts back in with its own
@@ -509,8 +509,12 @@ export default function RewardsCenterContent() {
           instead of `transform`). Horizontally centered to match the
           background layer's own centering, with the same `pl-[164px]`
           Figma offset preserved inside so the row still starts under
-          where the sidebar column sits. */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-[20px] z-[5] flex justify-center">
+          where the sidebar column sits. `z-[15]`, above the grid's own
+          `z-10` (Talking_Bar included) -- per the user's own direct call,
+          scrolling this row all the way to its last card must not leave
+          that card hidden behind the chat panel, which previously painted
+          over it at z-10 wherever their real screen positions overlapped. */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-[20px] z-[15] flex justify-center">
         <div
           className="no-scrollbar pointer-events-auto overflow-x-auto overflow-y-hidden"
           style={{ width: HERO_WIDTH * menuScale }}

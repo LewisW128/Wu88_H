@@ -75,22 +75,31 @@ export default function RewardVipCard({ level, currentExp, maxExp, continuousDep
         <p className="whitespace-nowrap text-[40px] font-black leading-[36px] tracking-[0.36px] text-[#3e4140]">Lv. {level}</p>
       </div>
 
+      {/* `Experence_bar` (Figma node I210:19103;519:3233): the "+" button
+          sits in the SAME row as the progress bar itself (both children of
+          node ...975:9652), NOT beside the "VIP 經驗" text above it -- an
+          earlier version here copied the shared VipCard's own layout
+          (text+button row, then a separate full-width bar row) without
+          re-checking it against this card's own actual Figma structure,
+          which visually collided the button with the crystal art bleeding
+          down from above it, read by the user as a stray "white dot" on
+          the rock. */}
       <div className="absolute bottom-[19px] left-[19px] right-[19px] flex flex-col items-start gap-[10px]">
-        <div className="flex w-full items-center justify-between">
-          <p className="whitespace-nowrap">
-            <span className="text-[12px] leading-[18px] tracking-[0.15px] text-[#b2b2b2]">VIP 經驗 </span>
-            <span className="text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#23f3d5]">{currentExp.toLocaleString()}</span>
-            <span className="text-[12px] leading-[18px] tracking-[0.15px] text-[#b2b2b2]"> / {maxExp.toLocaleString()}</span>
-          </p>
-          <div className="flex size-[25px] items-center justify-center rounded-full bg-[#3e4140] p-[5px] backdrop-blur-[5.556px]">
+        <p className="whitespace-nowrap">
+          <span className="text-[12px] leading-[18px] tracking-[0.15px] text-[#b2b2b2]">VIP 經驗 </span>
+          <span className="text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#23f3d5]">{currentExp.toLocaleString()}</span>
+          <span className="text-[12px] leading-[18px] tracking-[0.15px] text-[#b2b2b2]"> / {maxExp.toLocaleString()}</span>
+        </p>
+        <div className="flex w-full items-center gap-[20px]">
+          <div className="h-[10px] min-w-px flex-1 overflow-hidden rounded-[50px] border border-[#a2a2a2] bg-white">
+            <div
+              className="h-full rounded-[50px]"
+              style={{ width: `${progress}%`, background: "linear-gradient(90deg, #3cc2ca 0%, #b559fc 100%)" }}
+            />
+          </div>
+          <div className="flex size-[25px] shrink-0 items-center justify-center rounded-full bg-[#3e4140] p-[5px] backdrop-blur-[5.556px]">
             <img alt="" src={withBasePath("/assets/vip-card/add-icon.svg")} className="size-[13.889px]" />
           </div>
-        </div>
-        <div className="h-[10px] w-full overflow-hidden rounded-[50px] border border-[#a2a2a2] bg-white">
-          <div
-            className="h-full rounded-[50px]"
-            style={{ width: `${progress}%`, background: "linear-gradient(90deg, #3cc2ca 0%, #b559fc 100%)" }}
-          />
         </div>
         <p className="whitespace-nowrap">
           <span className="text-[12px] leading-[18px] tracking-[0.15px] text-[#b2b2b2]">已經連續儲值 </span>
