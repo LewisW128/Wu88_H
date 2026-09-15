@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import { withBasePath } from "../lib/asset";
 
 export type RewardKitLevelRow = { level: string; usdt: string };
@@ -157,10 +160,43 @@ function RewardTableColumn({ rows }: { rows: RewardKitLevelRow[] }) {
 // 175x311 moody photo -- that photo was a per-bracket placeholder image
 // this project doesn't have a real equivalent of, unlike the small-card
 // icon (see RewardKit's own comment on why that swap happened at all).
-export function RewardKitDetailPanel({ kit }: { kit: RewardKitData }) {
+export function RewardKitDetailPanel({ kit, maxHeight }: { kit: RewardKitData; maxHeight?: number }) {
   const half = Math.ceil(kit.rewardTable.length / 2);
   const left = kit.rewardTable.slice(0, half);
   const right = kit.rewardTable.slice(half);
+
+  // Same thin teal scrollbar thumb this project already uses for its other
+  // two scrollable panels (ProfileSidebar's own rail, Talking_Bar's own
+  // message list) -- per the user's own direct call to reuse that exact
+  // style here rather than a native browser scrollbar.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [thumb, setThumb] = useState({ height: 0, top: 0 });
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    function update() {
+      if (!el) return;
+      const { scrollTop, scrollHeight, clientHeight } = el;
+      if (scrollHeight <= clientHeight) {
+        setThumb({ height: 0, top: 0 });
+        return;
+      }
+      const height = Math.max(24, (clientHeight / scrollHeight) * clientHeight);
+      const maxTop = clientHeight - height;
+      const top = (scrollTop / (scrollHeight - clientHeight)) * maxTop;
+      setThumb({ height, top });
+    }
+
+    update();
+    el.addEventListener("scroll", update);
+    window.addEventListener("resize", update);
+    return () => {
+      el.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [kit, maxHeight]);
 
   return (
     <div className="flex items-start gap-[40px]">
@@ -179,27 +215,52 @@ export function RewardKitDetailPanel({ kit }: { kit: RewardKitData }) {
         <img alt="" src={withBasePath(kit.image)} className="w-[230px] max-w-none object-contain" />
       </div>
 
-      <div className="flex items-center rounded-tr-[50px] rounded-bl-[50px] rounded-br-[50px] border border-solid border-[#f4f4f4] bg-white/50 px-[40px] py-[20px] backdrop-blur-[10px]">
-        <div className="flex w-[361px] flex-col items-start gap-[20px]">
-          <div className="flex flex-col items-start gap-[10px] tracking-[0.15px]">
-            <p className="text-[14px] leading-[20px] text-[#3e4140]">
-              等級 <span className="text-[20px] font-bold leading-[32px] tracking-[0.35px] text-[#14d8bb]">{kit.levelStart}-{kit.levelEnd}</span>
-              ：{kit.name}，達成指定條件即可解鎖
-              <br />
-              限前 <span className="text-[#14d8bb]">5,000</span> 名領取。
-            </p>
-            <p className="text-[12px] leading-[18px] text-[#a2a2a2]">
-              以下為 Lv.{kit.levelStart}–{kit.levelEnd} 累積儲值等級的暫定範例。玩家的累積儲值金額達到對應門檻後，即可進入下一個等級，並逐步解鎖更高階的{kit.name}與成長回饋。前期等級門檻較容易達成，適合新手快速體驗升級節奏；中期開始提高累積需求，讓每次儲值都能明確推進進度；高階等級則提供更具挑戰性的長期目標，鼓勵玩家持續累積並朝 Lv.{kit.levelEnd} 邁進。等級越高，代表完成的累積里程碑越多，也能展現更高的會員身份與參與程度。下方金額皆以 USDT 計算，僅供版面與活動規劃參考，實際門檻、獎勵內容、發放條件及活動期間，仍應以最終公告與正式規則為準。請在儲值前確認目前累積進度與對應級別，避免因活動結算時間、資料更新或其他條件而影響資格判定。
-            </p>
-          </div>
+      {/* `items-start`, not the original `items-center` -- centering only
+          matters when content is shorter than the box, and once `maxHeight`
+          (the real leftover room below this panel on a short viewport, per
+          the user's own direct call) makes content TALLER than the box
+          instead, centering a scrolled overflow starts the scroll position
+          somewhere in the middle of the content instead of at its top.
+          `overflow-y-auto` is the fallback for whatever this page's own
+          proportional shrink (RewardsCenterContent's own `fixedScale`)
+          still doesn't make room for -- this box's own text/table content
+          scrolls internally rather than pushing past the fixed bottom
+          layer's own bounds. No `maxHeight` (the default) keeps this
+          exactly as it always rendered, unconstrained. */}
+      <div className="relative shrink-0">
+        <div
+          ref={scrollRef}
+          className="no-scrollbar flex items-start overflow-y-auto rounded-tr-[50px] rounded-bl-[50px] rounded-br-[50px] border border-solid border-[#f4f4f4] bg-white/50 px-[40px] py-[20px] backdrop-blur-[10px]"
+          style={maxHeight !== undefined ? { maxHeight } : undefined}
+        >
+          <div className="flex w-[361px] flex-col items-start gap-[20px]">
+            <div className="flex flex-col items-start gap-[10px] tracking-[0.15px]">
+              <p className="text-[14px] leading-[20px] text-[#3e4140]">
+                等級 <span className="text-[20px] font-bold leading-[32px] tracking-[0.35px] text-[#14d8bb]">{kit.levelStart}-{kit.levelEnd}</span>
+                ：{kit.name}，達成指定條件即可解鎖
+                <br />
+                限前 <span className="text-[#14d8bb]">5,000</span> 名領取。
+              </p>
+              <p className="text-[12px] leading-[18px] text-[#a2a2a2]">
+                以下為 Lv.{kit.levelStart}–{kit.levelEnd} 累積儲值等級的暫定範例。玩家的累積儲值金額達到對應門檻後，即可進入下一個等級，並逐步解鎖更高階的{kit.name}與成長回饋。前期等級門檻較容易達成，適合新手快速體驗升級節奏；中期開始提高累積需求，讓每次儲值都能明確推進進度；高階等級則提供更具挑戰性的長期目標，鼓勵玩家持續累積並朝 Lv.{kit.levelEnd} 邁進。等級越高，代表完成的累積里程碑越多，也能展現更高的會員身份與參與程度。下方金額皆以 USDT 計算，僅供版面與活動規劃參考，實際門檻、獎勵內容、發放條件及活動期間，仍應以最終公告與正式規則為準。請在儲值前確認目前累積進度與對應級別，避免因活動結算時間、資料更新或其他條件而影響資格判定。
+              </p>
+            </div>
 
-          <img alt="" src={withBasePath("/assets/rewards/detail-divider.svg")} className="h-px w-[359px]" />
+            <img alt="" src={withBasePath("/assets/rewards/detail-divider.svg")} className="h-px w-[359px]" />
 
-          <div className="flex items-start gap-[20px] text-[12px] leading-[18px] tracking-[0.15px]">
-            <RewardTableColumn rows={left} />
-            <RewardTableColumn rows={right} />
+            <div className="flex items-start gap-[20px] text-[12px] leading-[18px] tracking-[0.15px]">
+              <RewardTableColumn rows={left} />
+              <RewardTableColumn rows={right} />
+            </div>
           </div>
         </div>
+
+        {thumb.height > 0 && (
+          <div
+            className="pointer-events-none absolute right-[10px] w-[2px] rounded-full bg-[#23f3d5]"
+            style={{ top: 20 + thumb.top, height: thumb.height }}
+          />
+        )}
       </div>
     </div>
   );

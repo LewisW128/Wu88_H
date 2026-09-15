@@ -5,7 +5,7 @@ import BackgroundSequence from "./BackgroundSequence";
 import MinPanelHeight from "./MinPanelHeight";
 import ProfileSidebar from "./ProfileSidebar";
 import { REWARD_KITS, RewardKitCard, RewardKitDetailPanel } from "./RewardKit";
-import ScaleToFit from "./ScaleToFit";
+import ScaleToFit, { useScale } from "./ScaleToFit";
 import TalkingBar from "./TalkingBar";
 import TopBar from "./TopBar";
 import TopUp from "./TopUp";
@@ -49,6 +49,8 @@ const SEASON_COUNTDOWN_SEED = { days: "08", hours: "08", minutes: "12", seconds:
 
 const HERO_WIDTH = 1728;
 const HERO_HEIGHT = 1317;
+// The kit-detail panel's own Figma `top` offset (see its own usage below).
+const TITLE_PANEL_TOP = 150;
 
 // The background character art and the Reward_Kit row both need to stay
 // visible with no scrolling and no drift, per the user's own direct call --
@@ -77,6 +79,42 @@ function useFixedLayerScale() {
   return scale;
 }
 
+const BOTTOM_GAP = 20;
+// The plain card row's own natural height (262px card + 20px gap + ~24px
+// level-point row) -- the reference this menu's OWN scale shrinks against
+// below. Not the detail panel's height (taller, and varies per kit): that
+// panel leans on its own `maxHeight` + internal scroll instead (see
+// RewardKitDetailPanel's own comment) rather than needing this shared
+// scale to chase whichever content happens to be showing.
+const CARD_ROW_HEIGHT = 262 + 20 + 24;
+
+// The bottom Reward_Kit row doubles as this page's own "bottom nav" (see
+// its own comment below) -- per the user's own direct call it should
+// shrink proportionally on a short viewport, unlike the background above
+// (which deliberately crops instead of shrinking, per that SAME user's
+// earlier direct call not to make the whole page rescale for height).
+// Also returns the real leftover height in real screen px, which the
+// detail panel's own `maxHeight` prop needs converted back to this row's
+// OWN design-space coordinates (divided by `scale` below) since it lives
+// inside this row's own zoomed subtree.
+function useBottomMenuLayout() {
+  const [state, setState] = useState({ scale: 1, availableHeight: CARD_ROW_HEIGHT });
+
+  useEffect(() => {
+    function update() {
+      const widthScale = Math.min(1, window.innerWidth / HERO_WIDTH);
+      const availableHeight = Math.max(0, window.innerHeight - BOTTOM_GAP);
+      const heightScale = Math.min(1, availableHeight / CARD_ROW_HEIGHT);
+      setState({ scale: Math.min(widthScale, heightScale), availableHeight });
+    }
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  return state;
+}
+
 // Figma "05_WU88-H-PC-Profile-Page" node 648:14692 ("領獎中心" / Reward
 // center, "第 2 季 VIP 盛典"). Same 1728px fixed-canvas + ScaleToFit
 // convention as every other page, but unlike ProfileContent this frame is
@@ -95,7 +133,32 @@ function useFixedLayerScale() {
 export default function RewardsCenterContent() {
   const [selectedKit, setSelectedKit] = useState<number | null>(null);
   const countdown = useCountdown(SEASON_COUNTDOWN_SEED);
-  const fixedScale = useFixedLayerScale();
+  const bgScale = useFixedLayerScale();
+  const { scale: menuScale } = useBottomMenuLayout();
+
+  // The kit-detail panel (top-left, swaps in for the season title once a
+  // card is picked) is NOT one of the two fixed-to-viewport layers above --
+  // it's still plain content inside ScaleToFit's own scrolling/zoomed
+  // subtree, at a fixed `top-[150px]` design-space offset. `useScale()`
+  // (safe here, unlike the fixed layers -- see their own comment on why
+  // they can't use it) plus the same window.innerHeight-driven pattern
+  // Talking_Bar/ProfileSidebar already use gives it a `maxHeight` capped to
+  // whatever room is actually left below that offset in the real viewport,
+  // per the user's own direct call for this box's height to auto-adjust
+  // and scroll internally instead of just growing indefinitely.
+  const detailScale = useScale();
+  const [detailPanelMaxHeight, setDetailPanelMaxHeight] = useState(HERO_HEIGHT - TITLE_PANEL_TOP - BOTTOM_GAP);
+
+  useEffect(() => {
+    function update() {
+      if (!detailScale) return;
+      const targetScreenBottom = window.innerHeight - BOTTOM_GAP;
+      setDetailPanelMaxHeight(targetScreenBottom / detailScale - TITLE_PANEL_TOP);
+    }
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [detailScale]);
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-[#f4f4f4]">
@@ -111,7 +174,7 @@ export default function RewardsCenterContent() {
       <div className="pointer-events-none fixed inset-0 z-0 flex items-center justify-center overflow-hidden">
         <div
           className="relative shrink-0 overflow-hidden rounded-tl-[50px] bg-[#f4f4f4]"
-          style={{ width: HERO_WIDTH * fixedScale, height: HERO_HEIGHT * fixedScale }}
+          style={{ width: HERO_WIDTH * bgScale, height: HERO_HEIGHT * bgScale }}
         >
           <BackgroundSequence
             stage={selectedKit === null ? "idle" : "selected"}
@@ -119,7 +182,7 @@ export default function RewardsCenterContent() {
           />
           <div
             className="absolute inset-x-0 bottom-0"
-            style={{ height: 250 * fixedScale, background: "linear-gradient(to bottom, rgba(255,255,255,0), white)" }}
+            style={{ height: 250 * bgScale, background: "linear-gradient(to bottom, rgba(255,255,255,0), white)" }}
           />
         </div>
       </div>
@@ -207,7 +270,7 @@ export default function RewardsCenterContent() {
                   swaps which kit's panel shows). */}
               {selectedKit !== null ? (
                 <div className="pointer-events-auto absolute left-[38px] top-[150px]">
-                  <RewardKitDetailPanel kit={REWARD_KITS[selectedKit]} />
+                  <RewardKitDetailPanel kit={REWARD_KITS[selectedKit]} maxHeight={detailPanelMaxHeight} />
                 </div>
               ) : (
                 <div className="pointer-events-auto absolute left-[38px] top-[150px] flex w-[464px] flex-col items-start gap-[20px]">
@@ -262,25 +325,28 @@ export default function RewardsCenterContent() {
       {/* Fixed to the bottom of the real viewport, like a mobile bottom-nav
           bar -- per the user's own direct call, this row has to stay
           visible without scrolling, not just sit at a fixed design-space
-          `top` offset inside the scrolling page above. Same
-          independent-of-ScaleToFit `fixedScale` as the background layer
-          above (see its own comment for why), applied with `zoom` rather
-          than `transform: scale()` -- this row is still horizontally
-          scrollable when there are more kits than fit on screen, and
-          `transform` only repaints smaller without shrinking the element's
-          actual layout/scroll box to match, which would leave the
-          scrollable range wrong at any scale other than 1 (the exact
-          reason ScaleToFit itself uses `zoom` for the whole page instead
-          of `transform`). Horizontally centered to match the background
-          layer's own centering, with the same `pl-[164px]` Figma offset
-          preserved inside so the row still starts under where the sidebar
-          column sits. */}
+          `top` offset inside the scrolling page above. Independent of
+          ScaleToFit the same way the background layer above is (see its
+          own comment for why), but scaled with its OWN `menuScale` --
+          this row shrinks proportionally when the viewport is too SHORT
+          for it, unlike the background (which deliberately crops instead
+          of shrinking, per that same user's earlier direct call). `zoom`
+          rather than `transform: scale()` -- this row is still
+          horizontally scrollable when there are more kits than fit on
+          screen, and `transform` only repaints smaller without shrinking
+          the element's actual layout/scroll box to match, which would
+          leave the scrollable range wrong at any scale other than 1 (the
+          exact reason ScaleToFit itself uses `zoom` for the whole page
+          instead of `transform`). Horizontally centered to match the
+          background layer's own centering, with the same `pl-[164px]`
+          Figma offset preserved inside so the row still starts under
+          where the sidebar column sits. */}
       <div className="pointer-events-none fixed inset-x-0 bottom-[20px] z-[5] flex justify-center">
         <div
           className="no-scrollbar pointer-events-auto overflow-x-auto overflow-y-hidden"
-          style={{ width: HERO_WIDTH * fixedScale }}
+          style={{ width: HERO_WIDTH * menuScale }}
         >
-          <div className="flex w-max flex-col gap-[20px] pl-[164px]" style={{ zoom: fixedScale } as React.CSSProperties}>
+          <div className="flex w-max flex-col gap-[20px] pl-[164px]" style={{ zoom: menuScale } as React.CSSProperties}>
             <div className="flex items-end gap-[20px]">
               {REWARD_KITS.map((kit, index) => (
                 <RewardKitCard key={`${kit.name}-${index}`} kit={kit} selected={selectedKit === index} onSelect={() => setSelectedKit(index)} />
