@@ -427,12 +427,15 @@ export default function RewardsCenterContent() {
   // scale 1 anyway -- this floor already keeps clear of them for free.
   const heroBoxLeft = Math.max(0, (viewport.width - HERO_WIDTH * bgScale) / 2);
   const heroBoxTop = (viewport.height - HERO_HEIGHT * bgScale) / 2;
-  // Per the user's own direct call, the wide-shot -> close-up reframe (see
-  // `videoIsCloseUp`'s own comment) read as too big a jump -- HALFWAY to
-  // the full symmetric-center offset, not the whole way there, still
-  // meaningfully balances the crop around her face during the close-up
-  // without moving nearly as far from where the wide shot already sat.
-  const CLOSE_UP_TOP_DAMPING = 0.5;
+  // Started at 0.5 (halfway to the full symmetric-center offset) per the
+  // user's own direct call that the wide-shot -> close-up jump read as too
+  // big -- but on a short viewport that still cropped into her chin right
+  // below the nose (confirmed via the user's own screenshot, "這裡最後的鏡頭
+  // 可以看到臉部下面多一些嗎"). Raised to the FULL symmetric-center offset
+  // (1) so the close-up crops evenly top/bottom around her face instead of
+  // still favoring the top, revealing her nose/mouth instead of stopping at
+  // the eyes.
+  const CLOSE_UP_TOP_DAMPING = 1;
   const closeUpHeroBoxTop = Math.max(0, heroBoxTop) + (heroBoxTop - Math.max(0, heroBoxTop)) * CLOSE_UP_TOP_DAMPING;
   // Per the user's own direct call ("外圈遮罩應該維持固定位子不動才對 會動的是
   // 遮罩裡面的影片" -- confirmed the "外圈遮罩" they mean is this box's own
@@ -526,9 +529,19 @@ export default function RewardsCenterContent() {
               and sliding up by the full `videoPanShift` once close-up
               reveals exactly the same lower slice of the frame the old
               mask-box-moves approach did, just via the content instead of
-              the frame. */}
+              the frame.
+              `duration-1000 ease-in-out`, not the `duration-700 ease-out`
+              this started as -- per the user's own direct call, raising
+              `CLOSE_UP_TOP_DAMPING` to 1 (its own comment) roughly doubled
+              how far this actually travels, and `ease-out` front-loads
+              nearly all of a transition's motion into its first moment, so
+              the same distance in the same duration read as an abrupt
+              jump rather than a pan. `ease-in-out` spreads the motion out
+              (slow start, faster middle, slow finish) and the longer
+              duration gives that bigger distance more time to cover,
+              together reading as a smooth pan instead of a jump. */}
           <div
-            className="absolute inset-x-0 transition-[top] duration-700 ease-out"
+            className="absolute inset-x-0 transition-[top] duration-1000 ease-in-out"
             style={{ top: videoIsCloseUp ? -videoPanShift : 0, height: HERO_HEIGHT * bgScale + videoPanShift }}
           >
             <BackgroundSequence stage={isScreenTwo ? "selected" : "idle"} className="absolute inset-0 size-full object-cover" />
