@@ -310,6 +310,48 @@ export default function RewardsCenterContent() {
   // reaching 667:15687's own state is no longer exclusively a card click,
   // scrolling down gets there too.
   const isScreenTwo = selectedKit !== null || screenTwoProgress >= 1;
+
+  // Per the user's own direct call: the background should only ever be
+  // top-anchored (never crops her face, see `heroBoxTop`'s own comment)
+  // during the WIDE/full-body part of the "01" clip -- once she's close
+  // enough that the shot is a medium/close-up framing, a short viewport
+  // should crop symmetrically (centered) instead, since by then her face
+  // fills most of the frame's own height and a top-anchored crop would
+  // start cutting into her chin instead of leaving room past it.
+  // BackgroundSequence has no exposed playback clock (it's a plain
+  // autoplaying `<img>`, not a `<video>` with `currentTime`), so this
+  // approximates "has the close-up part started" with a plain timer keyed
+  // to real elapsed time since THIS stage last started playing --
+  // confirmed against the source frames (D:\works\09_WU88-H\source\public\
+  // Premiere\Bonus_Charactor\01): still a full-body shot through roughly
+  // frame 100 (~3.3s @ 33ms/frame), clearly medium/close by frame 140
+  // (~4.6s) -- ~4.3s (frame ~130) sits in between. "02" (the screen-2
+  // clip) continues the SAME close framing "01" ends on from its own
+  // frame 0, so it's always treated as close-up, no timer needed.
+  const CLOSE_UP_DELAY_MS = 4300;
+  const [videoIsCloseUp, setVideoIsCloseUp] = useState(false);
+  useEffect(() => {
+    if (isScreenTwo) {
+      // Syncing from an external system (real elapsed time / which video
+      // clip is playing), not mirroring state that was already correct --
+      // `isScreenTwo` flipping is exactly the moment "02"'s own always-
+      // close-up framing starts, so this has to fire immediately, not on
+      // some later render.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setVideoIsCloseUp(true);
+      return;
+    }
+    // Same reasoning: landing back on screen 1 remounts "01" (see below)
+    // from its own frame 0, so the wide-shot framing genuinely restarts
+    // too, not just this timer.
+    setVideoIsCloseUp(false);
+    // `key={stage}` on BackgroundSequence remounts (and restarts) "01"
+    // from its own frame 0 every time we land back on screen 1, so this
+    // timer has to restart right along with it, not just fire once ever.
+    const timer = setTimeout(() => setVideoIsCloseUp(true), CLOSE_UP_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [isScreenTwo]);
+
   // The menu's own reveal is a plain on/off flip driven by `isScreenTwo`,
   // NOT `screenTwoProgress` directly -- an earlier version here tracked
   // scroll continuously (1:1 with every pixel scrolled), which the user
@@ -403,24 +445,32 @@ export default function RewardsCenterContent() {
         className="pointer-events-auto fixed inset-0 z-0 overflow-hidden"
         onClick={() => setSelectedKit(null)}
       >
-        {/* `left`/`top: heroBoxLeft/Math.max(0, heroBoxTop)`, not `flex
-            items-center justify-center` -- per the user's own direct call
-            (confirmed live via their own screenshot, a wide-but-short real
-            browser window with her head entirely out of frame), a plain
-            centered crop can push the composition's own top edge ABOVE the
-            viewport, cropping into her face/head first since that's where
-            it sits in this 1317-tall design. Horizontally there's no such
-            risk (`heroBoxLeft` already floors at 0 the same way), but
-            vertically this now matches the title panel's own floor
-            (`titlePanelScreenTop`'s own comment) -- never pushed above
-            y=0, so a short viewport crops the BOTTOM of the composition
-            (legs/feet) instead, keeping the face in view the whole time.
-            Only actually asymmetric once the composition is taller than
-            the real viewport at all; otherwise this is pixel-identical to
-            plain centering. */}
+        {/* `left`/`top`, not `flex items-center justify-center` -- per the
+            user's own direct call (confirmed live via their own screenshot,
+            a wide-but-short real browser window with her head entirely out
+            of frame), a plain centered crop can push the composition's own
+            top edge ABOVE the viewport, cropping into her face/head first
+            since that's where it sits during the wide/full-body part of
+            this 1317-tall composition. Horizontally there's no such risk
+            (`heroBoxLeft` already floors at 0 the same way).
+            Vertically, `videoIsCloseUp` (its own comment above) switches
+            the floor on and off: OFF (top pinned to 0, matching the title
+            panel's own floor) during the wide shot, so a short viewport
+            crops the BOTTOM of the composition (legs/feet) instead of her
+            face; ON (plain unclamped/centered `heroBoxTop`, which can go
+            negative) once the shot is close enough that her face fills
+            most of the frame's own height, so cropping goes symmetric
+            around her face rather than risking her chin specifically.
+            `transition-[top]` turns that floor-toggle into a smooth
+            reframe instead of a hard jump when it fires mid-scene. */}
         <div
-          className="absolute shrink-0 overflow-hidden rounded-tl-[50px] bg-[#f4f4f4]"
-          style={{ width: HERO_WIDTH * bgScale, height: HERO_HEIGHT * bgScale, left: heroBoxLeft, top: Math.max(0, heroBoxTop) }}
+          className="absolute shrink-0 overflow-hidden rounded-tl-[50px] bg-[#f4f4f4] transition-[top] duration-700 ease-out"
+          style={{
+            width: HERO_WIDTH * bgScale,
+            height: HERO_HEIGHT * bgScale,
+            left: heroBoxLeft,
+            top: videoIsCloseUp ? heroBoxTop : Math.max(0, heroBoxTop),
+          }}
         >
           <BackgroundSequence stage={isScreenTwo ? "selected" : "idle"} className="absolute inset-0 size-full object-cover" />
           <div
