@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import BackgroundSequence from "./BackgroundSequence";
 import MinPanelHeight from "./MinPanelHeight";
 import ProfileSidebar from "./ProfileSidebar";
@@ -47,6 +47,36 @@ function LevelLine() {
 
 const SEASON_COUNTDOWN_SEED = { days: "08", hours: "08", minutes: "12", seconds: "32" };
 
+const HERO_WIDTH = 1728;
+const HERO_HEIGHT = 1317;
+
+// The background character art and the Reward_Kit row both need to stay
+// visible with no scrolling and no drift, per the user's own direct call --
+// but nothing ELSE on this page (Sidebar/Talking_Bar/the grid) should
+// change from how every other page already behaves. Pulling just these two
+// pieces out to `position: fixed` layers (below) does that without
+// touching anything else, but `position: fixed` measures against the REAL
+// viewport, not ScaleToFit's own zoomed coordinate space -- so they can't
+// just read ScaleToFit's `useScale()` context (an earlier version of this
+// file tried that; zoom's actual interaction with fixed descendants is
+// murky enough across engines that it isn't worth relying on). This
+// recomputes the same width-only scale directly off window.innerWidth
+// instead, entirely independent of ScaleToFit.
+function useFixedLayerScale() {
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    function update() {
+      setScale(Math.min(1, window.innerWidth / HERO_WIDTH));
+    }
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  return scale;
+}
+
 // Figma "05_WU88-H-PC-Profile-Page" node 648:14692 ("領獎中心" / Reward
 // center, "第 2 季 VIP 盛典"). Same 1728px fixed-canvas + ScaleToFit
 // convention as every other page, but unlike ProfileContent this frame is
@@ -65,9 +95,35 @@ const SEASON_COUNTDOWN_SEED = { days: "08", hours: "08", minutes: "12", seconds:
 export default function RewardsCenterContent() {
   const [selectedKit, setSelectedKit] = useState<number | null>(null);
   const countdown = useCountdown(SEASON_COUNTDOWN_SEED);
+  const fixedScale = useFixedLayerScale();
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-[#f4f4f4]">
+      {/* A fixed, viewport-centered backdrop, not part of the scrolling
+          page flow below -- per the user's own direct call, the character
+          has to stay centered (both horizontally AND vertically) at any
+          window size, cropping symmetrically instead of anchoring to the
+          top-left the way this page's fixed-1728 canvas otherwise does.
+          `overflow-hidden` on the outer `inset-0` layer is what actually
+          produces that symmetric crop: the sized box below it is centered
+          by flexbox and simply clipped at the real viewport's edges
+          whenever it's taller/wider than the window. */}
+      <div className="pointer-events-none fixed inset-0 z-0 flex items-center justify-center overflow-hidden">
+        <div
+          className="relative shrink-0 overflow-hidden rounded-tl-[50px] bg-[#f4f4f4]"
+          style={{ width: HERO_WIDTH * fixedScale, height: HERO_HEIGHT * fixedScale }}
+        >
+          <BackgroundSequence
+            stage={selectedKit === null ? "idle" : "selected"}
+            className="absolute inset-0 size-full object-cover"
+          />
+          <div
+            className="absolute inset-x-0 bottom-0"
+            style={{ height: 250 * fixedScale, background: "linear-gradient(to bottom, rgba(255,255,255,0), white)" }}
+          />
+        </div>
+      </div>
+
       {/* Plain fit-to-width -- same ScaleToFit call, no special props, as
           every other page (home/casino/sports/promotions/profile/wallet).
           This page scrolls on a short viewport exactly the way those
@@ -79,37 +135,16 @@ export default function RewardsCenterContent() {
         </div>
 
         {/* `relative`, NOT the hero's own fixed h-1317/overflow-hidden --
-            those live on the background layer below instead, which is
-            sized to Figma's own 1317px frame but no longer the ANCESTOR of
-            Talking_Bar/ProfileSidebar. Talking_Bar computes its own height
-            straight off the real window (see its own panelHeight state,
-            independent of any parent), same as it does on every other
-            page -- on a browser window taller/narrower than the 1728x900
-            design ratio that's routinely MORE than 1317px. Nesting it
-            inside the hero's own overflow-hidden box (an earlier version of
-            this file did) silently clipped its own bottom off along with
-            anything else past that edge, which is what made both this row
-            and the Reward_Kit row below disappear on real windows.
-            Foreground content (title row, VIP block, Reward_Kit row,
-            Level_line) still uses plain `top-*` offsets straight off
-            Figma's own numbers, which land in the exact same place either
-            way -- only `bottom-*` offsets (the Reward_Kit row's own,
-            fixed below) depend on the surrounding box's total height and
-            silently drift once Min_panel_height's own viewport-driven
-            stretch (needed for Talking_Bar's sticky offset to have room,
-            same as ProfileContent) makes that height taller than 1317. */}
+            those live on the fixed background layer above instead (see its
+            own comment for why it has to sit outside this zoomed subtree
+            entirely). Talking_Bar computes its own height straight off the
+            real window (see its own panelHeight state, independent of any
+            parent), same as it does on every other page -- on a browser
+            window taller/narrower than the 1728x900 design ratio that's
+            routinely MORE than 1317px. Foreground content (title row, VIP
+            block) still uses plain `top-*` offsets straight off Figma's
+            own numbers, which land in the exact same place either way. */}
         <div className="relative">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-[1317px] w-[1728px] overflow-hidden rounded-tl-[50px] bg-[#f4f4f4]">
-            <BackgroundSequence
-              stage={selectedKit === null ? "idle" : "selected"}
-              className="absolute inset-0 size-full object-cover"
-            />
-            <div
-              className="absolute inset-x-0 bottom-0 h-[250px]"
-              style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0), white)" }}
-            />
-          </div>
-
           {/* `pointer-events-none` here too, not just on the content column
               below -- with only the content column opted out, a click over
               any part of ITS transparent area fell through past it to the
@@ -221,53 +256,54 @@ export default function RewardsCenterContent() {
             </div>
           </MinPanelHeight>
 
-          {/* Figma's own reference: this row runs the FULL page width,
-              behind BOTH ProfileSidebar and Talking_Bar -- scrolling slides
-              cards visually in and out from under them (peeking through the
-              gaps between sidebar icons, disappearing under Talking_Bar's
-              own panel), not hard-clipped at the content column's own
-              edges. An earlier version here bounded the scroll box to
-              `left-0 right-0` INSIDE the content column, which did clip
-              cleanly, but per the user's own reference that clean clip is
-              wrong -- the row is supposed to be full-bleed, with the
-              sidebar/Talking_Bar simply painting on top of it, not a
-              container the row is clipped inside of.
-              `z-[5]`: below the grid's own `z-10` (so ProfileSidebar/
-              Talking_Bar still paint over this row where they overlap it)
-              but above the background hero layer (`z-0`/auto), which is
-              what actually lets cards visually slide "behind" the side
-              panels instead of behind the character art too.
-              `pl-[164px]` on the inner wrapper reproduces the same visual
-              start position the row had before (matching the content
-              column's own left edge, i.e. Figma's own left-164 for this
-              row) now that the scroll box itself spans the full 0-1728
-              canvas rather than starting there. */}
-          <div className="no-scrollbar absolute left-0 right-0 top-[955px] z-[5] overflow-x-auto overflow-y-hidden">
-            <div className="flex w-max flex-col gap-[20px] pl-[164px]">
-              <div className="flex items-end gap-[20px]">
-                {REWARD_KITS.map((kit, index) => (
-                  <RewardKitCard key={`${kit.name}-${index}`} kit={kit} selected={selectedKit === index} onSelect={() => setSelectedKit(index)} />
-                ))}
-              </div>
+        </div>
+      </ScaleToFit>
 
-              {/* Below the Reward_Kit row (262 card height + 20 gap), not
-                  Figma's own raw top-[1057px] -- that value actually lands
-                  mid-way THROUGH the card row above, so the level rail
-                  visually cut across the bottom of the cards instead of
-                  sitting under them. Moved down per the user's own direct
-                  visual call on the live page. */}
-              <div className="ml-[96px] flex items-center">
-                {LEVEL_POINTS.map((numeral, i) => (
-                  <div key={i} className="flex items-center">
-                    <LevelPoint numeral={numeral} />
-                    <LevelLine />
-                  </div>
-                ))}
-              </div>
+      {/* Fixed to the bottom of the real viewport, like a mobile bottom-nav
+          bar -- per the user's own direct call, this row has to stay
+          visible without scrolling, not just sit at a fixed design-space
+          `top` offset inside the scrolling page above. Same
+          independent-of-ScaleToFit `fixedScale` as the background layer
+          above (see its own comment for why), applied with `zoom` rather
+          than `transform: scale()` -- this row is still horizontally
+          scrollable when there are more kits than fit on screen, and
+          `transform` only repaints smaller without shrinking the element's
+          actual layout/scroll box to match, which would leave the
+          scrollable range wrong at any scale other than 1 (the exact
+          reason ScaleToFit itself uses `zoom` for the whole page instead
+          of `transform`). Horizontally centered to match the background
+          layer's own centering, with the same `pl-[164px]` Figma offset
+          preserved inside so the row still starts under where the sidebar
+          column sits. */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-[20px] z-[5] flex justify-center">
+        <div
+          className="no-scrollbar pointer-events-auto overflow-x-auto overflow-y-hidden"
+          style={{ width: HERO_WIDTH * fixedScale }}
+        >
+          <div className="flex w-max flex-col gap-[20px] pl-[164px]" style={{ zoom: fixedScale } as React.CSSProperties}>
+            <div className="flex items-end gap-[20px]">
+              {REWARD_KITS.map((kit, index) => (
+                <RewardKitCard key={`${kit.name}-${index}`} kit={kit} selected={selectedKit === index} onSelect={() => setSelectedKit(index)} />
+              ))}
+            </div>
+
+            {/* Below the Reward_Kit row (262 card height + 20 gap), not
+                Figma's own raw top-[1057px] -- that value actually lands
+                mid-way THROUGH the card row above, so the level rail
+                visually cut across the bottom of the cards instead of
+                sitting under them. Moved down per the user's own direct
+                visual call on the live page. */}
+            <div className="ml-[96px] flex items-center">
+              {LEVEL_POINTS.map((numeral, i) => (
+                <div key={i} className="flex items-center">
+                  <LevelPoint numeral={numeral} />
+                  <LevelLine />
+                </div>
+              ))}
             </div>
           </div>
         </div>
-      </ScaleToFit>
+      </div>
     </div>
   );
 }
