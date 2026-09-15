@@ -509,16 +509,31 @@ export default function RewardsCenterContent() {
           instead of `transform`). Horizontally centered to match the
           background layer's own centering, with the same `pl-[164px]`
           Figma offset preserved inside so the row still starts under
-          where the sidebar column sits. `z-[15]`, above the grid's own
+          where the sidebar column sits. `z-[5]` stays BELOW the grid's own
           `z-10` (Talking_Bar included) -- per the user's own direct call,
-          scrolling this row all the way to its last card must not leave
-          that card hidden behind the chat panel, which previously painted
-          over it at z-10 wherever their real screen positions overlapped. */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-[20px] z-[15] flex justify-center">
-        <div
-          className="no-scrollbar pointer-events-auto overflow-x-auto overflow-y-hidden"
-          style={{ width: HERO_WIDTH * menuScale }}
-        >
+          this isn't a stacking-order fix (an earlier version here tried
+          raising this row's own z-index instead, which the user explicitly
+          rejected: "不是叫你改變圖層位置"). The real problem is the row's own
+          centered width reaching all the way to the page's right edge,
+          the SAME real screen space the chat panel already occupies --
+          scrolled to the end, the last card lands underneath it and
+          (confirmed live) can't even be clicked there, since the chat
+          panel sits on top and intercepts the click. `right: 295px`
+          (design px, `menuScale`-matched) shrinks this whole row's own
+          available width to stop short of that reserved column instead,
+          so its centered resting position -- and everything scrolled
+          into view within it -- never reaches under the chat panel at
+          all, exactly the "pull the whole row left" the user asked for. */}
+      <div
+        className="pointer-events-none fixed inset-y-auto left-0 bottom-[20px] z-[5] flex justify-center"
+        style={{ right: 295 * menuScale }}
+      >
+        {/* `width: 100%` of this already-narrowed outer container, not a
+            second fixed `HERO_WIDTH * menuScale` -- that would just
+            recreate the same overflow past the chat panel from inside,
+            duplicating the `right: 295px` math above instead of actually
+            respecting it. */}
+        <div className="no-scrollbar pointer-events-auto w-full overflow-x-auto overflow-y-hidden">
           <div className="flex w-max flex-col gap-[20px] pl-[164px]" style={{ zoom: menuScale } as React.CSSProperties}>
             <div className="flex items-end gap-[20px]">
               {REWARD_KITS.map((kit, index) => (
