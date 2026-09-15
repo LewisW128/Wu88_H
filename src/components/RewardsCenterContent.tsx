@@ -308,12 +308,17 @@ export default function RewardsCenterContent() {
   // selected page state" already referenced by the detail-panel swap
   // below) ARE screen 1 and screen 2 -- per the user's own direct call,
   // reaching 667:15687's own state is no longer exclusively a card click,
-  // scrolling down gets there too. `selectedKit !== null` (an explicit
-  // click) always wins and snaps straight to fully revealed, matching how
-  // clicking a card already worked before scrolling existed on this page
-  // at all; short of a click, `screenTwoProgress` drives it continuously.
+  // scrolling down gets there too.
   const isScreenTwo = selectedKit !== null || screenTwoProgress >= 1;
-  const screenTwoReveal = selectedKit !== null ? 1 : screenTwoProgress;
+  // The menu's own reveal is a plain on/off flip driven by `isScreenTwo`,
+  // NOT `screenTwoProgress` directly -- an earlier version here tracked
+  // scroll continuously (1:1 with every pixel scrolled), which the user
+  // read as the row feeling dragged/"卡上來" rather than a clean float-up.
+  // Screen 1 keeps it fully hidden the entire time regardless of how far
+  // you've scrolled short of actually reaching screen 2; once there, a CSS
+  // transition (on the element's own className below) animates it into
+  // place on its own instead of being pinned to scroll position.
+  const screenTwoReveal = isScreenTwo ? 1 : 0;
   // The detail panel Figma shows on 667:15687 is specifically the FIRST
   // bracket's (index 0) -- scrolling into screen 2 without having clicked
   // any particular card yet defaults to that same kit, matching the
@@ -671,7 +676,7 @@ export default function RewardsCenterContent() {
           for, with nothing left to native sticky/flow positioning to get
           wrong. */}
       <div
-        className="pointer-events-none fixed inset-x-0 bottom-[20px] z-[5] flex justify-center"
+        className="pointer-events-none fixed inset-x-0 bottom-[20px] z-[5] flex justify-center transition-transform duration-500 ease-out"
         style={{
           // `+ Npx`, not just the `N%` alone -- `%` here resolves against
           // this element's OWN height, so shifting by exactly 100% only
