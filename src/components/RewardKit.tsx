@@ -255,9 +255,16 @@ export function RewardKitDetailPanel({ kit, maxHeight }: { kit: RewardKitData; m
           </div>
         </div>
 
+        {/* `right-0`, flush against the box's own edge -- matching
+            Talking_Bar/ProfileSidebar's own scrollbar thumb convention
+            exactly, per the user's own direct call to reuse that same
+            style here. An earlier version here used `right-[10px]`,
+            tucked inside the box's own 40px horizontal padding rather
+            than at its actual edge -- easy to miss entirely against the
+            white/50 backdrop it sat on. */}
         {thumb.height > 0 && (
           <div
-            className="pointer-events-none absolute right-[10px] w-[2px] rounded-full bg-[#23f3d5]"
+            className="pointer-events-none absolute right-0 w-[2px] rounded-full bg-[#23f3d5]"
             style={{ top: 20 + thumb.top, height: thumb.height }}
           />
         )}

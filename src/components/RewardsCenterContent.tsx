@@ -5,7 +5,7 @@ import BackgroundSequence from "./BackgroundSequence";
 import MinPanelHeight from "./MinPanelHeight";
 import ProfileSidebar from "./ProfileSidebar";
 import { REWARD_KITS, RewardKitCard, RewardKitDetailPanel } from "./RewardKit";
-import ScaleToFit, { useScale } from "./ScaleToFit";
+import ScaleToFit from "./ScaleToFit";
 import TalkingBar from "./TalkingBar";
 import TopBar from "./TopBar";
 import TopUp from "./TopUp";
@@ -49,7 +49,16 @@ const SEASON_COUNTDOWN_SEED = { days: "08", hours: "08", minutes: "12", seconds:
 
 const HERO_WIDTH = 1728;
 const HERO_HEIGHT = 1317;
-// The kit-detail panel's own Figma `top` offset (see its own usage below).
+// The season-title/kit-detail panel's own Figma offset, `left-[38px]`
+// inside the grid's MIDDLE column -- which itself starts at x=164 (the
+// first, sidebar column's own width, see the grid's `gridTemplateColumns`
+// below), not at the hero canvas's own x=0. Now that this panel is its
+// own fixed layer instead of a grid child, its `left` has to be measured
+// from that same x=0 directly, so the 164px the grid used to contribute
+// for free is folded in here -- omitting it (an earlier version here did)
+// put the panel 164px too far left, overlapping ProfileSidebar's own
+// icons instead of sitting clear of them the way Figma intended.
+const TITLE_PANEL_LEFT = 164 + 38;
 const TITLE_PANEL_TOP = 150;
 
 // The background character art and the Reward_Kit row both need to stay
@@ -115,6 +124,21 @@ function useBottomMenuLayout() {
   return state;
 }
 
+function useViewportSize() {
+  const [size, setSize] = useState({ width: HERO_WIDTH, height: HERO_HEIGHT });
+
+  useEffect(() => {
+    function update() {
+      setSize({ width: window.innerWidth, height: window.innerHeight });
+    }
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  return size;
+}
+
 // Figma "05_WU88-H-PC-Profile-Page" node 648:14692 ("領獎中心" / Reward
 // center, "第 2 季 VIP 盛典"). Same 1728px fixed-canvas + ScaleToFit
 // convention as every other page, but unlike ProfileContent this frame is
@@ -135,30 +159,43 @@ export default function RewardsCenterContent() {
   const countdown = useCountdown(SEASON_COUNTDOWN_SEED);
   const bgScale = useFixedLayerScale();
   const { scale: menuScale } = useBottomMenuLayout();
+  const viewport = useViewportSize();
 
-  // The kit-detail panel (top-left, swaps in for the season title once a
-  // card is picked) is NOT one of the two fixed-to-viewport layers above --
-  // it's still plain content inside ScaleToFit's own scrolling/zoomed
-  // subtree, at a fixed `top-[150px]` design-space offset. `useScale()`
-  // (safe here, unlike the fixed layers -- see their own comment on why
-  // they can't use it) plus the same window.innerHeight-driven pattern
-  // Talking_Bar/ProfileSidebar already use gives it a `maxHeight` capped to
-  // whatever room is actually left below that offset in the real viewport,
-  // per the user's own direct call for this box's height to auto-adjust
-  // and scroll internally instead of just growing indefinitely.
-  const detailScale = useScale();
-  const [detailPanelMaxHeight, setDetailPanelMaxHeight] = useState(HERO_HEIGHT - TITLE_PANEL_TOP - BOTTOM_GAP);
-
-  useEffect(() => {
-    function update() {
-      if (!detailScale) return;
-      const targetScreenBottom = window.innerHeight - BOTTOM_GAP;
-      setDetailPanelMaxHeight(targetScreenBottom / detailScale - TITLE_PANEL_TOP);
-    }
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, [detailScale]);
+  // The season-title/kit-detail panel used to be plain content inside
+  // ScaleToFit's own scrolling/zoomed subtree -- but per the user's own
+  // direct call (echoing the background/bottom-menu treatment above) its
+  // position needs to stay fixed too, so it's never one scroll away from
+  // view. It's now a THIRD fixed layer, positioned with the same `bgScale`
+  // as the background it overlays (so it visually tracks the character art
+  // consistently, rather than the height-shrinking `menuScale` the bottom
+  // row uses) -- see the layer's own JSX comment for the actual position
+  // math. `maxHeight` still caps its own height against whatever room is
+  // actually left in the real viewport below it, with internal scroll for
+  // the rest (see RewardKitDetailPanel's own comment), independent of
+  // `bgScale`'s crop-not-shrink behavior.
+  // `heroBoxLeft`/`heroBoxTop` are the background layer's own centered
+  // position (see that layer's JSX) -- reused here purely so this panel's
+  // `left` offset lines up with the character art beneath it. `heroBoxTop`
+  // specifically goes NEGATIVE once the background is taller than the
+  // viewport -- correct for THAT layer (it deliberately crops off-screen
+  // top and bottom, see its own comment), but blindly inheriting it for
+  // this panel's own `top` pushed it off the top of the screen entirely on
+  // a short window (confirmed live: rect.top around -33px). Only ADDING
+  // `heroBoxTop` when it's positive -- never subtracting -- floors this
+  // panel at the exact position it'd sit at if the background's own top
+  // edge were pinned flush to the real viewport's top instead of centered
+  // (i.e. Figma's own `top-150` reference position, its own natural floor
+  // with zero fudge-factor guessing), and lets a tall viewport's extra
+  // centering room push it further down as a bonus exactly like before.
+  // A flat px floor here (tried first) needed guessing a safe clearance
+  // under the scrolling grid's own "領獎中心" title row + ProfileSidebar's
+  // back button/first icon, which sit at that SAME natural ~y-150 spot at
+  // scale 1 anyway -- this floor already keeps clear of them for free.
+  const heroBoxLeft = Math.max(0, (viewport.width - HERO_WIDTH * bgScale) / 2);
+  const heroBoxTop = (viewport.height - HERO_HEIGHT * bgScale) / 2;
+  const titlePanelScreenLeft = heroBoxLeft + TITLE_PANEL_LEFT * bgScale;
+  const titlePanelScreenTop = TITLE_PANEL_TOP * bgScale + Math.max(0, heroBoxTop);
+  const detailPanelMaxHeight = Math.max(0, viewport.height - titlePanelScreenTop - BOTTOM_GAP) / (bgScale || 1);
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-[#f4f4f4]">
@@ -184,6 +221,81 @@ export default function RewardsCenterContent() {
             className="absolute inset-x-0 bottom-0"
             style={{ height: 250 * bgScale, background: "linear-gradient(to bottom, rgba(255,255,255,0), white)" }}
           />
+        </div>
+      </div>
+
+      {/* A second fixed, viewport-anchored layer -- the season-title/kit-
+          detail panel (top-left over the character art), per the user's
+          own direct call to give it a fixed position too, matching the
+          background/bottom-menu treatment above. Positioned directly
+          against this OUTER `inset-0` layer (real screen px, `heroBoxLeft`/
+          `titlePanelScreenTop` already computed above) rather than nested
+          inside a hero-sized box the way the background layer is -- that
+          box's own top goes off-screen once it's taller than the viewport
+          (intentional there, see its own comment), which silently carried
+          this panel off-screen right along with it before `titlePanel
+          ScreenTop`'s own clamp existed. */}
+      <div className="pointer-events-none fixed inset-0 z-[1] overflow-hidden">
+        {/* Positioning (`left`/`top`, real screen px) and scaling (`zoom`)
+            need to be on TWO SEPARATE nested elements, not the same one --
+            confirmed live that `zoom` on the SAME element as its own
+            `left`/`top` scales that offset a SECOND time too (measured
+            `top: 78.3px` rendering at an actual 40.9px, exactly 78.3 times
+            the zoom factor), which is why the bottom menu's own row
+            already keeps its `width`-only real-px wrapper and its `zoom`
+            wrapper as two separate divs -- this now matches that. */}
+        <div className="pointer-events-auto absolute" style={{ left: titlePanelScreenLeft, top: titlePanelScreenTop }}>
+          <div style={{ zoom: bgScale } as React.CSSProperties}>
+          {/* Figma's hover/selected page state (node 667:15687) swaps this
+                ENTIRE block for Reward_Kit's own detail panel (image +
+                level-by-level USDT table) once a card is picked -- it
+                doesn't sit alongside the season title, it replaces it in
+                the same top-left slot. Reverts to the plain title/
+                countdown block on deselect (there's no toggle-off click
+                target of its own here; picking a different card just
+                swaps which kit's panel shows). */}
+            {selectedKit !== null ? (
+              <RewardKitDetailPanel kit={REWARD_KITS[selectedKit]} maxHeight={detailPanelMaxHeight} />
+            ) : (
+              <div className="flex w-[464px] flex-col items-start gap-[20px]">
+                <div className="flex w-full flex-col items-start justify-center gap-[10px]">
+                  <div className="flex items-center gap-[10px]">
+                    <div className="flex items-center justify-center rounded-[20px] border-2 border-solid border-[#3e4140] px-[20px] py-[10px]">
+                      <p className="whitespace-nowrap text-[40px] font-bold leading-[36px] tracking-[0.36px] text-[#3e4140]">第 2 季</p>
+                    </div>
+                    <p className="whitespace-nowrap text-[40px] font-bold leading-[36px] tracking-[0.36px] text-[#3e4140]">VIP 盛典</p>
+                  </div>
+                  <div className="flex items-start gap-[10px] whitespace-nowrap text-[14px] font-medium leading-[20px] tracking-[0.15px] text-[#3e4140]">
+                    <p>2024年10月17日（GMT 09:00）</p>
+                    <p>～</p>
+                    <p>2024年11月17日（GMT 09:00）</p>
+                  </div>
+                </div>
+
+                {/* `bg-white/50` added on top of Figma's own raw export --
+                    that export is just a border + `backdrop-blur-[10px]`
+                    with no fill at all (a flattened Background Blur EFFECT
+                    layer, not a solid), which over this page's own vivid,
+                    busy character animation reads as a broken half-see-
+                    through box with a hard color seam rather than a frosted
+                    pill. Same white/50 tint this project's own countdown
+                    pill already uses elsewhere (PromotionCard's Large
+                    variant) makes it read as one coherent frosted-glass
+                    surface regardless of what's moving behind it. */}
+                <div className="flex w-full flex-col items-start overflow-hidden rounded-[20px] border border-solid border-[#a2a2a2] bg-white/50 px-[20px] py-[14px] backdrop-blur-[10px]">
+                  <div className="flex w-full items-center justify-between whitespace-nowrap">
+                    <p className="text-[16px] font-medium leading-[24px] tracking-[0.15px] text-[#3e4140]">活動倒數：</p>
+                    <div className="flex items-center gap-[20px]">
+                      <TimeUnit value={countdown.days} unit="天" />
+                      <TimeUnit value={countdown.hours} unit="時" />
+                      <TimeUnit value={countdown.minutes} unit="分" />
+                      <TimeUnit value={countdown.seconds} unit="秒" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -259,59 +371,6 @@ export default function RewardsCenterContent() {
                 </div>
                 <TopUp />
               </div>
-
-              {/* Figma's hover/selected page state (node 667:15687) swaps this
-                  ENTIRE block for Reward_Kit's own detail panel (image +
-                  level-by-level USDT table) once a card is picked -- it
-                  doesn't sit alongside the season title, it replaces it in
-                  the same top-left slot. Reverts to the plain title/
-                  countdown block on deselect (there's no toggle-off click
-                  target of its own here; picking a different card just
-                  swaps which kit's panel shows). */}
-              {selectedKit !== null ? (
-                <div className="pointer-events-auto absolute left-[38px] top-[150px]">
-                  <RewardKitDetailPanel kit={REWARD_KITS[selectedKit]} maxHeight={detailPanelMaxHeight} />
-                </div>
-              ) : (
-                <div className="pointer-events-auto absolute left-[38px] top-[150px] flex w-[464px] flex-col items-start gap-[20px]">
-                  <div className="flex w-full flex-col items-start justify-center gap-[10px]">
-                    <div className="flex items-center gap-[10px]">
-                      <div className="flex items-center justify-center rounded-[20px] border-2 border-solid border-[#3e4140] px-[20px] py-[10px]">
-                        <p className="whitespace-nowrap text-[40px] font-bold leading-[36px] tracking-[0.36px] text-[#3e4140]">第 2 季</p>
-                      </div>
-                      <p className="whitespace-nowrap text-[40px] font-bold leading-[36px] tracking-[0.36px] text-[#3e4140]">VIP 盛典</p>
-                    </div>
-                    <div className="flex items-start gap-[10px] whitespace-nowrap text-[14px] font-medium leading-[20px] tracking-[0.15px] text-[#3e4140]">
-                      <p>2024年10月17日（GMT 09:00）</p>
-                      <p>～</p>
-                      <p>2024年11月17日（GMT 09:00）</p>
-                    </div>
-                  </div>
-
-                  {/* `bg-white/50` added on top of Figma's own raw export --
-                      that export is just a border + `backdrop-blur-[10px]`
-                      with no fill at all (a flattened Background Blur EFFECT
-                      layer, not a solid), which over this page's own vivid,
-                      busy character animation reads as a broken half-see-
-                      through box with a hard color seam rather than a frosted
-                      pill. Same white/50 tint this project's own countdown
-                      pill already uses elsewhere (PromotionCard's Large
-                      variant) makes it read as one coherent frosted-glass
-                      surface regardless of what's moving behind it. */}
-                  <div className="flex w-full flex-col items-start overflow-hidden rounded-[20px] border border-solid border-[#a2a2a2] bg-white/50 px-[20px] py-[14px] backdrop-blur-[10px]">
-                    <div className="flex w-full items-center justify-between whitespace-nowrap">
-                      <p className="text-[16px] font-medium leading-[24px] tracking-[0.15px] text-[#3e4140]">活動倒數：</p>
-                      <div className="flex items-center gap-[20px]">
-                        <TimeUnit value={countdown.days} unit="天" />
-                        <TimeUnit value={countdown.hours} unit="時" />
-                        <TimeUnit value={countdown.minutes} unit="分" />
-                        <TimeUnit value={countdown.seconds} unit="秒" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
             </div>
 
             <div className="pointer-events-auto sticky top-[58px] z-10 ml-[20px] self-start">
