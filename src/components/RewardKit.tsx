@@ -160,6 +160,10 @@ function RewardTableColumn({ rows }: { rows: RewardKitLevelRow[] }) {
 // 175x311 moody photo -- that photo was a per-bracket placeholder image
 // this project doesn't have a real equivalent of, unlike the small-card
 // icon (see RewardKit's own comment on why that swap happened at all).
+// Matches the scroll box's own `rounded-tr-[50px]`/`rounded-br-[50px]`
+// corner radius (see the thumb-tracking effect's own comment below).
+const SCROLLBAR_CORNER_INSET = 50;
+
 export function RewardKitDetailPanel({ kit, maxHeight }: { kit: RewardKitData; maxHeight?: number }) {
   const half = Math.ceil(kit.rewardTable.length / 2);
   const left = kit.rewardTable.slice(0, half);
@@ -183,8 +187,17 @@ export function RewardKitDetailPanel({ kit, maxHeight }: { kit: RewardKitData; m
         setThumb({ height: 0, top: 0 });
         return;
       }
-      const height = Math.max(24, (clientHeight / scrollHeight) * clientHeight);
-      const maxTop = clientHeight - height;
+      // The box's own `rounded-tr-[50px]`/`rounded-br-[50px]` corners curve
+      // inward well past this scroll container's own 20px vertical padding
+      // -- a thumb track inset by just that padding (an earlier version
+      // here did) poked out past the rounded silhouette at both ends,
+      // confirmed live via a zoomed screenshot showing the thumb sticking
+      // out past the curve. Insetting the TRACK by the corner radius
+      // itself instead keeps the thumb inside the box's actual rounded
+      // shape at any scroll position.
+      const trackHeight = Math.max(0, clientHeight - 2 * SCROLLBAR_CORNER_INSET);
+      const height = Math.max(24, Math.min(trackHeight, (clientHeight / scrollHeight) * trackHeight));
+      const maxTop = Math.max(0, trackHeight - height);
       const top = (scrollTop / (scrollHeight - clientHeight)) * maxTop;
       setThumb({ height, top });
     }
@@ -261,11 +274,17 @@ export function RewardKitDetailPanel({ kit, maxHeight }: { kit: RewardKitData; m
             style here. An earlier version here used `right-[10px]`,
             tucked inside the box's own 40px horizontal padding rather
             than at its actual edge -- easy to miss entirely against the
-            white/50 backdrop it sat on. */}
+            white/50 backdrop it sat on.
+            `top: SCROLLBAR_CORNER_INSET + thumb.top`, not the box's own
+            20px padding -- the track itself is already inset by that same
+            corner radius (see the tracking effect's own comment), so the
+            thumb's screen position has to match or it re-introduces the
+            exact "pokes out past the rounded corner" bug that inset was
+            added to fix. */}
         {thumb.height > 0 && (
           <div
             className="pointer-events-none absolute right-0 w-[2px] rounded-full bg-[#23f3d5]"
-            style={{ top: 20 + thumb.top, height: thumb.height }}
+            style={{ top: SCROLLBAR_CORNER_INSET + thumb.top, height: thumb.height }}
           />
         )}
       </div>
