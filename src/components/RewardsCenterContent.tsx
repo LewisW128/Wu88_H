@@ -521,7 +521,14 @@ export default function RewardsCenterContent() {
                 <RewardKitCard
                   key={`${kit.name}-${index}`}
                   kit={kit}
-                  selected={selectedKit === index}
+                  // Per the user's own direct call: the member's own
+                  // current tier stays visually "selected" (the teal
+                  // card-frame glow) permanently once logged in, on top
+                  // of getting bigger -- not just while it happens to be
+                  // the one whose detail panel is open. Whatever the user
+                  // actually clicks to browse (`selectedKit`) still shows
+                  // selected too, independent of this.
+                  selected={selectedKit === index || (loggedIn && index === currentKitIndex)}
                   current={loggedIn && index === currentKitIndex}
                   onSelect={() => setSelectedKit(index)}
                 />
