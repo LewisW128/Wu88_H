@@ -306,10 +306,18 @@ export default function RewardsCenterContent() {
   // Figma's own two reference frames for this page (648:14692, the plain
   // title/countdown state used throughout, and 667:15687, "Figma's hover/
   // selected page state" already referenced by the detail-panel swap
-  // below) ARE screen 1 and screen 2 -- per the user's own direct call,
-  // reaching 667:15687's own state is no longer exclusively a card click,
-  // scrolling down gets there too.
-  const isScreenTwo = selectedKit !== null || screenTwoProgress >= 1;
+  // below) ARE screen 1 and screen 2 -- reached by scrolling, not a card
+  // click. Purely `screenTwoProgress` now -- an earlier version here also
+  // treated `selectedKit !== null` as reaching screen 2 on its own, which
+  // meant picking a card (only possible once already ON screen 2, since
+  // the bottom menu itself is hidden until then) latched this true
+  // PERMANENTLY, even after scrolling back up: confirmed live as the
+  // user's own "選取其他選項之後就滾不回去了" -- screen 1 became unreachable
+  // by scroll again once any card had ever been clicked. `selectedKit`
+  // still selects WHICH kit's panel to show (`effectiveSelectedKit`'s own
+  // comment), it just no longer forces screen 2 to stay true regardless
+  // of where you've actually scrolled to.
+  const isScreenTwo = screenTwoProgress >= 1;
 
   // Per the user's own direct call: the background should only ever be
   // top-anchored (never crops her face, see `heroBoxTop`'s own comment)
@@ -365,8 +373,11 @@ export default function RewardsCenterContent() {
   // bracket's (index 0) -- scrolling into screen 2 without having clicked
   // any particular card yet defaults to that same kit, matching the
   // reference exactly rather than leaving screen 2 with no detail panel
-  // at all.
-  const effectiveSelectedKit = selectedKit !== null ? selectedKit : screenTwoProgress >= 1 ? 0 : null;
+  // at all. Only resolves to a kit at all while actually `isScreenTwo` --
+  // `selectedKit` on its own (e.g. still set from a previous visit to
+  // screen 2) never shows a panel back on screen 1, same fix as
+  // `isScreenTwo`'s own comment.
+  const effectiveSelectedKit = isScreenTwo ? (selectedKit ?? 0) : null;
 
   // Per the user's own direct call, only the bracket matching the member's
   // OWN current level renders large in the bottom row (see RewardKitCard's
