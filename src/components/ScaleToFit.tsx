@@ -66,33 +66,17 @@ export function useMinPanelHeight(bottomGap = 20) {
 // any scale -- and this wrapper doesn't need to separately track/apply a
 // scaled height or width either, since zoom already makes the browser
 // treat this box as `DESIGN_WIDTH * scale` real pixels wide on its own.
-export type ScaleToFitProps = {
-  children: React.ReactNode;
-  // Opt-in: also constrains the scale so a `height`-tall design fits
-  // within the real viewport's height, not just DESIGN_WIDTH's own
-  // width -- for the one page that's a single fixed hero screen with no
-  // scrollable rows below it (RewardsCenterContent) rather than the
-  // normal "scrolls past a tall design on a short window" pages, which
-  // should keep doing exactly that and pass nothing here. See that
-  // component's own comment for the actual request this serves (fit any
-  // window size with no scrolling, background composition never
-  // cropped since the whole canvas scales as one uniform unit).
-  height?: number;
-};
-
-export default function ScaleToFit({ children, height }: ScaleToFitProps) {
+export default function ScaleToFit({ children }: { children: React.ReactNode }) {
   const [scale, setScale] = useState(1);
 
   useEffect(() => {
     function update() {
-      const widthScale = window.innerWidth / DESIGN_WIDTH;
-      const heightScale = height ? window.innerHeight / height : Infinity;
-      setScale(Math.min(1, widthScale, heightScale));
+      setScale(Math.min(1, window.innerWidth / DESIGN_WIDTH));
     }
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
-  }, [height]);
+  }, []);
 
   // Below the design width, this stays a fixed DESIGN_WIDTH box that zoom
   // shrinks to fit -- unchanged from before. At or above it, scale is
@@ -106,13 +90,7 @@ export default function ScaleToFit({ children, height }: ScaleToFitProps) {
   // grow with the real viewport, which is what lets rows like Hot Games
   // reveal more cards on a wide screen instead of just sitting in a
   // fixed-size box with empty space around it.
-  //
-  // `height`-fit pages skip this fluid step entirely, even once scale
-  // hits 1 -- their content is one fixed background composition, not a
-  // reflowable grid with a row that wants the extra width, so growing
-  // wider than DESIGN_WIDTH would just stretch/reveal empty canvas past
-  // the art rather than showing more of anything real.
-  const isFluid = !height && scale >= 1;
+  const isFluid = scale >= 1;
 
   return (
     <div style={{ width: isFluid ? "100%" : DESIGN_WIDTH, zoom: scale } as React.CSSProperties}>
