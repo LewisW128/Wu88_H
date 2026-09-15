@@ -521,19 +521,16 @@ export default function RewardsCenterContent() {
                 <RewardKitCard
                   key={`${kit.name}-${index}`}
                   kit={kit}
-                  // Per the user's own direct call: the member's own
-                  // current tier stays visually "selected" (the teal
-                  // card-frame glow) permanently once logged in, on top
-                  // of getting bigger -- not just while it happens to be
-                  // the one whose detail panel is open. Whatever the user
-                  // actually clicks to browse (`selectedKit`) still shows
-                  // selected too, independent of this -- but only once
-                  // actually logged in with a real level; per the user's
-                  // own direct call, a guest (no login, no level) clicking
-                  // through cards to read their detail panels stays on the
-                  // plain default card-frame throughout, never the
-                  // selected-glow one.
-                  selected={loggedIn && (selectedKit === index || index === currentKitIndex)}
+                  // Per the user's own direct call: the selected-glow card
+                  // frame belongs ONLY to the paying member's own current
+                  // level tier, permanently, once logged in -- not to
+                  // whichever card someone happens to have clicked. Clicking
+                  // ANY card (including this one) still opens its own detail
+                  // panel via `onSelect`/`selectedKit`, but never changes
+                  // this prop -- every other card, and every card at all
+                  // for a guest with no level, stays on the plain default
+                  // frame no matter what gets clicked.
+                  selected={loggedIn && index === currentKitIndex}
                   current={loggedIn && index === currentKitIndex}
                   onSelect={() => setSelectedKit(index)}
                 />
