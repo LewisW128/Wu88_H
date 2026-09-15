@@ -400,12 +400,27 @@ export default function RewardsCenterContent() {
           no bubbling to guard against -- whatever a click here actually
           landed on really was empty background, not another control. */}
       <div
-        className="pointer-events-auto fixed inset-0 z-0 flex items-center justify-center overflow-hidden"
+        className="pointer-events-auto fixed inset-0 z-0 overflow-hidden"
         onClick={() => setSelectedKit(null)}
       >
+        {/* `left`/`top: heroBoxLeft/Math.max(0, heroBoxTop)`, not `flex
+            items-center justify-center` -- per the user's own direct call
+            (confirmed live via their own screenshot, a wide-but-short real
+            browser window with her head entirely out of frame), a plain
+            centered crop can push the composition's own top edge ABOVE the
+            viewport, cropping into her face/head first since that's where
+            it sits in this 1317-tall design. Horizontally there's no such
+            risk (`heroBoxLeft` already floors at 0 the same way), but
+            vertically this now matches the title panel's own floor
+            (`titlePanelScreenTop`'s own comment) -- never pushed above
+            y=0, so a short viewport crops the BOTTOM of the composition
+            (legs/feet) instead, keeping the face in view the whole time.
+            Only actually asymmetric once the composition is taller than
+            the real viewport at all; otherwise this is pixel-identical to
+            plain centering. */}
         <div
-          className="relative shrink-0 overflow-hidden rounded-tl-[50px] bg-[#f4f4f4]"
-          style={{ width: HERO_WIDTH * bgScale, height: HERO_HEIGHT * bgScale }}
+          className="absolute shrink-0 overflow-hidden rounded-tl-[50px] bg-[#f4f4f4]"
+          style={{ width: HERO_WIDTH * bgScale, height: HERO_HEIGHT * bgScale, left: heroBoxLeft, top: Math.max(0, heroBoxTop) }}
         >
           <BackgroundSequence stage={isScreenTwo ? "selected" : "idle"} className="absolute inset-0 size-full object-cover" />
           <div
