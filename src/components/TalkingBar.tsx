@@ -98,6 +98,15 @@ export type TalkingBarProps = {
    * live -- cycles through this pool on an interval rather than a single
    * static snapshot. Only applies to the "all" channel. */
   simulatedMessages?: TalkSectionProps[];
+  // Opt-in: pins the panel at this fixed design-space height instead of
+  // stretching to chase the real viewport's bottom edge (the default --
+  // see the effect below). Every scrolling page needs that stretch so
+  // the panel's own `top-[58px]` sticky offset has somewhere to apply;
+  // RewardsCenterContent is the one page that's a single fixed hero
+  // screen with nothing to scroll to, where chasing the viewport bottom
+  // just overflows the panel past the hero's own fixed frame instead of
+  // fitting inside it. Pairs with ScaleToFit's own `height` prop.
+  height?: number;
 };
 
 type Channel = "all" | "private";
@@ -173,7 +182,7 @@ function FriendCard({ friend, onClick }: { friend: Friend; onClick: () => void }
 // channel switch (all-chat vs. private) is wired to real state that
 // actually swaps the rendered message list, not just a static screenshot
 // of "all" selected with the switch as inert decoration.
-export default function TalkingBar({ messages, friends, simulatedMessages = [] }: TalkingBarProps) {
+export default function TalkingBar({ messages, friends, simulatedMessages = [], height }: TalkingBarProps) {
   const clipId = useId();
   const { loggedIn } = useAuth();
   // There's nobody to have a friends list with before you have an
@@ -193,7 +202,7 @@ export default function TalkingBar({ messages, friends, simulatedMessages = [] }
   const activeMessages = channel === "all" ? liveMessages : (selectedFriend?.messages ?? NO_MESSAGES);
   const scrollRef = useRef<HTMLDivElement>(null);
   const scale = useScale();
-  const [panelHeight, setPanelHeight] = useState(DEFAULT_PANEL_HEIGHT);
+  const [panelHeight, setPanelHeight] = useState(height ?? DEFAULT_PANEL_HEIGHT);
   const trackHeight = panelHeight - BOTTOM_CHROME;
   const [thumb, setThumb] = useState({ height: trackHeight, top: 0 });
   // The top fade (fade-mask.svg) reads as "more content above, scroll up
@@ -205,6 +214,15 @@ export default function TalkingBar({ messages, friends, simulatedMessages = [] }
   const [needsScroll, setNeedsScroll] = useState(false);
 
   useEffect(() => {
+    if (height !== undefined) {
+      // Already covered by the lazy useState initializer above on first
+      // render; only reachable again if `height` itself changes after
+      // mount, syncing from a genuinely new prop rather than mirroring
+      // state that was already correct.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPanelHeight(height);
+      return;
+    }
     function update() {
       if (!scale) return;
       const targetScreenBottom = window.innerHeight - VIEWPORT_BOTTOM_GAP;
@@ -213,7 +231,7 @@ export default function TalkingBar({ messages, friends, simulatedMessages = [] }
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
-  }, [scale]);
+  }, [scale, height]);
 
   // Drip-feeds simulatedMessages into the "all" channel so the group chat
   // reads as live rather than a static, finished conversation. Every new

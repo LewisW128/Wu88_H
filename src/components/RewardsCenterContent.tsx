@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import BackgroundSequence from "./BackgroundSequence";
-import MinPanelHeight from "./MinPanelHeight";
 import ProfileSidebar from "./ProfileSidebar";
 import { REWARD_KITS, RewardKitCard, RewardKitDetailPanel } from "./RewardKit";
 import ScaleToFit from "./ScaleToFit";
@@ -67,37 +66,37 @@ export default function RewardsCenterContent() {
   const countdown = useCountdown(SEASON_COUNTDOWN_SEED);
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-[#f4f4f4]">
-      {/* Plain fit-to-width -- same ScaleToFit call, no special props, as
-          every other page (home/casino/sports/promotions/profile/wallet).
-          This page scrolls on a short viewport exactly the way those
-          pages already do; it isn't a one-off exception with its own
-          scale/no-scroll rule. */}
-      <ScaleToFit>
+    // `h-screen w-screen overflow-hidden` + centering both axes, unlike
+    // every other page's plain `min-h-screen items-center` (which lets
+    // the page grow taller than the viewport and scroll) -- this page is
+    // Figma's own single hero screen with nothing scrollable below it, so
+    // per the user's own request it should never need to scroll on any
+    // window size. `height={1317}` below makes ScaleToFit shrink the
+    // whole 1728x1317 canvas to fit the real viewport's height too, not
+    // just its width; centering the result keeps it from pinning to one
+    // corner when the window's own aspect ratio doesn't match 1728:1317
+    // (letterboxed on whichever axis has slack). Since the entire canvas
+    // -- background art included -- scales as one uniform unit rather
+    // than being cropped independently, the character in the background
+    // stays exactly where Figma placed her relative to the frame at
+    // every size, never drifting off-center or getting clipped.
+    <div className="flex h-screen w-screen items-center justify-center overflow-hidden bg-[#f4f4f4]">
+      <ScaleToFit height={1317}>
         <div className="sticky top-0 z-20">
           <TopBar onlineCount="900" totalReward="10,000,000" announcements={topBarAnnouncements} />
         </div>
 
         {/* `relative`, NOT the hero's own fixed h-1317/overflow-hidden --
-            those live on the background layer below instead, which is
-            sized to Figma's own 1317px frame but no longer the ANCESTOR of
-            Talking_Bar/ProfileSidebar. Talking_Bar computes its own height
-            straight off the real window (see its own panelHeight state,
-            independent of any parent), same as it does on every other
-            page -- on a browser window taller/narrower than the 1728x900
-            design ratio that's routinely MORE than 1317px. Nesting it
-            inside the hero's own overflow-hidden box (an earlier version of
-            this file did) silently clipped its own bottom off along with
-            anything else past that edge, which is what made both this row
-            and the Reward_Kit row below disappear on real windows.
-            Foreground content (title row, VIP block, Reward_Kit row,
-            Level_line) still uses plain `top-*` offsets straight off
-            Figma's own numbers, which land in the exact same place either
-            way -- only `bottom-*` offsets (the Reward_Kit row's own,
-            fixed below) depend on the surrounding box's total height and
-            silently drift once Min_panel_height's own viewport-driven
-            stretch (needed for Talking_Bar's sticky offset to have room,
-            same as ProfileContent) makes that height taller than 1317. */}
+            those live on the background layer below instead. Since this
+            page now fits the whole 1728x1317 canvas within the real
+            viewport as one uniform-scaled unit (ScaleToFit's own `height`
+            prop above) instead of scrolling, Talking_Bar/ProfileSidebar no
+            longer need to chase the real window's own height independently
+            the way they do on every scrolling page -- both are pinned to
+            fixed design-space heights below (Talking_Bar's own `height`
+            prop; the grid wrapper skips MinPanelHeight's dynamic stretch
+            entirely) so nothing here ever grows taller than the 1317 hero
+            it needs to fit inside. */}
         <div className="relative">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-[1317px] w-[1728px] overflow-hidden rounded-tl-[50px] bg-[#f4f4f4]">
             <BackgroundSequence
@@ -124,20 +123,34 @@ export default function RewardsCenterContent() {
               ProfileSidebar/Talking_Bar's own wrappers opt back in with
               `pointer-events-auto`, same as content's own visible children
               already do. */}
-          <MinPanelHeight className="relative z-10 grid pointer-events-none" style={{ gridTemplateColumns: "164px minmax(0, 1fr) 295px" }}>
+          {/* A plain grid, NOT MinPanelHeight -- that component's whole
+              purpose is stretching a short page's content to reach the
+              real viewport's bottom edge so a scrolling page's sticky
+              children have room to apply, which is exactly what this page
+              must NOT do: it needs to stay exactly as tall as its own
+              content (which fits inside the fixed 1317 hero once
+              Talking_Bar's own height is pinned below), not inflate to
+              chase however tall the real window happens to be. */}
+          <div className="relative z-10 grid pointer-events-none" style={{ gridTemplateColumns: "164px minmax(0, 1fr) 295px" }}>
             {/* `sticky`, same mechanism ProfileSidebar's wrapper uses on
                 EVERY other page -- not `relative`. This page not scrolling
-                (via ScaleToFit's `fitHeight` below) already gets the actual
-                requirement (sidebar never scrolls away, nothing to scroll
-                to anyway) without this wrapper itself needing to behave
-                differently from everywhere else it's used. `sticky` does
-                leave the back button a few px out of vertical center with
-                the title row next to it (a quirk that already exists
+                (ScaleToFit's own `height` prop above) already gets the
+                actual requirement (sidebar never scrolls away, nothing to
+                scroll to anyway) without this wrapper itself needing to
+                behave differently from everywhere else it's used. `sticky`
+                does leave the back button a few px out of vertical center
+                with the title row next to it (a quirk that already exists
                 identically on /profile itself, not something unique to
                 this page), which is the tradeoff for staying consistent
                 rather than introducing a page-specific positioning rule. */}
             <div className="pointer-events-auto sticky top-[59px] z-10 self-start justify-self-start pl-[30px]">
-              <ProfileSidebar />
+              {/* height=1239: same fixed target as Talking_Bar's own `height`
+                  prop below (see its comment) -- ProfileSidebar's rail does
+                  the identical window.innerHeight-chasing calc by default,
+                  which silently stretched this grid row past the 1317
+                  hero the same way Talking_Bar's unpinned height did before
+                  that fix. */}
+              <ProfileSidebar height={1239} />
             </div>
 
             {/* `pointer-events-none` on this whole column -- now that the
@@ -217,9 +230,14 @@ export default function RewardsCenterContent() {
             </div>
 
             <div className="pointer-events-auto sticky top-[58px] z-10 ml-[20px] self-start">
-              <TalkingBar messages={talkingBarMessages} friends={talkingBarFriends} simulatedMessages={talkingBarSimulatedMessages} />
+              {/* height=1239: the 1317 hero minus the same 58px top
+                  offset + 20px bottom gap every scrolling page's dynamic
+                  calc targets (see TalkingBar's own comment) -- pinned to
+                  a fixed number here since there's no real viewport bottom
+                  to chase on a page that never scrolls. */}
+              <TalkingBar messages={talkingBarMessages} friends={talkingBarFriends} simulatedMessages={talkingBarSimulatedMessages} height={1239} />
             </div>
-          </MinPanelHeight>
+          </div>
 
           {/* Figma's own reference: this row runs the FULL page width,
               behind BOTH ProfileSidebar and Talking_Bar -- scrolling slides

@@ -117,16 +117,27 @@ const DEFAULT_RAIL_HEIGHT = 900;
 const BACK_BUTTON_SIZE = 64;
 const GAP = 30;
 
-export default function ProfileSidebar() {
+export default function ProfileSidebar({ height }: { height?: number } = {}) {
   const { loggedIn, setLoggedIn } = useAuth();
   const scale = useScale();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [railHeight, setRailHeight] = useState(DEFAULT_RAIL_HEIGHT);
+  const [railHeight, setRailHeight] = useState(height ?? DEFAULT_RAIL_HEIGHT);
   const [thumb, setThumb] = useState({ height: 0, top: 0 });
   const [scrolledFromTop, setScrolledFromTop] = useState(false);
   const listHeight = Math.max(0, railHeight - BACK_BUTTON_SIZE - GAP);
 
   useEffect(() => {
+    // A fixed-height page (RewardsCenterContent, via its own `height` prop
+    // -- see TalkingBar's matching prop for why) has no real viewport
+    // bottom to chase: pin the rail to that number instead of the usual
+    // window.innerHeight-driven calc, or this rail silently stretches the
+    // shared grid row taller than the page's own fixed hero, overflowing
+    // it exactly the way Talking_Bar's own unpinned height used to.
+    if (height !== undefined) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setRailHeight(height);
+      return;
+    }
     function update() {
       if (!scale) return;
       const targetScreenBottom = window.innerHeight - VIEWPORT_BOTTOM_GAP;
@@ -135,7 +146,7 @@ export default function ProfileSidebar() {
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
-  }, [scale]);
+  }, [scale, height]);
 
   useEffect(() => {
     const el = scrollRef.current;
