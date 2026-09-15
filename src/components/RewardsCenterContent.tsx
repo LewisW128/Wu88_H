@@ -183,6 +183,28 @@ function useViewportSize() {
   return size;
 }
 
+// Per the user's own direct call ("動態也要跟隨阿"): now that the page from
+// screen 1 to screen 2 (see the bottom menu's own comment) is an actual
+// scroll, the background can't just sit perfectly rigid on screen the
+// whole time -- it needs to visibly react to that same scroll, not just
+// the menu. A light parallax drift (translateY, a fraction of scrollY)
+// on the background's own sized box gives it that "follows the scroll"
+// motion without touching its existing centering/crop behavior at all.
+function useScrollY() {
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    function update() {
+      setScrollY(window.scrollY);
+    }
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, []);
+
+  return scrollY;
+}
+
 // Wires up click-and-drag scrolling on a plain `overflow-x-auto` element --
 // per the user's own direct call, that's the actual reason the bottom
 // Reward_Kit row's last card read as unreachable with a mouse: an
@@ -252,10 +274,14 @@ function useDragScroll<T extends HTMLElement>() {
 //
 // The background is the two-stage Premiere render described in
 // BackgroundSequence's own comment: "01" plays once on load and holds on
-// its last frame, "02" (the same continuous shot's remainder) plays the
-// instant any Reward_Kit card below is picked and then holds on ITS last
-// frame -- picking a different kit afterwards does not replay anything,
-// since "02" already finished the take.
+// its last frame, "02" (the same continuous shot's remainder) plays once
+// this page reaches its own "screen 2" (Figma node 667:15687 -- see
+// `isScreenTwo`'s own comment) and then holds on ITS last frame -- moving
+// back and forth afterwards does not replay anything, since "02" already
+// finished the take. Reachable two ways now, per the user's own direct
+// call: scrolling down into screen 2 on its own, or picking a Reward_Kit
+// card directly (which still snaps straight there, same as before this
+// page could scroll at all).
 export default function RewardsCenterContent() {
   const { loggedIn } = useAuth();
   const [selectedKit, setSelectedKit] = useState<number | null>(null);
@@ -264,6 +290,36 @@ export default function RewardsCenterContent() {
   const { scale: menuScale } = useBottomMenuLayout();
   const viewport = useViewportSize();
   const menuScrollRef = useDragScroll<HTMLDivElement>();
+  const scrollY = useScrollY();
+  // Drives BOTH the background's own "01"->"02" swap and the bottom menu's
+  // own reveal off the SAME scroll progress, so the two stay in sync
+  // instead of the menu settling somewhere disconnected from wherever the
+  // background happens to switch (confirmed live, an earlier `position:
+  // sticky` version let the menu's own native "unstuck" flow position land
+  // it in the dead middle of the screen, overlapping the season title,
+  // rather than resting near the bottom the way it's meant to -- native
+  // sticky's "stuck vs. static" transition isn't something this page can
+  // precisely aim, so this computes the reveal directly off `scrollY`
+  // instead and drives a plain `translateY` with it).
+  const SCREEN_TWO_SCROLL_DISTANCE = viewport.height * 0.6;
+  const screenTwoProgress = Math.min(1, Math.max(0, scrollY / SCREEN_TWO_SCROLL_DISTANCE));
+  // Figma's own two reference frames for this page (648:14692, the plain
+  // title/countdown state used throughout, and 667:15687, "Figma's hover/
+  // selected page state" already referenced by the detail-panel swap
+  // below) ARE screen 1 and screen 2 -- per the user's own direct call,
+  // reaching 667:15687's own state is no longer exclusively a card click,
+  // scrolling down gets there too. `selectedKit !== null` (an explicit
+  // click) always wins and snaps straight to fully revealed, matching how
+  // clicking a card already worked before scrolling existed on this page
+  // at all; short of a click, `screenTwoProgress` drives it continuously.
+  const isScreenTwo = selectedKit !== null || screenTwoProgress >= 1;
+  const screenTwoReveal = selectedKit !== null ? 1 : screenTwoProgress;
+  // The detail panel Figma shows on 667:15687 is specifically the FIRST
+  // bracket's (index 0) -- scrolling into screen 2 without having clicked
+  // any particular card yet defaults to that same kit, matching the
+  // reference exactly rather than leaving screen 2 with no detail panel
+  // at all.
+  const effectiveSelectedKit = selectedKit !== null ? selectedKit : screenTwoProgress >= 1 ? 0 : null;
 
   // Per the user's own direct call, only the bracket matching the member's
   // OWN current level renders large in the bottom row (see RewardKitCard's
@@ -346,10 +402,7 @@ export default function RewardsCenterContent() {
           className="relative shrink-0 overflow-hidden rounded-tl-[50px] bg-[#f4f4f4]"
           style={{ width: HERO_WIDTH * bgScale, height: HERO_HEIGHT * bgScale }}
         >
-          <BackgroundSequence
-            stage={selectedKit === null ? "idle" : "selected"}
-            className="absolute inset-0 size-full object-cover"
-          />
+          <BackgroundSequence stage={isScreenTwo ? "selected" : "idle"} className="absolute inset-0 size-full object-cover" />
           <div
             className="absolute inset-x-0 bottom-0"
             style={{ height: 250 * bgScale, background: "linear-gradient(to bottom, rgba(255,255,255,0), white)" }}
@@ -379,16 +432,17 @@ export default function RewardsCenterContent() {
             wrapper as two separate divs -- this now matches that. */}
         <div className="pointer-events-auto absolute" style={{ left: titlePanelScreenLeft, top: titlePanelScreenTop }}>
           <div style={{ zoom: bgScale } as React.CSSProperties}>
-          {/* Figma's hover/selected page state (node 667:15687) swaps this
-                ENTIRE block for Reward_Kit's own detail panel (image +
-                level-by-level USDT table) once a card is picked -- it
+          {/* Figma's hover/selected page state (node 667:15687, this
+                page's own "screen 2" -- see `effectiveSelectedKit`'s own
+                comment) swaps this ENTIRE block for Reward_Kit's own
+                detail panel (image + level-by-level USDT table) -- it
                 doesn't sit alongside the season title, it replaces it in
                 the same top-left slot. Reverts to the plain title/
-                countdown block on deselect (there's no toggle-off click
-                target of its own here; picking a different card just
-                swaps which kit's panel shows). */}
-            {selectedKit !== null ? (
-              <RewardKitDetailPanel kit={REWARD_KITS[selectedKit]} maxHeight={detailPanelMaxHeight} />
+                countdown block back on screen 1 (there's no toggle-off
+                click target of its own here; picking a different card
+                just swaps which kit's panel shows). */}
+            {effectiveSelectedKit !== null ? (
+              <RewardKitDetailPanel kit={REWARD_KITS[effectiveSelectedKit]} maxHeight={detailPanelMaxHeight} />
             ) : (
               <>
               <div className="flex w-[464px] flex-col items-start gap-[20px]">
@@ -545,6 +599,30 @@ export default function RewardsCenterContent() {
             <div className="pointer-events-auto sticky top-[58px] z-10 ml-[20px] self-start">
               <TalkingBar messages={talkingBarMessages} friends={talkingBarFriends} simulatedMessages={talkingBarSimulatedMessages} />
             </div>
+
+            {/* A plain invisible spacer, INSIDE this same grid -- not a
+                sibling after `</ScaleToFit>` (an earlier version here put
+                it there instead). `position: sticky` only ever stays stuck
+                within its own containing block's own height, which for
+                ProfileSidebar/Talking_Bar above is this grid itself
+                (`relative`, making it their containing block) -- a spacer
+                OUTSIDE the grid grows the page's own scrollable height
+                just fine, but doesn't grow THIS box, so both of them ran
+                out of room to stay stuck partway through the screen-1-to-
+                screen-2 scroll and scrolled away instead of staying fixed
+                in place, exactly what the user's own screenshot showed and
+                said shouldn't happen ("那邊本來就固定位子"). Auto-placed into
+                its own new grid row below the row ProfileSidebar/Talking_
+                Bar/content already occupy, so it adds height without
+                disturbing that row's own layout. Sized in this zoomed
+                subtree's own design-space units (divided by `bgScale`, not
+                a real screen px value directly) so it still resolves to
+                the SAME real height needed after the ambient `zoom`
+                scales it back down. */}
+            <div
+              className="pointer-events-none"
+              style={{ height: (SCREEN_TWO_SCROLL_DISTANCE + 300) / (bgScale || 1) }}
+            />
           </MinPanelHeight>
 
         </div>
@@ -570,16 +648,40 @@ export default function RewardsCenterContent() {
           Figma offset preserved inside so the row still starts under
           where the sidebar column sits. `z-[5]` stays BELOW the grid's own
           `z-10` (Talking_Bar included) on purpose -- per the user's own
-          direct call, this row belongs behind the chat panel, same as
-          before. The actual problem was never stacking order or reach: a
-          mouse has no way to drag-scroll a plain `overflow-x-auto` div (no
-          visible scrollbar either, `no-scrollbar` hides it) -- confirmed
-          by the user's own report of not being able to slide it with the
-          cursor at all. `useDragScroll` below wires up click-and-drag
-          scrolling directly, so the last card is reachable by sliding the
-          row itself, exactly like the rest of this row's own
-          touch/trackpad users could already do. */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-[20px] z-[5] flex justify-center">
+          direct call, this row belongs behind the chat panel. The actual
+          click-drag problem was never stacking order or reach: a mouse has
+          no way to drag-scroll a plain `overflow-x-auto` div (no visible
+          scrollbar either, `no-scrollbar` hides it) -- confirmed by the
+          user's own report of not being able to slide it with the cursor
+          at all. `useDragScroll` below wires up click-and-drag scrolling
+          directly, so the last card is reachable by sliding the row
+          itself, exactly like the rest of this row's own touch/trackpad
+          users could already do. */}
+      {/* Back to `position: fixed` (an earlier version here tried `sticky`
+          instead -- see `screenTwoProgress`'s own comment for why that
+          didn't work), with a `translateY` driven directly by
+          `screenTwoReveal`: 100% (fully below its own resting spot, i.e.
+          off-screen under the viewport's own bottom edge) at scroll 0, 0%
+          (its normal `bottom-[20px]` resting position) once on screen 2 --
+          continuously interpolated with the scroll itself short of an
+          explicit card click, which snaps straight to 0% instead (`screen
+          TwoReveal`'s own comment) the same way clicking already jumped
+          straight to the panel before scrolling existed here at all.
+          Exactly the "floats up from below the screen" the user asked
+          for, with nothing left to native sticky/flow positioning to get
+          wrong. */}
+      <div
+        className="pointer-events-none fixed inset-x-0 bottom-[20px] z-[5] flex justify-center"
+        style={{
+          // `+ Npx`, not just the `N%` alone -- `%` here resolves against
+          // this element's OWN height, so shifting by exactly 100% only
+          // clears it back to its resting `bottom-[20px]` position, not
+          // the full 20px past that needed to leave the viewport
+          // entirely. Confirmed live: without it, a ~20px sliver of the
+          // row's own top edge stayed visible at scrollY 0.
+          transform: `translateY(calc(${(1 - screenTwoReveal) * 100}% + ${(1 - screenTwoReveal) * 20}px))`,
+        }}
+      >
         <div
           ref={menuScrollRef}
           className="no-scrollbar pointer-events-auto cursor-grab overflow-x-auto overflow-y-hidden active:cursor-grabbing"

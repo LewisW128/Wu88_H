@@ -8,7 +8,9 @@ export type BackgroundSequenceStage = "idle" | "selected";
 // source\public\Premiere\Bonus_Charactor), exported as 298 PNG frames and
 // split by the user into two folders -- "01" (frames sh000-sh182, the
 // portion shown the moment this page loads) and "02" (sh183-sh297, picked
-// up the instant any Reward_Kit card below is selected). The two are one
+// up once the caller's own "stage" prop says so -- currently the Reward
+// Center page's own screen 2, reachable by scrolling there or picking a
+// Reward_Kit card, see that page's own comment). The two are one
 // continuous take, not independent loops, so "02" has to visually pick up
 // exactly where "01" left off rather than replaying from its own start.
 //
