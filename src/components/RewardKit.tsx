@@ -103,13 +103,39 @@ function RankRibbonIcon() {
 // `overflow="visible"`) and a solid teal stroke in place of the unselected
 // state's #F4F4F4 one. Name/ribbon/"前 5,000 名" text stay exactly where
 // they are -- only this one background image swaps.
-export function RewardKitCard({ kit, selected, onSelect }: { kit: RewardKitData; selected: boolean; onSelect: () => void }) {
+// Figma "Reward_Kit" (node 664:17374, seen live at 657:18891's own
+// "登陸之後已經充值後等級8" state): the ONE card matching the logged-in
+// member's own current level bracket renders ~1.2685x larger than every
+// other kit (274x332.35 vs the plain 216x262 every other bracket still
+// uses) -- confirmed by diffing the two instances' own outer frame sizes
+// in Figma, both perfectly consistent at that same ratio (274/216 ==
+// 332.3518/262). Structurally identical otherwise (same card-frame image,
+// same gem art, same name/ribbon/"前 5,000 名" text), so `zoom` -- not a
+// hand-duplicated larger copy -- reproduces it exactly: it scales this
+// button's own layout box along with everything inside it uniformly,
+// which is also why the surrounding row's own `gap-[20px]` still lines up
+// against the NEXT card at Figma's own x=294 (0 + 274 + 20) without this
+// card needing special-cased margins of its own.
+const CURRENT_KIT_SCALE = 274 / 216;
+
+export function RewardKitCard({
+  kit,
+  selected,
+  current,
+  onSelect,
+}: {
+  kit: RewardKitData;
+  selected: boolean;
+  current?: boolean;
+  onSelect: () => void;
+}) {
   return (
     <button
       type="button"
       onClick={onSelect}
       aria-pressed={selected}
       className="relative block h-[262px] w-[216px] shrink-0 overflow-visible rounded-[20px] text-left"
+      style={current ? ({ zoom: CURRENT_KIT_SCALE } as React.CSSProperties) : undefined}
     >
       <img
         alt=""

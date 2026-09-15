@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuth } from "./AuthProvider";
 import BackgroundSequence from "./BackgroundSequence";
 import MinPanelHeight from "./MinPanelHeight";
 import ProfileSidebar from "./ProfileSidebar";
 import { REWARD_KITS, RewardKitCard, RewardKitDetailPanel } from "./RewardKit";
+import RewardVipCard from "./RewardVipCard";
 import ScaleToFit from "./ScaleToFit";
 import TalkingBar from "./TalkingBar";
 import TopBar from "./TopBar";
@@ -60,6 +62,16 @@ const HERO_HEIGHT = 1317;
 // icons instead of sitting clear of them the way Figma intended.
 const TITLE_PANEL_LEFT = 164 + 38;
 const TITLE_PANEL_TOP = 150;
+
+// Figma's own reference screen (657:18891, "這是登陸之後已經充值後等級8的畫面"
+// per the user's own direct call) is this project's usual hardcoded demo
+// member -- same Lv.8 / 700 of 1,500 exp / 10,000 continuous deposit
+// ProfileContent's own VipCard already shows for its logged-in state, not
+// independently invented numbers for this page.
+const MEMBER_LEVEL = 8;
+const MEMBER_EXP = 700;
+const MEMBER_MAX_EXP = 1500;
+const MEMBER_CONTINUOUS_DEPOSIT = "10,000";
 
 // The background character art and the Reward_Kit row both need to stay
 // visible with no scrolling and no drift, per the user's own direct call --
@@ -155,11 +167,19 @@ function useViewportSize() {
 // frame -- picking a different kit afterwards does not replay anything,
 // since "02" already finished the take.
 export default function RewardsCenterContent() {
+  const { loggedIn } = useAuth();
   const [selectedKit, setSelectedKit] = useState<number | null>(null);
   const countdown = useCountdown(SEASON_COUNTDOWN_SEED);
   const bgScale = useFixedLayerScale();
   const { scale: menuScale } = useBottomMenuLayout();
   const viewport = useViewportSize();
+
+  // Per the user's own direct call, only the bracket matching the member's
+  // OWN current level renders large in the bottom row (see RewardKitCard's
+  // own comment) -- and only once actually logged in and recharged
+  // (`loggedIn` doubles for both here, same as everywhere else on this
+  // page already gates on it), not for a guest browsing the reward tiers.
+  const currentKitIndex = REWARD_KITS.findIndex((kit) => MEMBER_LEVEL >= kit.levelStart && MEMBER_LEVEL <= kit.levelEnd);
 
   // The season-title/kit-detail panel used to be plain content inside
   // ScaleToFit's own scrolling/zoomed subtree -- but per the user's own
@@ -279,6 +299,7 @@ export default function RewardsCenterContent() {
             {selectedKit !== null ? (
               <RewardKitDetailPanel kit={REWARD_KITS[selectedKit]} maxHeight={detailPanelMaxHeight} />
             ) : (
+              <>
               <div className="flex w-[464px] flex-col items-start gap-[20px]">
                 <div className="flex w-full flex-col items-start justify-center gap-[10px]">
                   <div className="flex items-center gap-[10px]">
@@ -316,6 +337,29 @@ export default function RewardsCenterContent() {
                   </div>
                 </div>
               </div>
+
+              {/* Figma "VIP_Card" (node 210:19103) -- shown alongside the
+                  season title, per the user's own direct call, only once
+                  actually logged in and recharged (`loggedIn`, same gate
+                  the rest of this project's logged-in member content
+                  already uses). Sits 40px below the title block's own
+                  bottom edge (Figma's own 356 top minus 316, the title
+                  block's own 150 top + 166 tall) -- a plain `mt-[40px]`
+                  here, not a shared flex gap with the block above it,
+                  since that block's own internal title/countdown gap is a
+                  smaller 20px, not this same 40. */}
+              {loggedIn && (
+                <div className="mt-[40px]">
+                  <RewardVipCard
+                    level={MEMBER_LEVEL}
+                    currentExp={MEMBER_EXP}
+                    maxExp={MEMBER_MAX_EXP}
+                    continuousDeposit={MEMBER_CONTINUOUS_DEPOSIT}
+                    crystalImage={REWARD_KITS[currentKitIndex]?.image ?? REWARD_KITS[0].image}
+                  />
+                </div>
+              )}
+              </>
             )}
           </div>
         </div>
@@ -442,7 +486,13 @@ export default function RewardsCenterContent() {
           <div className="flex w-max flex-col gap-[20px] pl-[164px]" style={{ zoom: menuScale } as React.CSSProperties}>
             <div className="flex items-end gap-[20px]">
               {REWARD_KITS.map((kit, index) => (
-                <RewardKitCard key={`${kit.name}-${index}`} kit={kit} selected={selectedKit === index} onSelect={() => setSelectedKit(index)} />
+                <RewardKitCard
+                  key={`${kit.name}-${index}`}
+                  kit={kit}
+                  selected={selectedKit === index}
+                  current={loggedIn && index === currentKitIndex}
+                  onSelect={() => setSelectedKit(index)}
+                />
               ))}
             </div>
 
