@@ -22,7 +22,15 @@ import { topBarAnnouncements, talkingBarMessages, talkingBarSimulatedMessages, t
 // the last point still getting a trailing line).
 const LEVEL_POINTS = ["1", "14", "28", "41", "54", "67", "82"];
 
-function LevelPoint({ numeral }: { numeral: string }) {
+// Figma node 689:16248 (a standalone example of the FIRST point+line pair,
+// "1", on the logged-in-and-recharged reward center page) shows a
+// DIFFERENT pair of assets once a milestone is actually reached -- the
+// hexagon's own stroke and the numeral both swap from gray (#3e4140) to
+// this project's teal (#23f3d5), and the line following it swaps the same
+// way, not just a recolor applied in code: `level-point-active.svg`/
+// `level-line-active.svg` are Figma's own real exports for that state, not
+// a CSS filter over the plain ones.
+function LevelPoint({ numeral, active }: { numeral: string; active: boolean }) {
   return (
     <div className="relative size-[24px] shrink-0">
       {/* The hexagon (level-point.svg, natural 20.7846x24) needs its own
@@ -34,17 +42,29 @@ function LevelPoint({ numeral }: { numeral: string }) {
           past its own container. Two nested elements, exactly matching
           Figma's own structure, avoids that fight entirely. */}
       <div className="absolute inset-[0_6.7%]">
-        <img alt="" src={withBasePath("/assets/rewards/level-point.svg")} className="block size-full max-w-none" />
+        <img
+          alt=""
+          src={withBasePath(active ? "/assets/rewards/level-point-active.svg" : "/assets/rewards/level-point.svg")}
+          className="block size-full max-w-none"
+        />
       </div>
-      <p className="absolute left-1/2 top-[calc(50%-9px)] -translate-x-1/2 whitespace-nowrap text-[12px] font-medium leading-[18px] tracking-[0.15px] text-[#3e4140]">
+      <p
+        className={`absolute left-1/2 top-[calc(50%-9px)] -translate-x-1/2 whitespace-nowrap text-[12px] font-medium leading-[18px] tracking-[0.15px] ${active ? "text-[#23f3d5]" : "text-[#3e4140]"}`}
+      >
         {numeral}
       </p>
     </div>
   );
 }
 
-function LevelLine() {
-  return <img alt="" src={withBasePath("/assets/rewards/level-line.svg")} className="h-[19px] w-[212px] shrink-0" />;
+function LevelLine({ active }: { active: boolean }) {
+  return (
+    <img
+      alt=""
+      src={withBasePath(active ? "/assets/rewards/level-line-active.svg" : "/assets/rewards/level-line.svg")}
+      className="h-[19px] w-[212px] shrink-0"
+    />
+  );
 }
 
 const SEASON_COUNTDOWN_SEED = { days: "08", hours: "08", minutes: "12", seconds: "32" };
@@ -72,6 +92,18 @@ const MEMBER_LEVEL = 8;
 const MEMBER_EXP = 700;
 const MEMBER_MAX_EXP = 1500;
 const MEMBER_CONTINUOUS_DEPOSIT = "10,000";
+// Figma's own VIP_Card export (node 210:19103) uses a DIFFERENT crystal
+// crop from the square-ish `kit.image` renders RewardKitCard/
+// RewardKitDetailPanel use -- a tall 736x1308 image specifically composed
+// for this card's own narrow bleed slot, not the same asset reused at a
+// different aspect ratio (an earlier version here reused `kit.image`
+// directly, which `object-cover` then had to crop far more aggressively
+// than Figma's own export ever needed, confirmed wrong via the user's own
+// side-by-side screenshot). Only exists for the Lv.1-13 bracket (matching
+// this project's established "only bracket 0 has real per-kit art"
+// limitation, see RewardKit's own comment) -- not swapped per current
+// tier the way the small card art is.
+const VIP_CARD_CRYSTAL_IMAGE = "/assets/rewards/vip-card-crystal.png";
 
 // The background character art and the Reward_Kit row both need to stay
 // visible with no scrolling and no drift, per the user's own direct call --
@@ -355,7 +387,7 @@ export default function RewardsCenterContent() {
                     currentExp={MEMBER_EXP}
                     maxExp={MEMBER_MAX_EXP}
                     continuousDeposit={MEMBER_CONTINUOUS_DEPOSIT}
-                    crystalImage={REWARD_KITS[currentKitIndex]?.image ?? REWARD_KITS[0].image}
+                    crystalImage={VIP_CARD_CRYSTAL_IMAGE}
                   />
                 </div>
               )}
@@ -503,12 +535,21 @@ export default function RewardsCenterContent() {
                 sitting under them. Moved down per the user's own direct
                 visual call on the live page. */}
             <div className="ml-[96px] flex items-center">
-              {LEVEL_POINTS.map((numeral, i) => (
-                <div key={i} className="flex items-center">
-                  <LevelPoint numeral={numeral} />
-                  <LevelLine />
-                </div>
-              ))}
+              {LEVEL_POINTS.map((numeral, i) => {
+                // Per the user's own direct call, matching Figma's own
+                // example (node 689:16248): a milestone reads as reached
+                // once the logged-in member's own level has actually
+                // passed it, not just decoration -- same `loggedIn` gate
+                // as the VIP card/enlarged kit card above, so a guest
+                // never sees any of this rail as "already achieved".
+                const achieved = loggedIn && MEMBER_LEVEL >= Number(numeral);
+                return (
+                  <div key={i} className="flex items-center">
+                    <LevelPoint numeral={numeral} active={achieved} />
+                    <LevelLine active={achieved} />
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
