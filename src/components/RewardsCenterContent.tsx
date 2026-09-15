@@ -527,8 +527,13 @@ export default function RewardsCenterContent() {
                   // of getting bigger -- not just while it happens to be
                   // the one whose detail panel is open. Whatever the user
                   // actually clicks to browse (`selectedKit`) still shows
-                  // selected too, independent of this.
-                  selected={selectedKit === index || (loggedIn && index === currentKitIndex)}
+                  // selected too, independent of this -- but only once
+                  // actually logged in with a real level; per the user's
+                  // own direct call, a guest (no login, no level) clicking
+                  // through cards to read their detail panels stays on the
+                  // plain default card-frame throughout, never the
+                  // selected-glow one.
+                  selected={loggedIn && (selectedKit === index || index === currentKitIndex)}
                   current={loggedIn && index === currentKitIndex}
                   onSelect={() => setSelectedKit(index)}
                 />
