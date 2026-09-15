@@ -407,6 +407,13 @@ export default function RewardsCenterContent() {
   // scale 1 anyway -- this floor already keeps clear of them for free.
   const heroBoxLeft = Math.max(0, (viewport.width - HERO_WIDTH * bgScale) / 2);
   const heroBoxTop = (viewport.height - HERO_HEIGHT * bgScale) / 2;
+  // Per the user's own direct call, the wide-shot -> close-up reframe (see
+  // `videoIsCloseUp`'s own comment) read as too big a jump -- HALFWAY to
+  // the full symmetric-center offset, not the whole way there, still
+  // meaningfully balances the crop around her face during the close-up
+  // without moving nearly as far from where the wide shot already sat.
+  const CLOSE_UP_TOP_DAMPING = 0.5;
+  const closeUpHeroBoxTop = Math.max(0, heroBoxTop) + (heroBoxTop - Math.max(0, heroBoxTop)) * CLOSE_UP_TOP_DAMPING;
   const titlePanelScreenLeft = heroBoxLeft + TITLE_PANEL_LEFT * bgScale;
   const titlePanelScreenTop = TITLE_PANEL_TOP * bgScale + Math.max(0, heroBoxTop);
   // Capped against the bottom MENU's own top edge, not the raw viewport
@@ -457,19 +464,21 @@ export default function RewardsCenterContent() {
             the floor on and off: OFF (top pinned to 0, matching the title
             panel's own floor) during the wide shot, so a short viewport
             crops the BOTTOM of the composition (legs/feet) instead of her
-            face; ON (plain unclamped/centered `heroBoxTop`, which can go
-            negative) once the shot is close enough that her face fills
-            most of the frame's own height, so cropping goes symmetric
-            around her face rather than risking her chin specifically.
-            `transition-[top]` turns that floor-toggle into a smooth
-            reframe instead of a hard jump when it fires mid-scene. */}
+            face; ON (`closeUpHeroBoxTop`, its own comment) once the shot
+            is close enough that her face fills most of the frame's own
+            height, so cropping balances back toward centered around her
+            face rather than risking her chin specifically -- only HALFWAY
+            there, not the full symmetric center, since the complete jump
+            read as too big a move for what's meant to be a subtle
+            reframe. `transition-[top]` turns that floor-toggle into a
+            smooth reframe instead of a hard jump when it fires mid-scene. */}
         <div
           className="absolute shrink-0 overflow-hidden rounded-tl-[50px] bg-[#f4f4f4] transition-[top] duration-700 ease-out"
           style={{
             width: HERO_WIDTH * bgScale,
             height: HERO_HEIGHT * bgScale,
             left: heroBoxLeft,
-            top: videoIsCloseUp ? heroBoxTop : Math.max(0, heroBoxTop),
+            top: videoIsCloseUp ? closeUpHeroBoxTop : Math.max(0, heroBoxTop),
           }}
         >
           <BackgroundSequence stage={isScreenTwo ? "selected" : "idle"} className="absolute inset-0 size-full object-cover" />
