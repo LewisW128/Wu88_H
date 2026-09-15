@@ -82,6 +82,15 @@ const HERO_HEIGHT = 1317;
 // icons instead of sitting clear of them the way Figma intended.
 const TITLE_PANEL_LEFT = 164 + 38;
 const TITLE_PANEL_TOP = 150;
+// Per the user's own direct call: the kit-DETAIL panel specifically (not
+// the plain season title) sits noticeably lower than Talking_Bar's own
+// top edge -- moved up to align with it instead, matching the SAME
+// `top-[58px]`/`top-[59px]` row every other sticky element on this page
+// (Talking_Bar, ProfileSidebar's back button, the "領獎中心" title row)
+// already shares. Figma's own reference (node 667:15723, y=148) puts it
+// at essentially the same spot as the plain title block (150) -- this is
+// a deliberate deviation from that reference, not a bug fix.
+const DETAIL_PANEL_TOP = 58;
 
 // Figma's own reference screen (657:18891, "這是登陸之後已經充值後等級8的畫面"
 // per the user's own direct call) is this project's usual hardcoded demo
@@ -425,8 +434,23 @@ export default function RewardsCenterContent() {
   // without moving nearly as far from where the wide shot already sat.
   const CLOSE_UP_TOP_DAMPING = 0.5;
   const closeUpHeroBoxTop = Math.max(0, heroBoxTop) + (heroBoxTop - Math.max(0, heroBoxTop)) * CLOSE_UP_TOP_DAMPING;
+  // Per the user's own direct call ("外圈遮罩應該維持固定位子不動才對 會動的是
+  // 遮罩裡面的影片" -- confirmed the "外圈遮罩" they mean is this box's own
+  // rounded-tl-[50px] corner/frame), the mask box below is now pinned at a
+  // single constant `top` (`Math.max(0, heroBoxTop)`, never `closeUpHeroBox
+  // Top`) -- it's the VIDEO drawn inside it that shifts for the wide-shot ->
+  // close-up reframe instead. `videoPanShift` is that shift's magnitude:
+  // exactly the distance the mask box itself used to move by (its old
+  // `top` going from `Math.max(0, heroBoxTop)` down to `closeUpHeroBoxTop`),
+  // reused here so the reframe reads identically to before, just applied to
+  // the video layer instead of the frame around it.
+  const videoPanShift = Math.max(0, heroBoxTop) - closeUpHeroBoxTop;
   const titlePanelScreenLeft = heroBoxLeft + TITLE_PANEL_LEFT * bgScale;
-  const titlePanelScreenTop = TITLE_PANEL_TOP * bgScale + Math.max(0, heroBoxTop);
+  // `DETAIL_PANEL_TOP` (its own comment) only once the detail panel is
+  // actually the thing showing in this slot -- the plain season title
+  // stays at its own Figma-matched `TITLE_PANEL_TOP`.
+  const titlePanelTopValue = effectiveSelectedKit !== null ? DETAIL_PANEL_TOP : TITLE_PANEL_TOP;
+  const titlePanelScreenTop = titlePanelTopValue * bgScale + Math.max(0, heroBoxTop);
   // Capped against the bottom MENU's own top edge, not the raw viewport
   // bottom -- that menu is a separate fixed layer occupying its own real
   // screen space (`CARD_ROW_HEIGHT * menuScale` tall, `BOTTOM_GAP` off the
@@ -471,28 +495,44 @@ export default function RewardsCenterContent() {
             since that's where it sits during the wide/full-body part of
             this 1317-tall composition. Horizontally there's no such risk
             (`heroBoxLeft` already floors at 0 the same way).
-            Vertically, `videoIsCloseUp` (its own comment above) switches
-            the floor on and off: OFF (top pinned to 0, matching the title
-            panel's own floor) during the wide shot, so a short viewport
-            crops the BOTTOM of the composition (legs/feet) instead of her
-            face; ON (`closeUpHeroBoxTop`, its own comment) once the shot
-            is close enough that her face fills most of the frame's own
-            height, so cropping balances back toward centered around her
-            face rather than risking her chin specifically -- only HALFWAY
-            there, not the full symmetric center, since the complete jump
-            read as too big a move for what's meant to be a subtle
-            reframe. `transition-[top]` turns that floor-toggle into a
-            smooth reframe instead of a hard jump when it fires mid-scene. */}
+            This box (the "遮罩" -- mask -- per the user's own direct call,
+            identified by its own rounded-tl-[50px] corner) now sits at a
+            single constant `top` and never moves: `Math.max(0, heroBoxTop)`,
+            matching the title panel's own floor, so a short viewport always
+            crops the BOTTOM of the composition (legs/feet) rather than
+            risking the top (her face/head). The wide-shot -> close-up
+            reframe (`videoIsCloseUp`, its own comment above) is achieved by
+            panning the VIDEO inside this now-stationary mask instead -- see
+            the inner wrapper below. */}
         <div
-          className="absolute shrink-0 overflow-hidden rounded-tl-[50px] bg-[#f4f4f4] transition-[top] duration-700 ease-out"
+          className="absolute shrink-0 overflow-hidden rounded-tl-[50px] bg-[#f4f4f4]"
           style={{
             width: HERO_WIDTH * bgScale,
             height: HERO_HEIGHT * bgScale,
             left: heroBoxLeft,
-            top: videoIsCloseUp ? closeUpHeroBoxTop : Math.max(0, heroBoxTop),
+            top: Math.max(0, heroBoxTop),
           }}
         >
-          <BackgroundSequence stage={isScreenTwo ? "selected" : "idle"} className="absolute inset-0 size-full object-cover" />
+          {/* The video itself is what pans now, not the mask around it.
+              `object-cover` on this box's own exact aspect ratio leaves
+              ZERO vertical slack to pan within (proven live: height is
+              always the constraining dimension for this box, so the source
+              clip already fills the box's full height with no room to
+              slide) -- so this wrapper is deliberately rendered
+              `videoPanShift` px TALLER than the mask box itself, giving the
+              video that much genuine vertical overflow to pan through
+              (clipped by the mask's own `overflow-hidden`). Sitting at
+              `top: 0` (flush with the mask's own top) during the wide shot
+              and sliding up by the full `videoPanShift` once close-up
+              reveals exactly the same lower slice of the frame the old
+              mask-box-moves approach did, just via the content instead of
+              the frame. */}
+          <div
+            className="absolute inset-x-0 transition-[top] duration-700 ease-out"
+            style={{ top: videoIsCloseUp ? -videoPanShift : 0, height: HERO_HEIGHT * bgScale + videoPanShift }}
+          >
+            <BackgroundSequence stage={isScreenTwo ? "selected" : "idle"} className="absolute inset-0 size-full object-cover" />
+          </div>
           <div
             className="absolute inset-x-0 bottom-0"
             style={{ height: 250 * bgScale, background: "linear-gradient(to bottom, rgba(255,255,255,0), white)" }}
