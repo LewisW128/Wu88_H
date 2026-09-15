@@ -427,27 +427,29 @@ export default function RewardsCenterContent() {
   // scale 1 anyway -- this floor already keeps clear of them for free.
   const heroBoxLeft = Math.max(0, (viewport.width - HERO_WIDTH * bgScale) / 2);
   const heroBoxTop = (viewport.height - HERO_HEIGHT * bgScale) / 2;
-  // Started at 0.5 (halfway to the full symmetric-center offset) per the
-  // user's own direct call that the wide-shot -> close-up jump read as too
-  // big -- but on a short viewport that still cropped into her chin right
-  // below the nose (confirmed via the user's own screenshot, "這裡最後的鏡頭
-  // 可以看到臉部下面多一些嗎"). Raised to the FULL symmetric-center offset
-  // (1) so the close-up crops evenly top/bottom around her face instead of
-  // still favoring the top, revealing her nose/mouth instead of stopping at
-  // the eyes.
-  const CLOSE_UP_TOP_DAMPING = 1;
-  const closeUpHeroBoxTop = Math.max(0, heroBoxTop) + (heroBoxTop - Math.max(0, heroBoxTop)) * CLOSE_UP_TOP_DAMPING;
   // Per the user's own direct call ("外圈遮罩應該維持固定位子不動才對 會動的是
   // 遮罩裡面的影片" -- confirmed the "外圈遮罩" they mean is this box's own
-  // rounded-tl-[50px] corner/frame), the mask box below is now pinned at a
-  // single constant `top` (`Math.max(0, heroBoxTop)`, never `closeUpHeroBox
-  // Top`) -- it's the VIDEO drawn inside it that shifts for the wide-shot ->
-  // close-up reframe instead. `videoPanShift` is that shift's magnitude:
-  // exactly the distance the mask box itself used to move by (its old
-  // `top` going from `Math.max(0, heroBoxTop)` down to `closeUpHeroBoxTop`),
-  // reused here so the reframe reads identically to before, just applied to
-  // the video layer instead of the frame around it.
-  const videoPanShift = Math.max(0, heroBoxTop) - closeUpHeroBoxTop;
+  // rounded-tl-[50px] corner/frame), the mask box below is pinned at a
+  // single constant `top` (`Math.max(0, heroBoxTop)`) and never moves --
+  // it's the VIDEO drawn inside it that pans for the wide-shot -> close-up
+  // reframe instead.
+  // `CLOSE_UP_PAN_SHIFT` is a fixed DESIGN-SPACE distance (scaled by
+  // `bgScale` like everything else in this box), not derived from
+  // `heroBoxTop`/viewport height the way an earlier version here was --
+  // that viewport-derived formula panned exactly zero once the box was
+  // short enough to fit inside the viewport on its own (no crop "needed"),
+  // which on a tall/narrow (mobile) viewport left the full, un-reframed
+  // source frame showing -- too much empty forehead above her eyes for the
+  // user's own taste ("看到額頭的部分可以少一點", "這裡的臉也上移一些"),
+  // independent of whether the box technically still fit. A flat
+  // design-space amount pans the SAME proportion of the frame on every
+  // viewport instead, close-up or not. 257 is the exact distance the old
+  // viewport-derived formula produced on the desktop window the user last
+  // confirmed as correct ("最後的畫面是對的") -- reusing it keeps that
+  // already-approved framing unchanged while also applying it on viewports
+  // where the old formula used to fall back to zero.
+  const CLOSE_UP_PAN_SHIFT = 257;
+  const videoPanShift = CLOSE_UP_PAN_SHIFT * bgScale;
   const titlePanelScreenLeft = heroBoxLeft + TITLE_PANEL_LEFT * bgScale;
   // `DETAIL_PANEL_TOP` (its own comment) only once the detail panel is
   // actually the thing showing in this slot -- the plain season title
@@ -531,14 +533,12 @@ export default function RewardsCenterContent() {
               mask-box-moves approach did, just via the content instead of
               the frame.
               `duration-1000 ease-in-out`, not the `duration-700 ease-out`
-              this started as -- per the user's own direct call, raising
-              `CLOSE_UP_TOP_DAMPING` to 1 (its own comment) roughly doubled
-              how far this actually travels, and `ease-out` front-loads
-              nearly all of a transition's motion into its first moment, so
-              the same distance in the same duration read as an abrupt
-              jump rather than a pan. `ease-in-out` spreads the motion out
-              (slow start, faster middle, slow finish) and the longer
-              duration gives that bigger distance more time to cover,
+              this started as -- per the user's own direct call, an earlier
+              version's bigger pan distance read as an abrupt jump at the
+              shorter duration/`ease-out` (which front-loads nearly all of a
+              transition's motion into its first moment). `ease-in-out`
+              spreads the motion out (slow start, faster middle, slow
+              finish) and the longer duration gives it more time to cover,
               together reading as a smooth pan instead of a jump. */}
           <div
             className="absolute inset-x-0 transition-[top] duration-1000 ease-in-out"
