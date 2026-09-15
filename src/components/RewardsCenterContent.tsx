@@ -195,7 +195,16 @@ export default function RewardsCenterContent() {
   const heroBoxTop = (viewport.height - HERO_HEIGHT * bgScale) / 2;
   const titlePanelScreenLeft = heroBoxLeft + TITLE_PANEL_LEFT * bgScale;
   const titlePanelScreenTop = TITLE_PANEL_TOP * bgScale + Math.max(0, heroBoxTop);
-  const detailPanelMaxHeight = Math.max(0, viewport.height - titlePanelScreenTop - BOTTOM_GAP) / (bgScale || 1);
+  // Capped against the bottom MENU's own top edge, not the raw viewport
+  // bottom -- that menu is a separate fixed layer occupying its own real
+  // screen space (`CARD_ROW_HEIGHT * menuScale` tall, `BOTTOM_GAP` off the
+  // viewport bottom), invisible to a plain "how much viewport is left
+  // below this panel" calc. Confirmed live: on a wide-but-not-very-tall
+  // window, the fully-uncropped detail panel (no scroll needed by the OLD
+  // formula) rendered tall enough to visually overlap the Reward_Kit row
+  // sitting underneath it instead of capping/scrolling sooner.
+  const menuTopScreenY = viewport.height - BOTTOM_GAP - CARD_ROW_HEIGHT * menuScale;
+  const detailPanelMaxHeight = Math.max(0, menuTopScreenY - BOTTOM_GAP - titlePanelScreenTop) / (bgScale || 1);
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-[#f4f4f4]">
