@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "./AuthProvider";
 import BackgroundSequence from "./BackgroundSequence";
 import MinPanelHeight from "./MinPanelHeight";
@@ -183,6 +183,64 @@ function useViewportSize() {
   return size;
 }
 
+// Wires up click-and-drag scrolling on a plain `overflow-x-auto` element --
+// per the user's own direct call, that's the actual reason the bottom
+// Reward_Kit row's last card read as unreachable with a mouse: an
+// `overflow-x-auto` div has no drag-to-scroll behavior of its own on
+// desktop (only real touch/trackpad horizontal swipes scroll it natively),
+// and `no-scrollbar` hides the one other way to reach it by dragging a
+// visible scrollbar thumb. `moved` tracks whether the pointer actually
+// traveled past a small threshold during the down-to-up span; the
+// capturing click listener uses it to swallow the click a drag produces,
+// so dragging the row never also fires whichever card's button the
+// pointer happened to land on.
+function useDragScroll<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const drag = { down: false, startX: 0, startScrollLeft: 0, moved: false };
+
+    function onPointerDown(e: PointerEvent) {
+      drag.down = true;
+      drag.moved = false;
+      drag.startX = e.clientX;
+      drag.startScrollLeft = el!.scrollLeft;
+    }
+    function onPointerMove(e: PointerEvent) {
+      if (!drag.down) return;
+      const dx = e.clientX - drag.startX;
+      if (Math.abs(dx) > 3) drag.moved = true;
+      el!.scrollLeft = drag.startScrollLeft - dx;
+    }
+    function onPointerUp() {
+      drag.down = false;
+    }
+    function onClickCapture(e: MouseEvent) {
+      if (drag.moved) {
+        e.stopPropagation();
+        e.preventDefault();
+        drag.moved = false;
+      }
+    }
+
+    el.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+    el.addEventListener("click", onClickCapture, true);
+    return () => {
+      el.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+      el.removeEventListener("click", onClickCapture, true);
+    };
+  }, []);
+
+  return ref;
+}
+
 // Figma "05_WU88-H-PC-Profile-Page" node 648:14692 ("領獎中心" / Reward
 // center, "第 2 季 VIP 盛典"). Same 1728px fixed-canvas + ScaleToFit
 // convention as every other page, but unlike ProfileContent this frame is
@@ -205,6 +263,7 @@ export default function RewardsCenterContent() {
   const bgScale = useFixedLayerScale();
   const { scale: menuScale } = useBottomMenuLayout();
   const viewport = useViewportSize();
+  const menuScrollRef = useDragScroll<HTMLDivElement>();
 
   // Per the user's own direct call, only the bracket matching the member's
   // OWN current level renders large in the bottom row (see RewardKitCard's
@@ -509,14 +568,21 @@ export default function RewardsCenterContent() {
           instead of `transform`). Horizontally centered to match the
           background layer's own centering, with the same `pl-[164px]`
           Figma offset preserved inside so the row still starts under
-          where the sidebar column sits. `z-[15]`, above the grid's own
-          `z-10` (Talking_Bar included) -- per the user's own direct call,
-          scrolling this row all the way to its last card must not leave
-          that card hidden behind the chat panel, which previously painted
-          over it at z-10 wherever their real screen positions overlapped. */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-[20px] z-[15] flex justify-center">
+          where the sidebar column sits. `z-[5]` stays BELOW the grid's own
+          `z-10` (Talking_Bar included) on purpose -- per the user's own
+          direct call, this row belongs behind the chat panel, same as
+          before. The actual problem was never stacking order or reach: a
+          mouse has no way to drag-scroll a plain `overflow-x-auto` div (no
+          visible scrollbar either, `no-scrollbar` hides it) -- confirmed
+          by the user's own report of not being able to slide it with the
+          cursor at all. `useDragScroll` below wires up click-and-drag
+          scrolling directly, so the last card is reachable by sliding the
+          row itself, exactly like the rest of this row's own
+          touch/trackpad users could already do. */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-[20px] z-[5] flex justify-center">
         <div
-          className="no-scrollbar pointer-events-auto overflow-x-auto overflow-y-hidden"
+          ref={menuScrollRef}
+          className="no-scrollbar pointer-events-auto cursor-grab overflow-x-auto overflow-y-hidden active:cursor-grabbing"
           style={{ width: HERO_WIDTH * menuScale }}
         >
           <div className="flex w-max flex-col gap-[20px] pl-[164px]" style={{ zoom: menuScale } as React.CSSProperties}>
