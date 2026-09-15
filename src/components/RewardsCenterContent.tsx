@@ -216,8 +216,21 @@ export default function RewardsCenterContent() {
           `overflow-hidden` on the outer `inset-0` layer is what actually
           produces that symmetric crop: the sized box below it is centered
           by flexbox and simply clipped at the real viewport's edges
-          whenever it's taller/wider than the window. */}
-      <div className="pointer-events-none fixed inset-0 z-0 flex items-center justify-center overflow-hidden">
+          whenever it's taller/wider than the window.
+          `pointer-events-auto` + `onClick` here, not `-none` -- per the
+          user's own direct call, clicking any blank/background area
+          (the character art itself, or the letterboxed margin around it)
+          deselects back to the plain title/countdown view. Safe to put
+          directly on this whole layer without any card/sidebar/Talking_Bar
+          click accidentally triggering it too: none of those live INSIDE
+          this background layer's own React tree (each is its own sibling
+          fixed layer, or sits in the separately-scrolling grid), so there's
+          no bubbling to guard against -- whatever a click here actually
+          landed on really was empty background, not another control. */}
+      <div
+        className="pointer-events-auto fixed inset-0 z-0 flex items-center justify-center overflow-hidden"
+        onClick={() => setSelectedKit(null)}
+      >
         <div
           className="relative shrink-0 overflow-hidden rounded-tl-[50px] bg-[#f4f4f4]"
           style={{ width: HERO_WIDTH * bgScale, height: HERO_HEIGHT * bgScale }}
@@ -327,8 +340,20 @@ export default function RewardsCenterContent() {
             window taller/narrower than the 1728x900 design ratio that's
             routinely MORE than 1317px. Foreground content (title row, VIP
             block) still uses plain `top-*` offsets straight off Figma's
-            own numbers, which land in the exact same place either way. */}
-        <div className="relative">
+            own numbers, which land in the exact same place either way.
+            `pointer-events-none` on this div itself too, not just its grid
+            child below -- this div has no visible content of its own left
+            (the background/title-panel/Reward_Kit row all moved out to
+            their own fixed siblings), but its own box still sat in front
+            of that fixed background layer's `z-0` in paint order, silently
+            swallowing every click meant for the background's own new
+            click-to-deselect handler (confirmed live via
+            `elementFromPoint`, which kept returning this exact div instead
+            of the background layer for a click over the character art).
+            Its own grid child already opts specific pieces back in with
+            `pointer-events-auto` (sidebar/title row/Talking_Bar), so
+            nothing here loses its own interactivity. */}
+        <div className="relative pointer-events-none">
           {/* `pointer-events-none` here too, not just on the content column
               below -- with only the content column opted out, a click over
               any part of ITS transparent area fell through past it to the
