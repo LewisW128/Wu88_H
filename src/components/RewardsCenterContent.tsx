@@ -63,13 +63,24 @@ function LevelPoint({ numeral, active }: { numeral: string; active: boolean }) {
 // single flat `M0 Y H<width>` stroked path (confirmed by reading them
 // directly), so resizing the rendered width doesn't stretch or distort
 // any texture/pattern the way an arbitrary raster or dashed asset would.
+// `maxWidth: "none"` is required, not optional -- Tailwind's own preflight
+// reset (`@import "tailwindcss"` in globals.css) sets a blanket `img {
+// max-width: 100% }`, and `max-width` always wins over `width` regardless
+// of the latter's specificity (a basic CSS box-model rule, not a cascade
+// question) -- confirmed live: this img's own explicit inline `width` was
+// being applied (readable back off `.style.width`) while its ACTUAL
+// rendered `getBoundingClientRect().width` measured 0, because the
+// absolutely-positioned wrapper div around it has no explicit width of its
+// own for that 100% to resolve against. The user's own screenshot caught
+// this as the connector lines between the level-rail numbers having
+// silently vanished.
 function LevelLine({ active, width }: { active: boolean; width: number }) {
   return (
     <img
       alt=""
       src={withBasePath(active ? "/assets/rewards/level-line-active.svg" : "/assets/rewards/level-line.svg")}
       className="h-[19px] shrink-0"
-      style={{ width }}
+      style={{ width, maxWidth: "none" }}
     />
   );
 }
@@ -463,10 +474,21 @@ export default function RewardsCenterContent() {
   const heroBoxTop = (viewport.height - HERO_HEIGHT * bgScale) / 2;
   // Per the user's own direct call ("外圈遮罩應該維持固定位子不動才對 會動的是
   // 遮罩裡面的影片" -- confirmed the "外圈遮罩" they mean is this box's own
-  // rounded-tl-[50px] corner/frame), the mask box below is pinned at a
-  // single constant `top` (`Math.max(0, heroBoxTop)`) and never moves --
-  // it's the VIDEO drawn inside it that pans for the wide-shot -> close-up
-  // reframe instead.
+  // rounded-tl-[50px] corner/frame), the mask box below is just `heroBoxTop`
+  // -- plain symmetric centering, no crop-avoidance logic of its own at
+  // all. An earlier version here floored the MASK's own top at
+  // `Math.max(0, heroBoxTop)` to keep it from ever cropping her face on a
+  // short viewport -- but per the user's own follow-up direct call
+  // ("背景圖不是不用完全綁定外框的位子嗎? 外框可以單純做遮罩的功能 而背景圖可以
+  // 在遮罩內自由控制位子才對"), the mask's OWN position has no reason to carry
+  // that concern at all -- it's just a viewport onto the video, and the
+  // video already fully controls its own position inside it (`videoBaseTop`/
+  // `videoCloseUpTop` below). All the crop-avoidance floor logic that used
+  // to live on the mask's `top` moved onto the video's `top` instead
+  // (`videoBaseTop = Math.max(0, -heroBoxTop)`, `videoCloseUpTop`'s own
+  // comment), which is mathematically identical (it exactly cancels out
+  // the mask's now-unclamped position, see that constant's own comment) --
+  // zero visual change, just moved to the layer it actually belongs to.
   // `CLOSE_UP_PAN_SHIFT` is a fixed DESIGN-SPACE distance (scaled by
   // `bgScale` like everything else in this box), not derived from
   // `heroBoxTop`/viewport height the way an earlier version here was --
@@ -484,6 +506,13 @@ export default function RewardsCenterContent() {
   // where the old formula used to fall back to zero.
   const CLOSE_UP_PAN_SHIFT = 257;
   const videoPanShift = CLOSE_UP_PAN_SHIFT * bgScale;
+  // Exactly cancels the mask's own (now unclamped) `top` whenever it goes
+  // negative (short viewport) -- e.g. mask top -257 + videoBaseTop 257 =
+  // absolute screen position 0, the SAME floor-at-0 the mask itself used to
+  // enforce directly. Zero (no compensation needed) once the mask comfortably
+  // fits the viewport on its own (`heroBoxTop >= 0`).
+  const videoBaseTop = Math.max(0, -heroBoxTop);
+  const videoCloseUpTop = videoBaseTop - videoPanShift;
   const titlePanelScreenLeft = heroBoxLeft + TITLE_PANEL_LEFT * bgScale;
   // `DETAIL_PANEL_TOP` (its own comment) only once the detail panel is
   // actually the thing showing in this slot -- the plain season title
@@ -526,57 +555,59 @@ export default function RewardsCenterContent() {
         className="pointer-events-auto fixed inset-0 z-0 overflow-hidden"
         onClick={() => setSelectedKit(null)}
       >
-        {/* `left`/`top`, not `flex items-center justify-center` -- per the
-            user's own direct call (confirmed live via their own screenshot,
-            a wide-but-short real browser window with her head entirely out
-            of frame), a plain centered crop can push the composition's own
-            top edge ABOVE the viewport, cropping into her face/head first
-            since that's where it sits during the wide/full-body part of
-            this 1317-tall composition. Horizontally there's no such risk
-            (`heroBoxLeft` already floors at 0 the same way).
-            This box (the "遮罩" -- mask -- per the user's own direct call,
-            identified by its own rounded-tl-[50px] corner) now sits at a
-            single constant `top` and never moves: `Math.max(0, heroBoxTop)`,
-            matching the title panel's own floor, so a short viewport always
-            crops the BOTTOM of the composition (legs/feet) rather than
-            risking the top (her face/head). The wide-shot -> close-up
-            reframe (`videoIsCloseUp`, its own comment above) is achieved by
-            panning the VIDEO inside this now-stationary mask instead -- see
-            the inner wrapper below. */}
+        {/* `left`/`top`, not `flex items-center justify-center` -- lets
+            `heroBoxLeft`/`heroBoxTop` (their own comment above) be plain,
+            simple symmetric centering with zero crop-avoidance logic on
+            THIS box -- that concern now lives entirely on the video
+            wrapper's own `top` below (`videoBaseTop`/`videoCloseUpTop`,
+            their own comment), per the user's own direct call that this
+            box (the "遮罩" -- mask -- identified by its own
+            rounded-tl-[50px] corner) should "單純做遮罩的功能" (simply act as
+            a mask), with the video free to control its own position inside
+            it independently. */}
         <div
           className="absolute shrink-0 overflow-hidden rounded-tl-[50px] bg-[#f4f4f4]"
           style={{
             width: HERO_WIDTH * bgScale,
             height: HERO_HEIGHT * bgScale,
             left: heroBoxLeft,
-            top: Math.max(0, heroBoxTop),
+            top: heroBoxTop,
           }}
         >
-          {/* The video itself is what pans now, not the mask around it.
+          {/* The video's own `top` carries ALL of this box's crop-avoidance
+              and reframing logic now, independent of wherever the mask
+              around it happens to sit (its own comment above).
               `object-cover` on this box's own exact aspect ratio leaves
-              ZERO vertical slack to pan within (proven live: height is
-              always the constraining dimension for this box, so the source
-              clip already fills the box's full height with no room to
-              slide) -- so this wrapper is deliberately rendered
-              `videoPanShift` px TALLER than the mask box itself, giving the
-              video that much genuine vertical overflow to pan through
-              (clipped by the mask's own `overflow-hidden`). Sitting at
-              `top: 0` (flush with the mask's own top) during the wide shot
-              and sliding up by the full `videoPanShift` once close-up
-              reveals exactly the same lower slice of the frame the old
-              mask-box-moves approach did, just via the content instead of
-              the frame.
-              `duration-1000 ease-in-out`, not the `duration-700 ease-out`
-              this started as -- per the user's own direct call, an earlier
-              version's bigger pan distance read as an abrupt jump at the
-              shorter duration/`ease-out` (which front-loads nearly all of a
+              ZERO vertical slack to pan within on its own (proven live:
+              height is always the constraining dimension for this box, so
+              the source clip already fills the box's full height with no
+              room to slide) -- so this wrapper is deliberately rendered
+              taller than the mask box itself (`videoBaseTop` + `videoPan
+              Shift` extra), giving the video that much genuine vertical
+              overflow to pan through (clipped by the mask's own
+              `overflow-hidden`).
+              `videoBaseTop` (wide shot) reproduces the exact same absolute
+              on-screen position the mask's own old `Math.max(0, heroBoxTop)`
+              floor used to produce directly -- confirmed identical: mask
+              top (now `heroBoxTop`, can go negative) + `videoBaseTop`
+              (`Math.max(0, -heroBoxTop)`) always sums to `Math.max(0,
+              heroBoxTop)`, the same value the mask itself used to be
+              floored at. `videoCloseUpTop` (close-up) is that same base,
+              shifted up further by the full `videoPanShift` on top of it.
+              `duration-1000 ease-in-out`, not `duration-700 ease-out` --
+              per the user's own direct call, an earlier version's bigger
+              pan distance read as an abrupt jump at the shorter
+              duration/`ease-out` (which front-loads nearly all of a
               transition's motion into its first moment). `ease-in-out`
               spreads the motion out (slow start, faster middle, slow
               finish) and the longer duration gives it more time to cover,
               together reading as a smooth pan instead of a jump. */}
           <div
             className="absolute inset-x-0 transition-[top] duration-1000 ease-in-out"
-            style={{ top: videoIsCloseUp ? -videoPanShift : 0, height: HERO_HEIGHT * bgScale + videoPanShift }}
+            style={{
+              top: videoIsCloseUp ? videoCloseUpTop : videoBaseTop,
+              height: HERO_HEIGHT * bgScale + videoBaseTop + videoPanShift,
+            }}
           >
             <BackgroundSequence stage={isScreenTwo ? "selected" : "idle"} className="absolute inset-0 size-full object-cover" />
           </div>
