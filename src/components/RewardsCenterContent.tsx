@@ -549,20 +549,23 @@ export default function RewardsCenterContent() {
             height: HERO_MASK_HEIGHT * bgScale,
             left: heroBoxLeft,
             top: HERO_BOX_TOP,
-            // 60, matching every other /profile/* page's own
-            // `rounded-tl-[60px]` corner literally (ProfileContent's own
-            // ident block), not this page's own Figma frame's literal 50 --
-            // per the user's own direct call ("不管他們原理如何 重點領獎中心左上角
-            // 的樣式跟其他頁就是不一樣"), visual consistency with the rest of the
-            // site wins over exactly matching this one frame's own number.
-            // Flat/unscaled (not `bgScale * 60`) for the same reason a flat
-            // 50 replaced a scaled 50 two commits ago: `/profile`'s own
-            // 60px, being inside ScaleToFit's zoomed subtree, shrinks below
-            // Top_bar's own unscaled 38px height (confirmed live) at any
-            // viewport narrower than ~1094px, at which point it's not
-            // visible at all -- reusing that same scaled approach here would
-            // just reproduce the same disappearing act instead of fixing it.
-            borderTopLeftRadius: 60,
+            // `bgScale * 60`, matching every other /profile/* page's own
+            // `rounded-tl-[60px]` corner (ProfileContent's own identical
+            // block) -- both the VALUE (60, not this page's own Figma
+            // frame's literal 50) and the SCALING (proportional, not flat)
+            // now match, per the user's own direct call that a flat,
+            // unscaled 60 read as "明顯比其他頁的原角大上好幾倍" (visibly several
+            // times bigger than other pages' corner) once actually compared
+            // side by side. That flat version was chasing the wrong fix for
+            // an earlier "corner invisible" bug -- Top_bar was wrongly
+            // assumed to stay a flat unscaled 38px, but it's INSIDE
+            // ScaleToFit's own zoomed subtree same as everything else
+            // (confirmed live: its real rendered height tracks `bgScale`
+            // exactly, e.g. 19.79px at a 900px-wide viewport, not 38) -- so
+            // a proportionally `bgScale`-scaled radius was never actually at
+            // risk of being swallowed by it in the first place; both shrink
+            // by the exact same factor together.
+            borderTopLeftRadius: 60 * bgScale,
           }}
         >
           {/* The video's own `top` carries all of this box's reframing
@@ -710,18 +713,6 @@ export default function RewardsCenterContent() {
           <TopBar onlineCount="900" totalReward="10,000,000" announcements={topBarAnnouncements} />
         </div>
 
-        {/* Same corner-notch trick every other /profile/* page uses (see
-            ProfileContent's own identical block) -- without it, Top_bar's
-            own flat bottom edge sits flush above the white sidebar
-            backdrop's `rounded-tl-[60px]` corner below, reading as a small
-            square step instead of one continuous curve. */}
-        <div className="sticky top-[38px] left-0 z-30 h-0">
-          <div
-            className="pointer-events-none size-[60px]"
-            style={{ background: "radial-gradient(circle at 100% 100%, transparent 60px, #f4f4f4 60px)" }}
-          />
-        </div>
-
         {/* `relative`, NOT the hero's own fixed h-1317/overflow-hidden --
             those live on the fixed background layer above instead (see its
             own comment for why it has to sit outside this zoomed subtree
@@ -745,28 +736,24 @@ export default function RewardsCenterContent() {
             `pointer-events-auto` (sidebar/title row/Talking_Bar), so
             nothing here loses its own interactivity. */}
         <div className="relative pointer-events-none">
-          {/* Per the user's own direct call, after going back and forth on
-              this exact question across several turns: the SHAPE (a box
-              with a top-left border-radius) is identical whether it's used
-              as a plain background or as a mask over moving video content
-              ("白底的形狀跟遮罩的形狀製作有不一樣嗎? 不都是依樣畫出形狀") -- but
-              the same 60px curve cut into a continuously-changing video
-              frame (color, hair texture always shifting) reads far less
-              clean than the identical curve cut into a flat white fill,
-              confirmed directly against the user's own "乾淨俐落" white-
-              backdrop screenshot vs. the video-corner version. Restored
-              here for exactly that reason: a plain white `rounded-tl-[60px]`
-              backdrop, scoped to just the sidebar's own 164px column so it
-              never covers the video in the columns where it needs to stay
-              visible (this grid already sits at `z-10`, above the video's
-              `z-0` -- painting white across the FULL grid width would hide
-              the video everywhere, not just behind the sidebar). Positioned
-              with no explicit z-index (z:auto) so DOM order (it comes AFTER
-              the video in the document) breaks the tie in its favor against
-              the video's own `z-0`, while still sitting below MinPanel
-              Height's own explicit `z-10` right after it, so the sidebar
-              icons stay on top of it. */}
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-[164px] rounded-tl-[60px] bg-white" />
+          {/* NO white sidebar backdrop -- tried twice across this page's
+              build (once relying on DOM order, once with an explicit
+              z-index) and reverted both times. Confirmed live: any content
+              inside ScaleToFit's own `zoom`-ed wrapper -- no matter how high
+              its own z-index goes, tested up to 999999 -- still loses to the
+              video's `fixed z-0` layer outside that wrapper, because
+              ScaleToFit's own zoomed div behaves like a sealed stacking-
+              context boundary content inside it can't escape (the ONE
+              exception, MinPanelHeight's own `z-10`, still wins because
+              THAT element establishes its own stacking context directly
+              inside the same boundary the video's fixed div also roots
+              from -- a plain sibling div like this one doesn't get that).
+              Per the user's own final direct call once this was confirmed
+              ("我要那個影片是滿版" / "不要看到白底"), the video wins that fight
+              on purpose now: full-bleed under the sidebar, no white patch,
+              even though that means the mask's own `rounded-tl-[60px]`
+              corner (on the video layer itself, its own JSX above) is what
+              actually shows through here, not a plain white one. */}
           {/* `pointer-events-none` here too, not just on the content column
               below -- with only the content column opted out, a click over
               any part of ITS transparent area fell through past it to the
