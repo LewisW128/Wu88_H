@@ -5,7 +5,7 @@ import { useAuth } from "./AuthProvider";
 import BackgroundSequence from "./BackgroundSequence";
 import MinPanelHeight from "./MinPanelHeight";
 import ProfileSidebar from "./ProfileSidebar";
-import { REWARD_KITS, RewardKitCard, RewardKitDetailPanel } from "./RewardKit";
+import { CURRENT_KIT_SCALE, KIT_CARD_GAP, PLAIN_KIT_CARD_WIDTH, REWARD_KITS, RewardKitCard, RewardKitDetailPanel } from "./RewardKit";
 import RewardVipCard from "./RewardVipCard";
 import ScaleToFit from "./ScaleToFit";
 import TalkingBar from "./TalkingBar";
@@ -57,12 +57,19 @@ function LevelPoint({ numeral, active }: { numeral: string; active: boolean }) {
   );
 }
 
-function LevelLine({ active }: { active: boolean }) {
+// `width` is passed in per-instance now, not a flat `w-[212px]` -- see
+// `kitCardCenters`'s own comment on the bottom menu's JSX below for why
+// this needs to actually vary per segment. Both source SVGs are just a
+// single flat `M0 Y H<width>` stroked path (confirmed by reading them
+// directly), so resizing the rendered width doesn't stretch or distort
+// any texture/pattern the way an arbitrary raster or dashed asset would.
+function LevelLine({ active, width }: { active: boolean; width: number }) {
   return (
     <img
       alt=""
       src={withBasePath(active ? "/assets/rewards/level-line-active.svg" : "/assets/rewards/level-line.svg")}
-      className="h-[19px] w-[212px] shrink-0"
+      className="h-[19px] shrink-0"
+      style={{ width }}
     />
   );
 }
@@ -394,6 +401,33 @@ export default function RewardsCenterContent() {
   // (`loggedIn` doubles for both here, same as everywhere else on this
   // page already gates on it), not for a guest browsing the reward tiers.
   const currentKitIndex = REWARD_KITS.findIndex((kit) => MEMBER_LEVEL >= kit.levelStart && MEMBER_LEVEL <= kit.levelEnd);
+
+  // Per the user's own direct call ("reward kit要跟下方的數字剛好居中",
+  // "數字跟數字中間的線也要等距拉長"), the Level_line rail below the
+  // Reward_Kit row needs to actually line up with the cards above it --
+  // an earlier version here laid the rail out as its own independent flex
+  // row (a flat `ml-[96px]` plus a fixed 212px line asset repeated 7
+  // times), which had no relationship at all to the real card widths/gaps
+  // above it, and visibly drifted out of alignment by the time the row
+  // reached the LOGGED-IN "current" card's own `CURRENT_KIT_SCALE` zoom
+  // (274px instead of the plain 216px every other card uses).
+  // `kitCardCenters[i]` is the actual rendered x-center of REWARD_KITS[i]'s
+  // own card, computed the same way the flex row above lays them out itself
+  // (running sum of each card's own width, `PLAIN_KIT_CARD_WIDTH` unless
+  // it's the current-level card, plus `KIT_CARD_GAP` between them) --  so
+  // each LevelPoint can be positioned at the exact center of the card it
+  // corresponds to, and each LevelLine stretched to the exact distance
+  // between one point and the next instead of a flat guessed width.
+  const { kitCardCenters, kitRowWidth } = (() => {
+    const centers: number[] = [];
+    let left = 0;
+    for (let i = 0; i < REWARD_KITS.length; i++) {
+      const width = loggedIn && i === currentKitIndex ? PLAIN_KIT_CARD_WIDTH * CURRENT_KIT_SCALE : PLAIN_KIT_CARD_WIDTH;
+      centers.push(left + width / 2);
+      left += width + KIT_CARD_GAP;
+    }
+    return { kitCardCenters: centers, kitRowWidth: left - KIT_CARD_GAP };
+  })();
 
   // The season-title/kit-detail panel used to be plain content inside
   // ScaleToFit's own scrolling/zoomed subtree -- but per the user's own
@@ -857,8 +891,14 @@ export default function RewardsCenterContent() {
                 mid-way THROUGH the card row above, so the level rail
                 visually cut across the bottom of the cards instead of
                 sitting under them. Moved down per the user's own direct
-                visual call on the live page. */}
-            <div className="ml-[96px] flex items-center">
+                visual call on the live page.
+                No `ml-`/flex-gap layout of its own any more -- absolutely
+                positioned at the real `kitCardCenters` (own comment above)
+                instead, since that's what actually keeps every point
+                centered under its own card, current-level zoom included,
+                rather than a row laid out independently of the cards above
+                it. */}
+            <div className="relative h-[24px]" style={{ width: kitRowWidth }}>
               {LEVEL_POINTS.map((numeral, i) => {
                 // Per the user's own direct call, matching Figma's own
                 // example (node 689:16248): a milestone reads as reached
@@ -867,10 +907,23 @@ export default function RewardsCenterContent() {
                 // as the VIP card/enlarged kit card above, so a guest
                 // never sees any of this rail as "already achieved".
                 const achieved = loggedIn && MEMBER_LEVEL >= Number(numeral);
+                const center = kitCardCenters[i];
+                // The line after point `i` reaches toward the NEXT card's
+                // own center (`kitCardCenters[i + 1]`) -- always valid,
+                // even for the last point (numeral "82"): REWARD_KITS has
+                // one more card (index 7, Lv.93-100) than LEVEL_POINTS has
+                // numerals, so the trailing line Figma's own reference
+                // still shows after the last point (this file's own
+                // established comment on `LEVEL_POINTS`) reaches toward
+                // that 8th card's center, same as every other segment.
+                const lineEnd = kitCardCenters[i + 1];
+                const lineWidth = lineEnd - center - 24;
                 return (
-                  <div key={i} className="flex items-center">
+                  <div key={i} className="absolute top-0" style={{ left: center - 12 }}>
                     <LevelPoint numeral={numeral} active={achieved} />
-                    <LevelLine active={achieved} />
+                    <div className="absolute left-[24px] top-[2.5px]">
+                      <LevelLine active={achieved} width={lineWidth} />
+                    </div>
                   </div>
                 );
               })}

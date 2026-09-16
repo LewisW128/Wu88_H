@@ -116,7 +116,12 @@ function RankRibbonIcon() {
 // which is also why the surrounding row's own `gap-[20px]` still lines up
 // against the NEXT card at Figma's own x=294 (0 + 274 + 20) without this
 // card needing special-cased margins of its own.
-const CURRENT_KIT_SCALE = 274 / 216;
+// Exported (not just used locally below) so the Level_line rail on
+// RewardsCenterContent's own bottom menu can compute each card's real
+// rendered width -- see that file's own `kitCardCenters` comment.
+export const CURRENT_KIT_SCALE = 274 / 216;
+export const PLAIN_KIT_CARD_WIDTH = 216;
+export const KIT_CARD_GAP = 20;
 
 export function RewardKitCard({
   kit,
