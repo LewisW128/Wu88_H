@@ -549,23 +549,20 @@ export default function RewardsCenterContent() {
             height: HERO_MASK_HEIGHT * bgScale,
             left: heroBoxLeft,
             top: HERO_BOX_TOP,
-            // Plain `bgScale * 50` (tried next, after a flat unscaled 50px
-            // read as disproportionate against the OLD 1317-tall mask box)
-            // shrinks the radius below Top_bar's own UNSCALED 38px height at
-            // any viewport narrower than ~1313px wide (50 * (1313/1728) =
-            // 38) -- confirmed live (elementFromPoint at a point deep in the
-            // nominal curve returned Top_bar itself, not the mask) that
-            // Top_bar's own flat bar was fully swallowing the entire curve
-            // at anything narrower, reading as a plain square corner -- and
-            // confirmed the SAME thing happens on /profile's own reference
-            // corner at the same width, so this genuinely is how big the
-            // curve needs to be to ever clear Top_bar, not a proportion
-            // question. Back to Figma's own flat, literal 50px -- `bgScale`
-            // is itself capped at 1 (`Math.min(1, ...)`, see its own
-            // definition), so a scaled version could only ever be smaller
-            // than this, never bigger; there's no wide-viewport case where
-            // scaling it up would even apply.
-            borderTopLeftRadius: 50,
+            // 60, matching every other /profile/* page's own
+            // `rounded-tl-[60px]` corner literally (ProfileContent's own
+            // ident block), not this page's own Figma frame's literal 50 --
+            // per the user's own direct call ("不管他們原理如何 重點領獎中心左上角
+            // 的樣式跟其他頁就是不一樣"), visual consistency with the rest of the
+            // site wins over exactly matching this one frame's own number.
+            // Flat/unscaled (not `bgScale * 60`) for the same reason a flat
+            // 50 replaced a scaled 50 two commits ago: `/profile`'s own
+            // 60px, being inside ScaleToFit's zoomed subtree, shrinks below
+            // Top_bar's own unscaled 38px height (confirmed live) at any
+            // viewport narrower than ~1094px, at which point it's not
+            // visible at all -- reusing that same scaled approach here would
+            // just reproduce the same disappearing act instead of fixing it.
+            borderTopLeftRadius: 60,
           }}
         >
           {/* The video's own `top` carries all of this box's reframing
