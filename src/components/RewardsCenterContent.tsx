@@ -89,6 +89,20 @@ const SEASON_COUNTDOWN_SEED = { days: "08", hours: "08", minutes: "12", seconds:
 
 const HERO_WIDTH = 1728;
 const HERO_HEIGHT = 1317;
+// Per the user's own updated Figma (node 701:18568, "Frame 1376" -- the
+// character image, still 1317 tall, now nested INSIDE a shorter 1079-tall
+// wrapper carrying the mask's own `overflow-clip rounded-tl-[50px]`,
+// confirmed directly via get_design_context): the MASK is genuinely
+// shorter than the image it holds, permanently cropping the bottom 238px
+// -- not the same height as the image the way this file's own mask box
+// used to assume. Using the image's own 1317 height for the mask (an
+// earlier version here did) made the rounded corner's radius comically
+// small relative to the box in proportion terms once `bgScale` shrunk it
+// for a real viewport, on top of an apparent rendering issue where the
+// corner wasn't clipping visibly at all -- matching this file's own
+// height to Figma's actual (shorter) mask height is the correct fix
+// either way, independent of that rendering question.
+const HERO_MASK_HEIGHT = 1079;
 // The season-title/kit-detail panel's own Figma offset, `left-[38px]`
 // inside the grid's MIDDLE column -- which itself starts at x=164 (the
 // first, sidebar column's own width, see the grid's `gridTemplateColumns`
@@ -529,12 +543,25 @@ export default function RewardsCenterContent() {
             with the video free to control its own position inside it
             independently. */}
         <div
-          className="absolute shrink-0 overflow-hidden rounded-tl-[50px] bg-[#f4f4f4]"
+          className="absolute shrink-0 overflow-hidden bg-[#f4f4f4]"
           style={{
             width: HERO_WIDTH * bgScale,
-            height: HERO_HEIGHT * bgScale,
+            height: HERO_MASK_HEIGHT * bgScale,
             left: heroBoxLeft,
             top: HERO_BOX_TOP,
+            // A flat `rounded-tl-[50px]` (tried first, matching Figma's own
+            // literal 50px reference) stays a CONSTANT 50 real px no matter
+            // how much `bgScale` shrinks the box around it -- confirmed
+            // live at a narrow viewport (bgScale ~0.34, box ~447px tall):
+            // the corner read as a completely different, much more
+            // dramatic angle than Figma's own (where 50px is a small
+            // fraction of the box's full 1317px height), per the user's
+            // own direct call ("跟其他頁面的角度不太依樣 而且還切到" -- also
+            // cutting into content it shouldn't at that disproportionately
+            // large effective radius). Scaling it by the same `bgScale`
+            // keeps the curve exactly as proportional to the box as
+            // Figma's own 50/1317 ratio, at any viewport width.
+            borderTopLeftRadius: 50 * bgScale,
           }}
         >
           {/* The video's own `top` carries all of this box's reframing
@@ -682,18 +709,6 @@ export default function RewardsCenterContent() {
           <TopBar onlineCount="900" totalReward="10,000,000" announcements={topBarAnnouncements} />
         </div>
 
-        {/* Same corner-notch trick every other /profile/* page uses (see
-            ProfileContent's own identical block) -- without it, Top_bar's
-            own flat bottom edge sits flush above the white sidebar
-            backdrop's `rounded-tl-[60px]` corner below, reading as a small
-            square step instead of one continuous curve. */}
-        <div className="sticky top-[38px] left-0 z-30 h-0">
-          <div
-            className="pointer-events-none size-[60px]"
-            style={{ background: "radial-gradient(circle at 100% 100%, transparent 60px, #f4f4f4 60px)" }}
-          />
-        </div>
-
         {/* `relative`, NOT the hero's own fixed h-1317/overflow-hidden --
             those live on the fixed background layer above instead (see its
             own comment for why it has to sit outside this zoomed subtree
@@ -717,32 +732,6 @@ export default function RewardsCenterContent() {
             `pointer-events-auto` (sidebar/title row/Talking_Bar), so
             nothing here loses its own interactivity. */}
         <div className="relative pointer-events-none">
-          {/* Per the user's own direct call ("請你按照其他頁作法去做,目前看起來
-              單純是一個用白色背景 現在領獎中心把白色背景換成影片這樣而已" -- do it
-              the same way every other /profile/* page does, treating the
-              hero video as simply swapping IN for that white background):
-              those pages wrap their whole content grid in a
-              `rounded-tl-[60px] bg-white` panel (see ProfileContent's own
-              identical block). Doing that HERE too, across the full grid
-              width, would paint solid white directly on top of the hero
-              video everywhere (this grid already sits at `z-10`, above the
-              video's `z-0`) -- the opposite of "video swaps in for white".
-              Scoped to just the sidebar's own 164px column instead: wide
-              enough to back ProfileSidebar (below) without ever reaching
-              into the video's own visible content area, positioned (no
-              explicit z-index, i.e. z:auto) so it paints above the `z-0`
-              video -- DOM order breaks the tie between two same-level
-              positioned elements, and this comes later in the document --
-              but still below MinPanelHeight's own explicit `z-10` right
-              after it, so the sidebar icons stay on top of it. Verified
-              live: the previous version relying on the VIDEO's own
-              rounded-tl-[50px] corner for this (per the user's own "那個圓角
-              不就是遮罩的形狀嗎?") technically showed a curve, but read as
-              "怪怪的,跟其他頁面不一樣" once actually compared against a real
-              /profile screenshot -- colorful character art cut at a hard
-              curve right against the plain gray Top_bar reads nothing like
-              the quiet white-into-gray corner every other page has. */}
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-[164px] rounded-tl-[60px] bg-white" />
           {/* `pointer-events-none` here too, not just on the content column
               below -- with only the content column opted out, a click over
               any part of ITS transparent area fell through past it to the
