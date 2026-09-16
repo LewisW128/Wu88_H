@@ -535,13 +535,20 @@ export default function RewardsCenterContent() {
         onClick={() => setSelectedKit(null)}
       >
         {/* `left`/`top`, not `flex items-center justify-center` -- per the
-            user's own repeated direct call, this box (the "遮罩" -- mask --
-            identified by its own rounded-tl-[50px] corner) sits at a flat
-            constant position (`heroBoxLeft`/`HERO_BOX_TOP`, their own
-            comment above) and never moves for any reason, viewport height
-            included -- it should "單純做遮罩的功能" (simply act as a mask),
-            with the video free to control its own position inside it
-            independently. */}
+            user's own repeated direct call, this box (the "遮罩" -- mask)
+            sits at a flat constant position (`heroBoxLeft`/`HERO_BOX_TOP`,
+            their own comment above) and never moves for any reason,
+            viewport height included -- it should "單純做遮罩的功能" (simply
+            act as a mask), with the video free to control its own position
+            inside it independently.
+            No rounded corner any more -- per the user's own direct call
+            ("算了領獎中心原角拔掉") after several rounds trying to get this
+            corner's radius/visibility to match every other page's own
+            (Figma's literal 50px, then a flat 60px, then `bgScale`-scaled
+            60px to mathematically match /profile's own effective radius --
+            confirmed exactly equal at 31.25px on a 900px-wide viewport, yet
+            still not what the user wanted here), dropping the radius
+            entirely is the simplest resolution: a plain square corner. */}
         <div
           className="absolute shrink-0 overflow-hidden bg-[#f4f4f4]"
           style={{
@@ -549,23 +556,6 @@ export default function RewardsCenterContent() {
             height: HERO_MASK_HEIGHT * bgScale,
             left: heroBoxLeft,
             top: HERO_BOX_TOP,
-            // `bgScale * 60`, matching every other /profile/* page's own
-            // `rounded-tl-[60px]` corner (ProfileContent's own identical
-            // block) -- both the VALUE (60, not this page's own Figma
-            // frame's literal 50) and the SCALING (proportional, not flat)
-            // now match, per the user's own direct call that a flat,
-            // unscaled 60 read as "明顯比其他頁的原角大上好幾倍" (visibly several
-            // times bigger than other pages' corner) once actually compared
-            // side by side. That flat version was chasing the wrong fix for
-            // an earlier "corner invisible" bug -- Top_bar was wrongly
-            // assumed to stay a flat unscaled 38px, but it's INSIDE
-            // ScaleToFit's own zoomed subtree same as everything else
-            // (confirmed live: its real rendered height tracks `bgScale`
-            // exactly, e.g. 19.79px at a 900px-wide viewport, not 38) -- so
-            // a proportionally `bgScale`-scaled radius was never actually at
-            // risk of being swallowed by it in the first place; both shrink
-            // by the exact same factor together.
-            borderTopLeftRadius: 60 * bgScale,
           }}
         >
           {/* The video's own `top` carries all of this box's reframing
@@ -750,10 +740,10 @@ export default function RewardsCenterContent() {
               from -- a plain sibling div like this one doesn't get that).
               Per the user's own final direct call once this was confirmed
               ("我要那個影片是滿版" / "不要看到白底"), the video wins that fight
-              on purpose now: full-bleed under the sidebar, no white patch,
-              even though that means the mask's own `rounded-tl-[60px]`
-              corner (on the video layer itself, its own JSX above) is what
-              actually shows through here, not a plain white one. */}
+              on purpose now: full-bleed under the sidebar, no white patch.
+              The mask box itself has no rounded corner any more either
+              (its own JSX comment above, "算了領獎中心原角拔掉") -- a plain
+              square corner shows through here now. */}
           {/* `pointer-events-none` here too, not just on the content column
               below -- with only the content column opted out, a click over
               any part of ITS transparent area fell through past it to the
