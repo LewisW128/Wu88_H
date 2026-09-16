@@ -549,19 +549,23 @@ export default function RewardsCenterContent() {
             height: HERO_MASK_HEIGHT * bgScale,
             left: heroBoxLeft,
             top: HERO_BOX_TOP,
-            // A flat `rounded-tl-[50px]` (tried first, matching Figma's own
-            // literal 50px reference) stays a CONSTANT 50 real px no matter
-            // how much `bgScale` shrinks the box around it -- confirmed
-            // live at a narrow viewport (bgScale ~0.34, box ~447px tall):
-            // the corner read as a completely different, much more
-            // dramatic angle than Figma's own (where 50px is a small
-            // fraction of the box's full 1317px height), per the user's
-            // own direct call ("跟其他頁面的角度不太依樣 而且還切到" -- also
-            // cutting into content it shouldn't at that disproportionately
-            // large effective radius). Scaling it by the same `bgScale`
-            // keeps the curve exactly as proportional to the box as
-            // Figma's own 50/1317 ratio, at any viewport width.
-            borderTopLeftRadius: 50 * bgScale,
+            // Plain `bgScale * 50` (tried next, after a flat unscaled 50px
+            // read as disproportionate against the OLD 1317-tall mask box)
+            // shrinks the radius below Top_bar's own UNSCALED 38px height at
+            // any viewport narrower than ~1313px wide (50 * (1313/1728) =
+            // 38) -- confirmed live (elementFromPoint at a point deep in the
+            // nominal curve returned Top_bar itself, not the mask) that
+            // Top_bar's own flat bar was fully swallowing the entire curve
+            // at anything narrower, reading as a plain square corner -- and
+            // confirmed the SAME thing happens on /profile's own reference
+            // corner at the same width, so this genuinely is how big the
+            // curve needs to be to ever clear Top_bar, not a proportion
+            // question. Back to Figma's own flat, literal 50px -- `bgScale`
+            // is itself capped at 1 (`Math.min(1, ...)`, see its own
+            // definition), so a scaled version could only ever be smaller
+            // than this, never bigger; there's no wide-viewport case where
+            // scaling it up would even apply.
+            borderTopLeftRadius: 50,
           }}
         >
           {/* The video's own `top` carries all of this box's reframing
