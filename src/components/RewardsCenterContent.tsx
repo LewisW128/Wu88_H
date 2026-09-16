@@ -710,6 +710,18 @@ export default function RewardsCenterContent() {
           <TopBar onlineCount="900" totalReward="10,000,000" announcements={topBarAnnouncements} />
         </div>
 
+        {/* Same corner-notch trick every other /profile/* page uses (see
+            ProfileContent's own identical block) -- without it, Top_bar's
+            own flat bottom edge sits flush above the white sidebar
+            backdrop's `rounded-tl-[60px]` corner below, reading as a small
+            square step instead of one continuous curve. */}
+        <div className="sticky top-[38px] left-0 z-30 h-0">
+          <div
+            className="pointer-events-none size-[60px]"
+            style={{ background: "radial-gradient(circle at 100% 100%, transparent 60px, #f4f4f4 60px)" }}
+          />
+        </div>
+
         {/* `relative`, NOT the hero's own fixed h-1317/overflow-hidden --
             those live on the fixed background layer above instead (see its
             own comment for why it has to sit outside this zoomed subtree
@@ -733,6 +745,28 @@ export default function RewardsCenterContent() {
             `pointer-events-auto` (sidebar/title row/Talking_Bar), so
             nothing here loses its own interactivity. */}
         <div className="relative pointer-events-none">
+          {/* Per the user's own direct call, after going back and forth on
+              this exact question across several turns: the SHAPE (a box
+              with a top-left border-radius) is identical whether it's used
+              as a plain background or as a mask over moving video content
+              ("白底的形狀跟遮罩的形狀製作有不一樣嗎? 不都是依樣畫出形狀") -- but
+              the same 60px curve cut into a continuously-changing video
+              frame (color, hair texture always shifting) reads far less
+              clean than the identical curve cut into a flat white fill,
+              confirmed directly against the user's own "乾淨俐落" white-
+              backdrop screenshot vs. the video-corner version. Restored
+              here for exactly that reason: a plain white `rounded-tl-[60px]`
+              backdrop, scoped to just the sidebar's own 164px column so it
+              never covers the video in the columns where it needs to stay
+              visible (this grid already sits at `z-10`, above the video's
+              `z-0` -- painting white across the FULL grid width would hide
+              the video everywhere, not just behind the sidebar). Positioned
+              with no explicit z-index (z:auto) so DOM order (it comes AFTER
+              the video in the document) breaks the tie in its favor against
+              the video's own `z-0`, while still sitting below MinPanel
+              Height's own explicit `z-10` right after it, so the sidebar
+              icons stay on top of it. */}
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-[164px] rounded-tl-[60px] bg-white" />
           {/* `pointer-events-none` here too, not just on the content column
               below -- with only the content column opted out, a click over
               any part of ITS transparent area fell through past it to the
