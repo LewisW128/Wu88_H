@@ -11,6 +11,12 @@ export type RewardKitData = {
   levelStart: number;
   levelEnd: number;
   image: string;
+  // Optional per-kit rotating+floating animated WebP (transparent bg),
+  // generated via AI image-to-video per the user's own direct request --
+  // proof-of-concept for the Lv.1-13 bracket only so far (see
+  // REWARD_KITS' own comment); the other 7 brackets fall back to their
+  // plain static `image` until the same treatment is made for them too.
+  animatedImage?: string;
   rewardTable: RewardKitLevelRow[];
 };
 
@@ -57,7 +63,23 @@ const KIT0_TABLE: RewardKitLevelRow[] = [500, 1000, 2000, 3500, 5000, 8000, 1200
 // different gem image -- kept as-is rather than "fixed" to a guessed
 // unique name, since that's what the design itself contains.
 export const REWARD_KITS: RewardKitData[] = [
-  { name: "綠寶石寶箱", levelRange: "Lv.1-13", levelStart: 1, levelEnd: 13, image: "/assets/rewards/lv-01-13.png", rewardTable: KIT0_TABLE },
+  {
+    name: "綠寶石寶箱",
+    levelRange: "Lv.1-13",
+    levelStart: 1,
+    levelEnd: 13,
+    image: "/assets/rewards/lv-01-13.png",
+    // Proof-of-concept only -- per the user's own direct call to test ONE
+    // gem before doing the rest. Rotation is baked into the asset itself
+    // (AI image-to-video from this same static PNG, background removed
+    // and re-keyed against its own gem shape rather than a flat color
+    // threshold, so the gem's own dark internal cracks/shadows didn't get
+    // punched full of holes along with the real background); the floating
+    // bob is added separately via the `gem-float` CSS keyframe where this
+    // asset is actually used, not part of the video itself.
+    animatedImage: "/assets/rewards/gem-lv-01-13-rotate.webp",
+    rewardTable: KIT0_TABLE,
+  },
   { name: "琥珀石寶箱", levelRange: "Lv.14-27", levelStart: 14, levelEnd: 27, image: "/assets/rewards/lv-14-27.png", rewardTable: buildRewardTable(14, 27, 1500) },
   { name: "摩根石寶箱", levelRange: "Lv.28-40", levelStart: 28, levelEnd: 40, image: "/assets/rewards/lv-28-40.png", rewardTable: buildRewardTable(28, 40, 4500) },
   { name: "血鑽石寶箱", levelRange: "Lv.41-53", levelStart: 41, levelEnd: 53, image: "/assets/rewards/lv-41-53.png", rewardTable: buildRewardTable(41, 53, 13500) },
@@ -134,10 +156,25 @@ export function RewardKitCard({
   current?: boolean;
   onSelect: () => void;
 }) {
+  // Per the user's own direct call ("當我hover的時候會開始漂浮選轉" -- only
+  // starts floating/rotating on hover, not always-on): `kit.animatedImage`
+  // (its own comment) only exists for the Lv.1-13 proof-of-concept bracket
+  // so far, so every other kit's own `hovered` state simply never has
+  // anything to swap to. `key={hovered}` forces a remount on the SAME
+  // element BackgroundSequence.tsx's own comment already established this
+  // project's pattern for: swapping just the `src` on a live `<img>`
+  // doesn't reliably restart an already-decoded animated image, but a full
+  // remount does -- so re-hovering after the rotation already finished
+  // restarts it from frame 0 instead of holding on the last frame.
+  const [hovered, setHovered] = useState(false);
+  const showAnimated = hovered && !!kit.animatedImage;
+
   return (
     <button
       type="button"
       onClick={onSelect}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       aria-pressed={selected}
       className="relative block h-[262px] w-[216px] shrink-0 overflow-visible rounded-[20px] text-left"
       style={current ? ({ zoom: CURRENT_KIT_SCALE } as React.CSSProperties) : undefined}
@@ -148,11 +185,23 @@ export function RewardKitCard({
         className="absolute bottom-0 left-px h-[196px] w-[215px]"
       />
       <div className="absolute left-1/2 top-[-8px] size-[212px] -translate-x-1/2 overflow-hidden">
-        <img
-          alt={kit.levelRange}
-          src={withBasePath(kit.image)}
-          className="absolute left-1/2 top-1/2 size-[160px] -translate-x-1/2 -translate-y-1/2 object-contain"
-        />
+        {/* Centering (`left-1/2 top-1/2 -translate-x/y-1/2`) and the
+            floating bob need to be on TWO SEPARATE nested elements, not
+            the same one -- a `@keyframes` animation's own `transform`
+            REPLACES the element's whole transform value, which would wipe
+            out this centering translate rather than combining with it
+            (the same double-transform trap ScaleToFit's own zoom/position
+            split elsewhere in this project already ran into). The floating
+            wrapper below starts from a plain identity transform, so
+            `gem-float`'s own translateY has nothing to clobber. */}
+        <div className="absolute left-1/2 top-1/2 size-[160px] -translate-x-1/2 -translate-y-1/2">
+          <img
+            key={String(showAnimated)}
+            alt={kit.levelRange}
+            src={withBasePath(showAnimated ? kit.animatedImage! : kit.image)}
+            className={`size-full object-contain ${showAnimated ? "animate-[gem-float_3s_ease-in-out_infinite]" : ""}`}
+          />
+        </div>
       </div>
       <div className="absolute bottom-[20px] left-1/2 flex -translate-x-1/2 flex-col items-center gap-[5px]">
         <div className="flex w-full items-center gap-[5px]">
@@ -271,7 +320,17 @@ export function RewardKitDetailPanel({ kit, maxHeight }: { kit: RewardKitData; m
           text panel's own top edge despite overflowing its column
           horizontally. */}
       <div className="relative flex h-[311px] w-[175px] shrink-0 items-center justify-center overflow-visible">
-        <img alt="" src={withBasePath(kit.image)} className="w-[230px] max-w-none object-contain" />
+        {/* Per the user's own direct call ("這裡顯示的能量石 不需要hover就會自轉"
+            -- this large detail-panel gem always spins, no hover needed,
+            unlike the small card's own hover-gated version): plays
+            `kit.animatedImage` (its own comment) straight away whenever it
+            exists, with no floating bob here -- Figma has no floating spec
+            for this instance, only the small card asked for that. */}
+        <img
+          alt=""
+          src={withBasePath(kit.animatedImage ?? kit.image)}
+          className="w-[230px] max-w-none object-contain"
+        />
       </div>
 
       {/* `items-start`, not the original `items-center` -- centering only

@@ -43,6 +43,21 @@ body {
   }
 }
 
+/* Per the user's own direct call ("hover 的時候會開始漂浮"): the small
+   Reward_Kit card's own gem art gets a gentle up/down bob ONLY while
+   hovered (RewardKitCard applies this class conditionally) -- the
+   rotation itself is baked into the animated WebP asset, this class only
+   adds the vertical floating motion on top of it. */
+@keyframes gem-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
 @keyframes dot-twinkle {
   0%,
   100% {
