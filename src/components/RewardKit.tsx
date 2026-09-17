@@ -325,11 +325,17 @@ export function RewardKitDetailPanel({ kit, maxHeight }: { kit: RewardKitData; m
             unlike the small card's own hover-gated version): plays
             `kit.animatedImage` (its own comment) straight away whenever it
             exists, with no floating bob here -- Figma has no floating spec
-            for this instance, only the small card asked for that. */}
+            for this instance, only the small card asked for that.
+            `w-[480px]`, not the original `230px` -- per the user's own
+            direct call ("這裡的石頭要跟我畫的紅圈依樣大"), circling roughly 2x
+            this gem's own rendered size in a live screenshot. This box's
+            own `overflow-visible` (its wrapper's own comment above) already
+            lets the gem bleed past its 175px column without clipping, so
+            sizing up further doesn't need any other change here. */}
         <img
           alt=""
           src={withBasePath(kit.animatedImage ?? kit.image)}
-          className="w-[230px] max-w-none object-contain"
+          className="w-[480px] max-w-none object-contain"
         />
       </div>
 
