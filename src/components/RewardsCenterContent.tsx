@@ -89,20 +89,6 @@ const SEASON_COUNTDOWN_SEED = { days: "08", hours: "08", minutes: "12", seconds:
 
 const HERO_WIDTH = 1728;
 const HERO_HEIGHT = 1317;
-// Per the user's own updated Figma (node 701:18568, "Frame 1376" -- the
-// character image, still 1317 tall, now nested INSIDE a shorter 1079-tall
-// wrapper carrying the mask's own `overflow-clip rounded-tl-[50px]`,
-// confirmed directly via get_design_context): the MASK is genuinely
-// shorter than the image it holds, permanently cropping the bottom 238px
-// -- not the same height as the image the way this file's own mask box
-// used to assume. Using the image's own 1317 height for the mask (an
-// earlier version here did) made the rounded corner's radius comically
-// small relative to the box in proportion terms once `bgScale` shrunk it
-// for a real viewport, on top of an apparent rendering issue where the
-// corner wasn't clipping visibly at all -- matching this file's own
-// height to Figma's actual (shorter) mask height is the correct fix
-// either way, independent of that rendering question.
-const HERO_MASK_HEIGHT = 1079;
 // The season-title/kit-detail panel's own Figma offset, `left-[38px]`
 // inside the grid's MIDDLE column -- which itself starts at x=164 (the
 // first, sidebar column's own width, see the grid's `gridTemplateColumns`
@@ -553,14 +539,25 @@ export default function RewardsCenterContent() {
             60px to mathematically match /profile's own effective radius --
             confirmed exactly equal at 31.25px on a 900px-wide viewport, yet
             still not what the user wanted here), dropping the radius
-            entirely is the simplest resolution: a plain square corner. */}
+            entirely is the simplest resolution: a plain square corner.
+            `height: "100%"`, not `HERO_MASK_HEIGHT * bgScale` -- per the
+            user's own direct call to make this mask behave like
+            higgsfield.ai/enterprise's own full-bleed hero video (plain
+            `object-cover` inside an `absolute inset-0`, always filling the
+            real viewport with no letterboxing, whatever its aspect ratio).
+            This box's WIDTH keeps its existing Figma-fixed-canvas math
+            unchanged (`bgScale`/`heroBoxLeft` still cap it at 1728px and
+            center it on an ultra-wide window) -- only the HEIGHT switches
+            from a flat Figma-derived constant to "always exactly this
+            outer `fixed inset-0` layer's own real height", so every OTHER
+            element still positioned off `bgScale`/`heroBoxLeft` (the
+            sidebar, title/detail panel, kit row) is entirely unaffected;
+            only this one box's own vertical extent changes. */}
         <div
-          className="absolute shrink-0 overflow-hidden bg-[#f4f4f4]"
+          className="absolute inset-y-0 shrink-0 overflow-hidden bg-[#f4f4f4]"
           style={{
             width: HERO_WIDTH * bgScale,
-            height: HERO_MASK_HEIGHT * bgScale,
             left: heroBoxLeft,
-            top: HERO_BOX_TOP,
           }}
         >
           {/* The video's own `top` carries all of this box's reframing
@@ -574,6 +571,13 @@ export default function RewardsCenterContent() {
               rendered `videoPanShift` px TALLER than the mask box itself,
               giving the video that much genuine vertical overflow to pan
               through (clipped by the mask's own `overflow-hidden`).
+              `calc(100% + videoPanShift)`, not a flat
+              `HERO_HEIGHT * bgScale + videoPanShift` -- now that the mask
+              box itself is always exactly the real viewport's own height
+              (its own comment above), this wrapper's "taller than its
+              parent by the pan amount" relationship has to be expressed
+              relative to that same 100%, not a flat Figma-derived number
+              that no longer matches the mask's own (now dynamic) height.
               `duration-1000 ease-in-out`, not `duration-700 ease-out` --
               per the user's own direct call, an earlier version's bigger
               pan distance read as an abrupt jump at the shorter
@@ -586,7 +590,7 @@ export default function RewardsCenterContent() {
             className="absolute inset-x-0 transition-[top] duration-1000 ease-in-out"
             style={{
               top: videoIsCloseUp ? -videoPanShift : 0,
-              height: HERO_HEIGHT * bgScale + videoPanShift,
+              height: `calc(100% + ${videoPanShift}px)`,
             }}
           >
             <BackgroundSequence stage={isScreenTwo ? "selected" : "idle"} className="absolute inset-0 size-full object-cover" />
