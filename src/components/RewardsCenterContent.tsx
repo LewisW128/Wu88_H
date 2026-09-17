@@ -5,7 +5,7 @@ import { useAuth } from "./AuthProvider";
 import BackgroundSequence from "./BackgroundSequence";
 import MinPanelHeight from "./MinPanelHeight";
 import ProfileSidebar from "./ProfileSidebar";
-import { CURRENT_KIT_SCALE, KIT_CARD_GAP, PLAIN_KIT_CARD_WIDTH, REWARD_KITS, RewardKitCard, RewardKitDetailPanel } from "./RewardKit";
+import { CURRENT_KIT_SCALE, DETAIL_PANEL_TOP_OFFSET, KIT_CARD_GAP, PLAIN_KIT_CARD_WIDTH, REWARD_KITS, RewardKitCard, RewardKitDetailPanel } from "./RewardKit";
 import RewardVipCard from "./RewardVipCard";
 import ScaleToFit from "./ScaleToFit";
 import TalkingBar from "./TalkingBar";
@@ -165,13 +165,25 @@ function useFixedLayerScale() {
 }
 
 const BOTTOM_GAP = 20;
-// The plain card row's own natural height (262px card + 20px gap + ~24px
-// level-point row) -- the reference this menu's OWN scale shrinks against
-// below. Not the detail panel's height (taller, and varies per kit): that
-// panel leans on its own `maxHeight` + internal scroll instead (see
+// `262 * CURRENT_KIT_SCALE`, not a flat `262` -- the logged-in member's
+// own CURRENT tier card (its own `selected`/`current` comment below)
+// renders enlarged via `zoom: CURRENT_KIT_SCALE`, and with the row's own
+// `items-end` alignment that extra height grows the row's real rendered
+// height upward, not just that one card's own box. A flat `262` here
+// under-counted the row's true height by that same difference (about
+// 70px of design space) -- confirmed live: on a short, wide viewport,
+// this constant feeds `menuTopScreenY`/`detailPanelMaxHeight` below,
+// which under-estimating the row's real height let the detail panel's
+// own `maxHeight` run taller than the room actually left above the row,
+// visibly overlapping the two panels instead of leaving the intended
+// `BOTTOM_GAP` clearance between them. The rest (20px gap + 24px
+// level-point row) is unchanged from the row's own actual layout.
+// The reference this menu's OWN scale shrinks against below. Not the
+// detail panel's height (taller, and varies per kit): that panel leans
+// on its own `maxHeight` + internal scroll instead (see
 // RewardKitDetailPanel's own comment) rather than needing this shared
 // scale to chase whichever content happens to be showing.
-const CARD_ROW_HEIGHT = 262 + 20 + 24;
+const CARD_ROW_HEIGHT = 262 * CURRENT_KIT_SCALE + 20 + 24;
 
 // The bottom Reward_Kit row doubles as this page's own "bottom nav" (see
 // its own comment below) -- per the user's own direct call it should
@@ -497,8 +509,17 @@ export default function RewardsCenterContent() {
   // window, the fully-uncropped detail panel (no scroll needed by the OLD
   // formula) rendered tall enough to visually overlap the Reward_Kit row
   // sitting underneath it instead of capping/scrolling sooner.
+  // `- DETAIL_PANEL_TOP_OFFSET * bgScale` -- RewardKitDetailPanel's own
+  // gem+text row starts `DETAIL_PANEL_TOP_OFFSET` design-space px BELOW
+  // this `titlePanelScreenTop` (its own comment, aligning the gem/text to
+  // the sidebar's own icon height), so the room actually left for that
+  // row's own content is that much LESS than the raw gap between
+  // `titlePanelScreenTop` and the menu row above. Omitting this (an
+  // earlier version here did) let the panel's own `maxHeight` run that
+  // much too tall, overlapping the Reward_Kit row below by roughly this
+  // same amount -- confirmed live.
   const menuTopScreenY = viewport.height - BOTTOM_GAP - CARD_ROW_HEIGHT * menuScale;
-  const detailPanelMaxHeight = Math.max(0, menuTopScreenY - BOTTOM_GAP - titlePanelScreenTop) / (bgScale || 1);
+  const detailPanelMaxHeight = Math.max(0, menuTopScreenY - BOTTOM_GAP - titlePanelScreenTop - DETAIL_PANEL_TOP_OFFSET * bgScale) / (bgScale || 1);
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-[#f4f4f4]">

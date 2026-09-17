@@ -146,6 +146,16 @@ function RankRibbonIcon() {
 export const CURRENT_KIT_SCALE = 274 / 216;
 export const PLAIN_KIT_CARD_WIDTH = 216;
 export const KIT_CARD_GAP = 20;
+// The detail panel's own top offset (its `mt-[...]` below, RewardKitDetailPanel's
+// own comment) -- exported so RewardsCenterContent's `detailPanelMaxHeight`
+// calc can subtract this SAME number when budgeting the room actually left
+// above the bottom Reward_Kit row. Two independent hardcoded copies of this
+// value already drifted out of sync once (confirmed live: the detail panel
+// rendered visibly taller than the room really left, overlapping the row
+// below it, because the height budget was computed against this panel's
+// OLD top position from before this offset existed) -- a single shared
+// constant is the only way to keep them from silently drifting again.
+export const DETAIL_PANEL_TOP_OFFSET = 95;
 
 export function RewardKitCard({
   kit,
@@ -320,19 +330,24 @@ export function RewardKitDetailPanel({ kit, maxHeight }: { kit: RewardKitData; m
     // lands at the box's own top edge instead of bleeding out symmetrically
     // above and below it -- otherwise this row-level top-alignment would
     // still leave the image itself floating above the text's own top.
-    // `mt-[95px]` -- top-aligning the gem and text TO EACH OTHER (above)
-    // wasn't the whole ask: per the user's own direct follow-up ("我意思是
-    // 兩者高度都不要超過紅線"), that shared top edge also must not sit higher
-    // than a specific reference line, which the user then pinned down
-    // precisely as the left sidebar's own "會員中心" icon's own top edge
-    // ("石頭跟文案的頂端要跟左邊的會員中心按鈕的上緣對其"). Measured live: that
-    // icon's own top sits 35.94px lower (in real, post-zoom screen space)
-    // than this row's own un-shifted top -- this page's own global
-    // `zoom` scale at measurement time was 0.378472, so pushed down by
-    // 35.94 / 0.378472 = 94.95px of this component's own PRE-zoom design
-    // space to land at the same real height, regardless of viewport width
-    // (the zoom scale is why a flat px value here still tracks a fixed
-    // point elsewhere on the page across different screen sizes).
+    // `marginTop: DETAIL_PANEL_TOP_OFFSET` -- top-aligning the gem and text
+    // TO EACH OTHER (above) wasn't the whole ask: per the user's own direct
+    // follow-up ("我意思是兩者高度都不要超過紅線"), that shared top edge also
+    // must not sit higher than a specific reference line, which the user
+    // then pinned down precisely as the left sidebar's own "會員中心" icon's
+    // own top edge ("石頭跟文案的頂端要跟左邊的會員中心按鈕的上緣對其"). Measured
+    // live: that icon's own top sits 35.94px lower (in real, post-zoom
+    // screen space) than this row's own un-shifted top -- this page's own
+    // global `zoom` scale at measurement time was 0.378472, so pushed down
+    // by 35.94 / 0.378472 = 94.95px (rounded to the exported constant's 95)
+    // of this component's own PRE-zoom design space to land at the same
+    // real height, regardless of viewport width (the zoom scale is why a
+    // flat px value here still tracks a fixed point elsewhere on the page
+    // across different screen sizes). A plain numbered constant, not a
+    // `mt-[95px]` Tailwind literal -- RewardsCenterContent's own
+    // `detailPanelMaxHeight` has to subtract this SAME offset (its own
+    // comment), and a second hardcoded "95" over there already drifted out
+    // of sync with this one once.
     // `gap-[128.5px]` -- NOT the box's own literal spacing, and the gem's
     // box below is back to its ORIGINAL untouched `175px` (a version here
     // briefly widened that box to 480px to make the gap math simpler, but
@@ -351,7 +366,7 @@ export function RewardKitDetailPanel({ kit, maxHeight }: { kit: RewardKitData; m
     // (`152.5 + 0 = 152.5`) -- still 0px of real clearance now, just
     // re-derived for the smaller 432px image's own smaller overflow:
     // `128.5 + 0 = 128.5`.
-    <div className="mt-[95px] flex items-start gap-[128.5px]">
+    <div className="flex items-start gap-[128.5px]" style={{ marginTop: DETAIL_PANEL_TOP_OFFSET }}>
       <div className="relative flex h-[311px] w-[175px] shrink-0 items-start justify-center overflow-visible">
         {/* Per the user's own direct call ("這裡顯示的能量石 不需要hover就會自轉"
             -- this large detail-panel gem always spins, no hover needed,
