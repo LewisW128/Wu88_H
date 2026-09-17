@@ -307,18 +307,28 @@ export function RewardKitDetailPanel({ kit, maxHeight }: { kit: RewardKitData; m
   }, [kit, maxHeight]);
 
   return (
-    <div className="flex items-start gap-[40px]">
-      {/* The real per-bracket asset (D:\works\09_WU88-H\source\public\item\
-          Bonus, per the user's own instructions) is a transparent RGBA PNG
-          with no background of its own -- an earlier version here added a
-          `bg-white` card behind it "just in case", which is exactly the
-          fabricated background the user's own file never had. No card, no
-          fill: just the real transparent image, undistorted, sized up to
-          230px (bigger than this layout slot's own 175px reserved width,
-          per the user's own direct request for a larger scale) -- still
-          comfortably under the 311px row height, so it never touches the
-          text panel's own top edge despite overflowing its column
-          horizontally. */}
+    // `items-center`, not the original `items-start` -- per the user's own
+    // direct call ("石頭跟右邊的文案上下至中對其"), the gem column and the
+    // text/table panel next to it should be vertically centered against
+    // each other, not top-aligned. Doesn't affect the SEPARATE `items-start`
+    // inside the scroll box below (its own comment explains that one).
+    // `gap-[172.5px]` -- NOT the box's own literal spacing, and the gem's
+    // box below is back to its ORIGINAL untouched `175px` (a version here
+    // briefly widened that box to 480px to make the gap math simpler, but
+    // that shifted the gem's own rendered position/center -- per the
+    // user's own direct catch ("為什麼連石頭都出去了" / "石頭位子不變阿" / "我只是
+    // 要你改石頭跟文案之間的間距"), the gem itself must stay exactly where it
+    // already was; only the GAP to the text should change). The gem's own
+    // box is still deliberately narrower than its 480px image (that box's
+    // own comment), so the image bleeds (480-175)/2 = 152.5px past the
+    // box's own right edge -- same as before any of this. `gap` measures
+    // box-to-box, so the real visual clearance from the image's own true
+    // (bled-out) edge is this value MINUS that 152.5px overflow. Tried 40px
+    // of real clearance first (gap 192.5) -- confirmed live via the user's
+    // own screenshot that read as much wider than the ~12.5px gap the
+    // ORIGINAL (pre-enlarged) image had at this same spot, so settled on
+    // 20px of real clearance instead: `152.5 + 20 = 172.5`.
+    <div className="flex items-center gap-[172.5px]">
       <div className="relative flex h-[311px] w-[175px] shrink-0 items-center justify-center overflow-visible">
         {/* Per the user's own direct call ("這裡顯示的能量石 不需要hover就會自轉"
             -- this large detail-panel gem always spins, no hover needed,
