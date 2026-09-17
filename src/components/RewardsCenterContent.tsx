@@ -144,7 +144,12 @@ const MEMBER_CONTINUOUS_DEPOSIT = "10,000";
 // this project's established "only bracket 0 has real per-kit art"
 // limitation, see RewardKit's own comment) -- not swapped per current
 // tier the way the small card art is.
-const VIP_CARD_CRYSTAL_IMAGE = "/assets/rewards/vip-card-crystal.png";
+// Per the user's own direct call ("這裡的石頭也要" / "不就用剛剛的石頭替換上去
+// 就好了" / "是同一組阿" -- reuse the SAME rotating gem asset here instead of
+// generating a separate one from this card's own still photo): this now
+// points at the Lv.1-13 kit's own animated WebP (RewardKit.tsx's own
+// `animatedImage` comment), not this card's original static photo.
+const VIP_CARD_CRYSTAL_IMAGE = "/assets/rewards/gem-lv-01-13-rotate.webp";
 
 // The background character art and the Reward_Kit row both need to stay
 // visible with no scrolling and no drift, per the user's own direct call --

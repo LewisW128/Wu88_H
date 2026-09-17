@@ -60,10 +60,25 @@ export default function RewardVipCard({ level, currentExp, maxExp, continuousDep
         </div>
 
         <div className="absolute right-[-43px] top-[-14px] size-[237px] overflow-hidden">
+          {/* `object-contain` + `size-[230px]`, not the original
+              `object-cover` `h-[221.2px] w-[124.467px]` -- that narrow
+              portrait crop-box exactly matched the ORIGINAL static photo's
+              own 736x1308 aspect ratio (a tight pre-composed crop, cropped
+              ON PURPOSE). The rotating replacement asset (per the user's
+              own direct call to reuse it here, "是同一組阿") is a roughly
+              SQUARE 460x460 render with genuine empty space around the gem
+              (room for it to pan/float within its own frame, see
+              RewardKit.tsx's own comment) -- object-cover-ing it into that
+              same narrow box left the gem itself looking tiny, mostly
+              padding. Matches the detail panel's own established treatment
+              of this exact asset (RewardKitDetailPanel, `w-[230px]
+              object-contain`) instead: the whole gem shown undistorted at
+              the same 230px size the user's own screenshot circled as the
+              right scale, rather than an arbitrary crop of it. */}
           <img
             alt=""
             src={withBasePath(crystalImage)}
-            className="absolute left-1/2 top-1/2 h-[221.2px] w-[124.467px] -translate-x-1/2 -translate-y-1/2 object-cover"
+            className="absolute left-1/2 top-1/2 w-[230px] max-w-none -translate-x-1/2 -translate-y-1/2 object-contain"
           />
         </div>
 
