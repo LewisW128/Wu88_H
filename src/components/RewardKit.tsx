@@ -233,8 +233,24 @@ export function RewardKitCard({
             per RewardKitDetailPanel's own comment on that exact swap) --
             scaled down by this same frame's own ratio instead
             (93/123.148 ~= 160/212, both ~0.755) to keep the gem reading at
-            the same proportion of its own frame as before. */}
-        <div className="absolute left-1/2 top-1/2 size-[93px] -translate-x-1/2 -translate-y-1/2">
+            the same proportion of its own frame as before.
+            `scale-[1.15]` while `showAnimated` -- per the user's own direct
+            catch ("hover之後圖案縮小"), the animated WebP's own canvas has a
+            lot more built-in padding around the gem than the static PNG's
+            own tight crop (confirmed live: the gem's own content fills only
+            ~53-77% of the animated canvas vs ~86-90% for the static one),
+            so `object-contain`, which sizes off the full canvas, rendered
+            the SAME apparent gem noticeably smaller once hovered even
+            though both share this same `size-[93px]` box. This scale
+            compensates for that baked-in padding so hovering doesn't visibly
+            shrink the gem. Applied to this OUTER wrapper's own already-static
+            centering transform, not the `<img>` below -- that element's own
+            `gem-float` keyframe sets its OWN `transform` (translateY) every
+            frame, which would silently replace (not combine with) a scale
+            placed on the same element instead of composing with it (the
+            same double-transform trap this file's own comment above already
+            names elsewhere). */}
+        <div className={`absolute left-1/2 top-1/2 size-[93px] -translate-x-1/2 -translate-y-1/2 ${showAnimated ? "scale-[1.15]" : ""}`}>
           <img
             key={String(showAnimated)}
             alt={kit.levelRange}
