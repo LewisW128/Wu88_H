@@ -326,9 +326,12 @@ export function RewardKitDetailPanel({ kit, maxHeight }: { kit: RewardKitData; m
     // (bled-out) edge is this value MINUS that 152.5px overflow. Tried 40px
     // of real clearance first (gap 192.5) -- confirmed live via the user's
     // own screenshot that read as much wider than the ~12.5px gap the
-    // ORIGINAL (pre-enlarged) image had at this same spot, so settled on
-    // 20px of real clearance instead: `152.5 + 20 = 172.5`.
-    <div className="flex items-center gap-[172.5px]">
+    // ORIGINAL (pre-enlarged) image had at this same spot, then 20px
+    // (`152.5 + 20 = 172.5`), then per the user's own direct call to pull
+    // the text 20px closer to the stone, settled on 0px of real
+    // clearance -- the text now starts right at the gem's own bled-out
+    // edge: `152.5 + 0 = 152.5`.
+    <div className="flex items-center gap-[152.5px]">
       <div className="relative flex h-[311px] w-[175px] shrink-0 items-center justify-center overflow-visible">
         {/* Per the user's own direct call ("這裡顯示的能量石 不需要hover就會自轉"
             -- this large detail-panel gem always spins, no hover needed,
