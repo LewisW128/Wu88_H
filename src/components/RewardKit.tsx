@@ -307,11 +307,17 @@ export function RewardKitDetailPanel({ kit, maxHeight }: { kit: RewardKitData; m
   }, [kit, maxHeight]);
 
   return (
-    // `items-center`, not the original `items-start` -- per the user's own
-    // direct call ("石頭跟右邊的文案上下至中對其"), the gem column and the
-    // text/table panel next to it should be vertically centered against
-    // each other, not top-aligned. Doesn't affect the SEPARATE `items-start`
-    // inside the scroll box below (its own comment explains that one).
+    // `items-start` (reverted from a brief `items-center` per an earlier
+    // direct call, "石頭跟右邊的文案上下至中對其") -- per a later direct call with
+    // an annotated screenshot ("文案跟石頭頂端對其這個高度"), the gem and the
+    // text/table panel next to it should have their TOP edges level with
+    // each other instead. Doesn't affect the SEPARATE `items-start` inside
+    // the scroll box below (its own comment explains that one). The gem's
+    // own wrapper box below also switches its internal `items-center` to
+    // `items-start`, so the (larger-than-the-box) gem image's own top edge
+    // lands at the box's own top edge instead of bleeding out symmetrically
+    // above and below it -- otherwise this row-level top-alignment would
+    // still leave the image itself floating above the text's own top.
     // `gap-[128.5px]` -- NOT the box's own literal spacing, and the gem's
     // box below is back to its ORIGINAL untouched `175px` (a version here
     // briefly widened that box to 480px to make the gap math simpler, but
@@ -330,8 +336,8 @@ export function RewardKitDetailPanel({ kit, maxHeight }: { kit: RewardKitData; m
     // (`152.5 + 0 = 152.5`) -- still 0px of real clearance now, just
     // re-derived for the smaller 432px image's own smaller overflow:
     // `128.5 + 0 = 128.5`.
-    <div className="flex items-center gap-[128.5px]">
-      <div className="relative flex h-[311px] w-[175px] shrink-0 items-center justify-center overflow-visible">
+    <div className="flex items-start gap-[128.5px]">
+      <div className="relative flex h-[311px] w-[175px] shrink-0 items-start justify-center overflow-visible">
         {/* Per the user's own direct call ("這裡顯示的能量石 不需要hover就會自轉"
             -- this large detail-panel gem always spins, no hover needed,
             unlike the small card's own hover-gated version): plays
