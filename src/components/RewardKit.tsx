@@ -13,9 +13,10 @@ export type RewardKitData = {
   image: string;
   // Optional per-kit rotating+floating animated WebP (transparent bg),
   // generated via AI image-to-video per the user's own direct request --
-  // proof-of-concept for the Lv.1-13 bracket only so far (see
-  // REWARD_KITS' own comment); the other 7 brackets fall back to their
-  // plain static `image` until the same treatment is made for them too.
+  // all 8 brackets have one now (see REWARD_KITS' own comment on the
+  // first entry for the pipeline). Still optional in the type since the
+  // static `image` is the real fallback if a future bracket is added
+  // without one.
   animatedImage?: string;
   rewardTable: RewardKitLevelRow[];
 };
@@ -69,24 +70,25 @@ export const REWARD_KITS: RewardKitData[] = [
     levelStart: 1,
     levelEnd: 13,
     image: "/assets/rewards/lv-01-13.png",
-    // Proof-of-concept only -- per the user's own direct call to test ONE
-    // gem before doing the rest. Rotation is baked into the asset itself
-    // (AI image-to-video from this same static PNG, background removed
-    // and re-keyed against its own gem shape rather than a flat color
-    // threshold, so the gem's own dark internal cracks/shadows didn't get
-    // punched full of holes along with the real background); the floating
-    // bob is added separately via the `gem-float` CSS keyframe where this
-    // asset is actually used, not part of the video itself.
+    // Started as a proof-of-concept on this one gem before doing the rest
+    // (now all 8 brackets have their own `animatedImage`, same pipeline).
+    // Rotation is baked into the asset itself (AI image-to-video from this
+    // same static PNG, background removed and re-keyed against its own
+    // gem shape rather than a flat color threshold, so the gem's own dark
+    // internal cracks/shadows didn't get punched full of holes along with
+    // the real background); the floating bob is added separately via the
+    // `gem-float` CSS keyframe where this asset is actually used, not part
+    // of the video itself.
     animatedImage: "/assets/rewards/gem-lv-01-13-rotate.webp",
     rewardTable: KIT0_TABLE,
   },
-  { name: "琥珀石寶箱", levelRange: "Lv.14-27", levelStart: 14, levelEnd: 27, image: "/assets/rewards/lv-14-27.png", rewardTable: buildRewardTable(14, 27, 1500) },
-  { name: "摩根石寶箱", levelRange: "Lv.28-40", levelStart: 28, levelEnd: 40, image: "/assets/rewards/lv-28-40.png", rewardTable: buildRewardTable(28, 40, 4500) },
-  { name: "血鑽石寶箱", levelRange: "Lv.41-53", levelStart: 41, levelEnd: 53, image: "/assets/rewards/lv-41-53.png", rewardTable: buildRewardTable(41, 53, 13500) },
-  { name: "綠寶石寶箱", levelRange: "Lv.54-66", levelStart: 54, levelEnd: 66, image: "/assets/rewards/lv-54-66.png", rewardTable: buildRewardTable(54, 66, 40500) },
-  { name: "翡翠石寶箱", levelRange: "Lv.67-79", levelStart: 67, levelEnd: 79, image: "/assets/rewards/lv-67-79.png", rewardTable: buildRewardTable(67, 79, 121500) },
-  { name: "孔雀石寶箱", levelRange: "Lv.80-92", levelStart: 80, levelEnd: 92, image: "/assets/rewards/lv-80-92.png", rewardTable: buildRewardTable(80, 92, 364500) },
-  { name: "合金石寶箱", levelRange: "Lv.93-100", levelStart: 93, levelEnd: 100, image: "/assets/rewards/lv-93-100.png", rewardTable: buildRewardTable(93, 100, 1093500) },
+  { name: "琥珀石寶箱", levelRange: "Lv.14-27", levelStart: 14, levelEnd: 27, image: "/assets/rewards/lv-14-27.png", animatedImage: "/assets/rewards/gem-lv-14-27-rotate.webp", rewardTable: buildRewardTable(14, 27, 1500) },
+  { name: "摩根石寶箱", levelRange: "Lv.28-40", levelStart: 28, levelEnd: 40, image: "/assets/rewards/lv-28-40.png", animatedImage: "/assets/rewards/gem-lv-28-40-rotate.webp", rewardTable: buildRewardTable(28, 40, 4500) },
+  { name: "血鑽石寶箱", levelRange: "Lv.41-53", levelStart: 41, levelEnd: 53, image: "/assets/rewards/lv-41-53.png", animatedImage: "/assets/rewards/gem-lv-41-53-rotate.webp", rewardTable: buildRewardTable(41, 53, 13500) },
+  { name: "綠寶石寶箱", levelRange: "Lv.54-66", levelStart: 54, levelEnd: 66, image: "/assets/rewards/lv-54-66.png", animatedImage: "/assets/rewards/gem-lv-54-66-rotate.webp", rewardTable: buildRewardTable(54, 66, 40500) },
+  { name: "翡翠石寶箱", levelRange: "Lv.67-79", levelStart: 67, levelEnd: 79, image: "/assets/rewards/lv-67-79.png", animatedImage: "/assets/rewards/gem-lv-67-79-rotate.webp", rewardTable: buildRewardTable(67, 79, 121500) },
+  { name: "孔雀石寶箱", levelRange: "Lv.80-92", levelStart: 80, levelEnd: 92, image: "/assets/rewards/lv-80-92.png", animatedImage: "/assets/rewards/gem-lv-80-92-rotate.webp", rewardTable: buildRewardTable(80, 92, 364500) },
+  { name: "合金石寶箱", levelRange: "Lv.93-100", levelStart: 93, levelEnd: 100, image: "/assets/rewards/lv-93-100.png", animatedImage: "/assets/rewards/gem-lv-93-100-rotate.webp", rewardTable: buildRewardTable(93, 100, 1093500) },
 ];
 
 // The little ribbon/medal glyph next to every kit's name (Figma "Actions",
@@ -157,10 +159,10 @@ export function RewardKitCard({
   onSelect: () => void;
 }) {
   // Per the user's own direct call ("當我hover的時候會開始漂浮選轉" -- only
-  // starts floating/rotating on hover, not always-on): `kit.animatedImage`
-  // (its own comment) only exists for the Lv.1-13 proof-of-concept bracket
-  // so far, so every other kit's own `hovered` state simply never has
-  // anything to swap to. `key={hovered}` forces a remount on the SAME
+  // starts floating/rotating on hover, not always-on): every kit now has
+  // its own `kit.animatedImage` (its own comment), so this hover-swap
+  // applies uniformly across the whole row. `key={hovered}` forces a
+  // remount on the SAME
   // element BackgroundSequence.tsx's own comment already established this
   // project's pattern for: swapping just the `src` on a live `<img>`
   // doesn't reliably restart an already-decoded animated image, but a full
