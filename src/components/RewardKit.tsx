@@ -312,26 +312,25 @@ export function RewardKitDetailPanel({ kit, maxHeight }: { kit: RewardKitData; m
     // text/table panel next to it should be vertically centered against
     // each other, not top-aligned. Doesn't affect the SEPARATE `items-start`
     // inside the scroll box below (its own comment explains that one).
-    // `gap-[172.5px]` -- NOT the box's own literal spacing, and the gem's
+    // `gap-[128.5px]` -- NOT the box's own literal spacing, and the gem's
     // box below is back to its ORIGINAL untouched `175px` (a version here
     // briefly widened that box to 480px to make the gap math simpler, but
     // that shifted the gem's own rendered position/center -- per the
     // user's own direct catch ("為什麼連石頭都出去了" / "石頭位子不變阿" / "我只是
     // 要你改石頭跟文案之間的間距"), the gem itself must stay exactly where it
     // already was; only the GAP to the text should change). The gem's own
-    // box is still deliberately narrower than its 480px image (that box's
-    // own comment), so the image bleeds (480-175)/2 = 152.5px past the
-    // box's own right edge -- same as before any of this. `gap` measures
+    // box is still deliberately narrower than its image (that box's own
+    // comment), so at the current 432px image size it bleeds
+    // (432-175)/2 = 128.5px past the box's own right edge. `gap` measures
     // box-to-box, so the real visual clearance from the image's own true
-    // (bled-out) edge is this value MINUS that 152.5px overflow. Tried 40px
-    // of real clearance first (gap 192.5) -- confirmed live via the user's
-    // own screenshot that read as much wider than the ~12.5px gap the
-    // ORIGINAL (pre-enlarged) image had at this same spot, then 20px
+    // (bled-out) edge is this value MINUS that overflow. Went through
+    // 40px of real clearance (gap 192.5 at the old 480px size), then 20px
     // (`152.5 + 20 = 172.5`), then per the user's own direct call to pull
-    // the text 20px closer to the stone, settled on 0px of real
-    // clearance -- the text now starts right at the gem's own bled-out
-    // edge: `152.5 + 0 = 152.5`.
-    <div className="flex items-center gap-[152.5px]">
+    // the text closer, 0px of real clearance at the old size
+    // (`152.5 + 0 = 152.5`) -- still 0px of real clearance now, just
+    // re-derived for the smaller 432px image's own smaller overflow:
+    // `128.5 + 0 = 128.5`.
+    <div className="flex items-center gap-[128.5px]">
       <div className="relative flex h-[311px] w-[175px] shrink-0 items-center justify-center overflow-visible">
         {/* Per the user's own direct call ("這裡顯示的能量石 不需要hover就會自轉"
             -- this large detail-panel gem always spins, no hover needed,
@@ -339,25 +338,27 @@ export function RewardKitDetailPanel({ kit, maxHeight }: { kit: RewardKitData; m
             `kit.animatedImage` (its own comment) straight away whenever it
             exists, with no floating bob here -- Figma has no floating spec
             for this instance, only the small card asked for that.
-            `size-[480px]` (BOTH width and height explicit), not just a
-            `w-[480px]` -- per the user's own direct call ("這裡的石頭要跟我畫
-            的紅圈依樣大"), circling roughly 2x this gem's own rendered size in
-            a live screenshot. This box's own `overflow-visible` (its
-            wrapper's own comment above) already lets the gem bleed past its
-            175px column without clipping. A width-only version here
-            silently computed to the image's own natural 460px instead of
-            the requested 480 (confirmed live even with an `!important`
-            inline override) -- this flex row's parent has a fixed
-            `h-[311px]` cross-axis, and leaving height as `auto` put this
-            replaced element into a sizing algorithm that solved for the
-            wrong width entirely instead of deriving height from the
-            explicit width via the image's own aspect ratio. Setting both
-            dimensions explicitly (the asset is square, so equal) sidesteps
-            that algorithm rather than depending on it. */}
+            `size-[432px]` (BOTH width and height explicit), not just a
+            `w-[432px]` -- originally sized to 480px per the user's own
+            direct call ("這裡的石頭要跟我畫的紅圈依樣大"), circling roughly 2x
+            this gem's own rendered size in a live screenshot, then reduced
+            10% per a later direct call ("石頭幫我小10%": 480 * 0.9 = 432).
+            This box's own `overflow-visible` (its wrapper's own comment
+            above) already lets the gem bleed past its 175px column without
+            clipping. A width-only version here silently computed to the
+            image's own natural 460px instead of the requested width
+            (confirmed live even with an `!important` inline override) --
+            this flex row's parent has a fixed `h-[311px]` cross-axis, and
+            leaving height as `auto` put this replaced element into a
+            sizing algorithm that solved for the wrong width entirely
+            instead of deriving height from the explicit width via the
+            image's own aspect ratio. Setting both dimensions explicitly
+            (the asset is square, so equal) sidesteps that algorithm rather
+            than depending on it. */}
         <img
           alt=""
           src={withBasePath(kit.animatedImage ?? kit.image)}
-          className="size-[480px] max-w-none object-contain"
+          className="size-[432px] max-w-none object-contain"
         />
       </div>
 
