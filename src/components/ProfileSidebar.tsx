@@ -124,6 +124,7 @@ export default function ProfileSidebar() {
   const [railHeight, setRailHeight] = useState(DEFAULT_RAIL_HEIGHT);
   const [thumb, setThumb] = useState({ height: 0, top: 0 });
   const [scrolledFromTop, setScrolledFromTop] = useState(false);
+  const [hasMoreBelow, setHasMoreBelow] = useState(false);
   const listHeight = Math.max(0, railHeight - BACK_BUTTON_SIZE - GAP);
 
   useEffect(() => {
@@ -145,6 +146,11 @@ export default function ProfileSidebar() {
       if (!el) return;
       const { scrollTop, scrollHeight, clientHeight } = el;
       setScrolledFromTop(scrollTop > 0);
+      // `> 1`, not `> 0` -- sub-pixel scroll-height rounding (fractional
+      // `zoom` scaling elsewhere on this page routinely produces this)
+      // otherwise left a permanent 0.3px sliver of "more below" that never
+      // actually clears even scrolled fully to the bottom.
+      setHasMoreBelow(scrollHeight - clientHeight - scrollTop > 1);
       if (scrollHeight <= clientHeight) {
         setThumb({ height: 0, top: 0 });
         return;
@@ -185,27 +191,44 @@ export default function ProfileSidebar() {
           it shrink to its own natural content size when short, and only
           clamps (enabling the scroll+fade below) once the
           real content actually exceeds the available room.
-          Fades the first ~16px of the list into transparent (a plain CSS
-          gradient mask, not Talking_Bar's own fade-mask.svg -- that asset's
-          shape is cut to Talking_Bar's own notched panel outline, meaningless
-          for this plain rectangular column) only once actually scrolled
-          away from the top (`scrolledFromTop`, not just `needsScroll`) --
-          `needsScroll` alone is true the instant there's ANY overflow,
-          which faded the very first icon permanently even at rest, before
-          scrolling away from it means anything. Keeping the fade zone
-          short (16px, not the original 30px) is the "push it up more" the
-          user asked for -- most of the icon in that top slot stays fully
-          visible, and only the sliver actually crossing the boundary
-          fades. */}
+          Fades the first/last ~16px of the list into transparent (a plain
+          CSS gradient mask, not Talking_Bar's own fade-mask.svg -- that
+          asset's shape is cut to Talking_Bar's own notched panel outline,
+          meaningless for this plain rectangular column) -- the TOP fade
+          only once actually scrolled away from the top (`scrolledFromTop`,
+          not just `needsScroll`) -- `needsScroll` alone is true the
+          instant there's ANY overflow, which faded the very first icon
+          permanently even at rest, before scrolling away from it means
+          anything. The BOTTOM fade mirrors that same logic off
+          `hasMoreBelow` (per the user's own direct call, matching this
+          same top/bottom-fade treatment RewardKitDetailPanel's own scroll
+          box briefly had) -- only shown while there's still more below to
+          scroll to, not once already at the very bottom. Keeping the fade
+          zone short (16px, not the original 30px) is the "push it up
+          more" the user asked for -- most of the icon in that edge slot
+          stays fully visible, and only the sliver actually crossing the
+          boundary fades. Built as one combined gradient (not two stacked
+          masks -- `mask-image` only supports one layer reliably across
+          engines the same way `background-image` supports several)
+          with only the active edge(s)' own stop pair included, so a
+          list short enough to need neither fade renders with no mask at
+          all rather than a same-color no-op gradient. */}
       <div
         ref={scrollRef}
         className="no-scrollbar flex w-full flex-col items-center gap-[30px] overflow-y-auto"
         style={{
           maxHeight: listHeight,
-          ...(scrolledFromTop && {
-            maskImage: "linear-gradient(to bottom, transparent, black 16px)",
-            WebkitMaskImage: "linear-gradient(to bottom, transparent, black 16px)",
-          }),
+          ...((scrolledFromTop || hasMoreBelow) &&
+            (() => {
+              const stops = [
+                scrolledFromTop ? "transparent 0px" : "black 0px",
+                scrolledFromTop ? "black 16px" : null,
+                hasMoreBelow ? "black calc(100% - 16px)" : null,
+                hasMoreBelow ? "transparent 100%" : "black 100%",
+              ].filter((stop): stop is string => stop !== null);
+              const gradient = `linear-gradient(to bottom, ${stops.join(", ")})`;
+              return { maskImage: gradient, WebkitMaskImage: gradient };
+            })()),
         }}
       >
         <NavIcon

@@ -304,16 +304,6 @@ export function RewardKitDetailPanel({ kit, maxHeight }: { kit: RewardKitData; m
   // style here rather than a native browser scrollbar.
   const scrollRef = useRef<HTMLDivElement>(null);
   const [thumb, setThumb] = useState({ height: 0, top: 0 });
-  // Per the user's own direct call ("這裡下面看不到的地方要淡出" -- the part
-  // that's cut off at the bottom here should fade out): the reward table
-  // otherwise just hard-clips at this box's own edge whenever there's more
-  // scrolled content below, with nothing indicating that's not simply the
-  // end of the table. `hasMoreBelow` drives a bottom fade the same way
-  // ProfileSidebar's own rail already fades its TOP edge once scrolled
-  // away from it -- reusing that established mask-image convention rather
-  // than inventing a different technique for the same kind of "there's
-  // more, keep scrolling" affordance.
-  const [hasMoreBelow, setHasMoreBelow] = useState(false);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -322,11 +312,6 @@ export function RewardKitDetailPanel({ kit, maxHeight }: { kit: RewardKitData; m
     function update() {
       if (!el) return;
       const { scrollTop, scrollHeight, clientHeight } = el;
-      // `> 1`, not `> 0` -- sub-pixel scroll-height rounding (fractional
-      // `zoom` scaling elsewhere on this page routinely produces this)
-      // otherwise left a permanent 0.3px sliver of "more below" that never
-      // actually clears even scrolled fully to the bottom.
-      setHasMoreBelow(scrollHeight - clientHeight - scrollTop > 1);
       if (scrollHeight <= clientHeight) {
         setThumb({ height: 0, top: 0 });
         return;
@@ -446,18 +431,18 @@ export function RewardKitDetailPanel({ kit, maxHeight }: { kit: RewardKitData; m
           still doesn't make room for -- this box's own text/table content
           scrolls internally rather than pushing past the fixed bottom
           layer's own bounds. No `maxHeight` (the default) keeps this
-          exactly as it always rendered, unconstrained. */}
+          exactly as it always rendered, unconstrained.
+          No bottom fade mask any more -- an earlier version here added one
+          for whenever more content sat below the visible scroll area
+          ("這裡下面看不到的地方要淡出"), reusing ProfileSidebar's own top-fade
+          mask-image convention; reverted per a later direct call
+          ("這裡的文案我改不做淡出了"), back to a plain hard clip at the box's
+          own edge. */}
       <div className="relative shrink-0">
         <div
           ref={scrollRef}
           className="no-scrollbar flex items-start overflow-y-auto rounded-tr-[50px] rounded-bl-[50px] rounded-br-[50px] border border-solid border-[#f4f4f4] bg-white/50 px-[40px] py-[20px] backdrop-blur-[10px]"
-          style={{
-            ...(maxHeight !== undefined && { maxHeight }),
-            ...(hasMoreBelow && {
-              maskImage: "linear-gradient(to bottom, black calc(100% - 40px), transparent)",
-              WebkitMaskImage: "linear-gradient(to bottom, black calc(100% - 40px), transparent)",
-            }),
-          }}
+          style={maxHeight !== undefined ? { maxHeight } : undefined}
         >
           <div className="flex w-[361px] flex-col items-start gap-[20px]">
             <div className="flex flex-col items-start gap-[10px] tracking-[0.15px]">
