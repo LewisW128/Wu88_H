@@ -336,16 +336,25 @@ export function RewardKitDetailPanel({ kit, maxHeight }: { kit: RewardKitData; m
             `kit.animatedImage` (its own comment) straight away whenever it
             exists, with no floating bob here -- Figma has no floating spec
             for this instance, only the small card asked for that.
-            `w-[480px]`, not the original `230px` -- per the user's own
-            direct call ("這裡的石頭要跟我畫的紅圈依樣大"), circling roughly 2x
-            this gem's own rendered size in a live screenshot. This box's
-            own `overflow-visible` (its wrapper's own comment above) already
-            lets the gem bleed past its 175px column without clipping, so
-            sizing up further doesn't need any other change here. */}
+            `size-[480px]` (BOTH width and height explicit), not just a
+            `w-[480px]` -- per the user's own direct call ("這裡的石頭要跟我畫
+            的紅圈依樣大"), circling roughly 2x this gem's own rendered size in
+            a live screenshot. This box's own `overflow-visible` (its
+            wrapper's own comment above) already lets the gem bleed past its
+            175px column without clipping. A width-only version here
+            silently computed to the image's own natural 460px instead of
+            the requested 480 (confirmed live even with an `!important`
+            inline override) -- this flex row's parent has a fixed
+            `h-[311px]` cross-axis, and leaving height as `auto` put this
+            replaced element into a sizing algorithm that solved for the
+            wrong width entirely instead of deriving height from the
+            explicit width via the image's own aspect ratio. Setting both
+            dimensions explicitly (the asset is square, so equal) sidesteps
+            that algorithm rather than depending on it. */}
         <img
           alt=""
           src={withBasePath(kit.animatedImage ?? kit.image)}
-          className="w-[480px] max-w-none object-contain"
+          className="size-[480px] max-w-none object-contain"
         />
       </div>
 
