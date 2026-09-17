@@ -318,6 +318,19 @@ export function RewardKitDetailPanel({ kit, maxHeight }: { kit: RewardKitData; m
     // lands at the box's own top edge instead of bleeding out symmetrically
     // above and below it -- otherwise this row-level top-alignment would
     // still leave the image itself floating above the text's own top.
+    // `mt-[95px]` -- top-aligning the gem and text TO EACH OTHER (above)
+    // wasn't the whole ask: per the user's own direct follow-up ("我意思是
+    // 兩者高度都不要超過紅線"), that shared top edge also must not sit higher
+    // than a specific reference line, which the user then pinned down
+    // precisely as the left sidebar's own "會員中心" icon's own top edge
+    // ("石頭跟文案的頂端要跟左邊的會員中心按鈕的上緣對其"). Measured live: that
+    // icon's own top sits 35.94px lower (in real, post-zoom screen space)
+    // than this row's own un-shifted top -- this page's own global
+    // `zoom` scale at measurement time was 0.378472, so pushed down by
+    // 35.94 / 0.378472 = 94.95px of this component's own PRE-zoom design
+    // space to land at the same real height, regardless of viewport width
+    // (the zoom scale is why a flat px value here still tracks a fixed
+    // point elsewhere on the page across different screen sizes).
     // `gap-[128.5px]` -- NOT the box's own literal spacing, and the gem's
     // box below is back to its ORIGINAL untouched `175px` (a version here
     // briefly widened that box to 480px to make the gap math simpler, but
@@ -336,7 +349,7 @@ export function RewardKitDetailPanel({ kit, maxHeight }: { kit: RewardKitData; m
     // (`152.5 + 0 = 152.5`) -- still 0px of real clearance now, just
     // re-derived for the smaller 432px image's own smaller overflow:
     // `128.5 + 0 = 128.5`.
-    <div className="flex items-start gap-[128.5px]">
+    <div className="mt-[95px] flex items-start gap-[128.5px]">
       <div className="relative flex h-[311px] w-[175px] shrink-0 items-start justify-center overflow-visible">
         {/* Per the user's own direct call ("這裡顯示的能量石 不需要hover就會自轉"
             -- this large detail-panel gem always spins, no hover needed,
