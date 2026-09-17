@@ -97,19 +97,28 @@ export const REWARD_KITS: RewardKitData[] = [
 // of flattening it into a downloaded PNG, since Figma itself never exports
 // it as one image (get_design_context returns only the ellipse asset, with
 // the ribbon lines as real bordered divs).
+// `size-[15px]`/`border-[1.2px]`, not the original `17px`/`1.36px` -- same
+// updated Figma revision as the card's own size (PLAIN_KIT_CARD_WIDTH's
+// own comment). Every inset here is percentage-based already, so it scales
+// automatically with the outer size change alone; only the border widths
+// and two of the rounded-corner radii (2.04->1.8, 1.36->1.2) needed their
+// own explicit update to match Figma's new literal values. The one
+// `rounded-[2.526px]` stayed IDENTICAL in the new Figma export -- not
+// touched, confirmed against the fetched design context directly rather
+// than assumed to scale along with everything else.
 function RankRibbonIcon() {
   return (
-    <div className="relative size-[17px] shrink-0 overflow-hidden">
+    <div className="relative size-[15px] shrink-0 overflow-hidden">
       <div className="absolute inset-[56%_4%_4%_56%]">
         <img alt="" src={withBasePath("/assets/rewards/icon-badge-ellipse.svg")} className="absolute inset-0 block size-full max-w-none" />
       </div>
       <div className="absolute inset-[12%_8%_8%_8%]">
-        <div className="absolute inset-[12%_8%_36%_8%] rounded-tl-[2.04px] rounded-tr-[2.04px] rounded-bl-[1.36px] rounded-br-[1.36px] border-[1.36px] border-solid border-[#3e4140]" />
-        <div className="absolute inset-[12%_28%_36%_28%] border-[1.36px] border-solid border-[#3e4140]" />
-        <div className="absolute inset-[40%_40%_48%_40%] rounded-[2.526px] border-[1.36px] border-solid border-[#3e4140]" />
+        <div className="absolute inset-[12%_8%_36%_8%] rounded-tl-[1.8px] rounded-tr-[1.8px] rounded-bl-[1.2px] rounded-br-[1.2px] border-[1.2px] border-solid border-[#3e4140]" />
+        <div className="absolute inset-[12%_28%_36%_28%] border-[1.2px] border-solid border-[#3e4140]" />
+        <div className="absolute inset-[40%_40%_48%_40%] rounded-[2.526px] border-[1.2px] border-solid border-[#3e4140]" />
         <div className="absolute inset-[56%_12%_8%_12%] flex items-center justify-center" style={{ containerType: "size" }}>
           <div className="h-[100cqh] w-[100cqw] flex-none -rotate-180 -scale-x-100">
-            <div className="relative size-full rounded-tl-[1.36px] rounded-tr-[1.36px] border-[1.36px] border-solid border-[#3e4140]" />
+            <div className="relative size-full rounded-tl-[1.2px] rounded-tr-[1.2px] border-[1.2px] border-solid border-[#3e4140]" />
           </div>
         </div>
       </div>
@@ -130,22 +139,26 @@ function RankRibbonIcon() {
 // Figma "Reward_Kit" (node 664:17374, seen live at 657:18891's own
 // "登陸之後已經充值後等級8" state): the ONE card matching the logged-in
 // member's own current level bracket renders ~1.2685x larger than every
-// other kit (274x332.35 vs the plain 216x262 every other bracket still
-// uses) -- confirmed by diffing the two instances' own outer frame sizes
-// in Figma, both perfectly consistent at that same ratio (274/216 ==
-// 332.3518/262). Structurally identical otherwise (same card-frame image,
-// same gem art, same name/ribbon/"前 5,000 名" text), so `zoom` -- not a
-// hand-duplicated larger copy -- reproduces it exactly: it scales this
-// button's own layout box along with everything inside it uniformly,
-// which is also why the surrounding row's own `gap-[20px]` still lines up
-// against the NEXT card at Figma's own x=294 (0 + 274 + 20) without this
-// card needing special-cased margins of its own.
+// other kit -- confirmed by diffing the two instances' own outer frame
+// sizes in Figma, both perfectly consistent at that same ratio. This is a
+// per-project ratio (how much bigger the current-tier card reads, not a
+// Figma-given absolute size), so it stays fixed across the base card size
+// change below -- `zoom: CURRENT_KIT_SCALE` still scales this button's own
+// layout box, and everything inside it, uniformly around whatever the
+// current `PLAIN_KIT_CARD_WIDTH` is.
 // Exported (not just used locally below) so the Level_line rail on
 // RewardsCenterContent's own bottom menu can compute each card's real
 // rendered width -- see that file's own `kitCardCenters` comment.
 export const CURRENT_KIT_SCALE = 274 / 216;
-export const PLAIN_KIT_CARD_WIDTH = 216;
-export const KIT_CARD_GAP = 20;
+// `139`/`95`, not the original `216`/`20` -- per the user's own direct
+// call ("下方選單的Reward kit尺寸有改") pointing at an updated Figma revision
+// of this same node (667:15687): the plain card shrank from 216x262 to
+// 139x168, and the row's own gap between cards grew from 20 to 95 to
+// compensate -- confirmed live that the two changes roughly cancel out
+// (216+20=236 old pitch vs 139+95=234 new pitch), so the level-rail's own
+// overall span barely moves even though each card itself reads smaller.
+export const PLAIN_KIT_CARD_WIDTH = 139;
+export const KIT_CARD_GAP = 95;
 // The detail panel's own top offset (its `mt-[...]` below, RewardKitDetailPanel's
 // own comment) -- exported so RewardsCenterContent's `detailPanelMaxHeight`
 // calc can subtract this SAME number when budgeting the room actually left
@@ -188,15 +201,22 @@ export function RewardKitCard({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       aria-pressed={selected}
-      className="relative block h-[262px] w-[216px] shrink-0 overflow-visible rounded-[20px] text-left"
+      className="relative block h-[168px] w-[139px] shrink-0 overflow-visible rounded-[20px] text-left"
       style={current ? ({ zoom: CURRENT_KIT_SCALE } as React.CSSProperties) : undefined}
     >
+      {/* `h-[126px] w-[138px]`, not the original `196px`/`215px` -- same
+          updated Figma card size as everything else in this component (the
+          exported size constants' own comment). A plain vector re-render of
+          the SAME `card-frame(-selected).svg`, so shrinking its own box
+          here doesn't distort or crop it. */}
       <img
         alt=""
         src={withBasePath(selected ? "/assets/rewards/card-frame-selected.svg" : "/assets/rewards/card-frame.svg")}
-        className="absolute bottom-0 left-px h-[196px] w-[215px]"
+        className="absolute bottom-0 left-px h-[126px] w-[138px]"
       />
-      <div className="absolute left-1/2 top-[-8px] size-[212px] -translate-x-1/2 overflow-hidden">
+      {/* `top-[-5.15px] size-[123.148px]`, not the original `-8px`/`212px`
+          -- Figma's own new literal values for this same gem-art frame. */}
+      <div className="absolute left-1/2 top-[-5.15px] size-[123.148px] -translate-x-1/2 overflow-hidden">
         {/* Centering (`left-1/2 top-1/2 -translate-x/y-1/2`) and the
             floating bob need to be on TWO SEPARATE nested elements, not
             the same one -- a `@keyframes` animation's own `transform`
@@ -205,8 +225,16 @@ export function RewardKitCard({
             (the same double-transform trap ScaleToFit's own zoom/position
             split elsewhere in this project already ran into). The floating
             wrapper below starts from a plain identity transform, so
-            `gem-float`'s own translateY has nothing to clobber. */}
-        <div className="absolute left-1/2 top-1/2 size-[160px] -translate-x-1/2 -translate-y-1/2">
+            `gem-float`'s own translateY has nothing to clobber.
+            `size-[93px]`, not the original `160px` -- Figma's own new gem
+            frame (above) doesn't have a direct equivalent for this square
+            production-art wrapper (its own art reuses the same square
+            gem render regardless, not Figma's own placeholder photo crop,
+            per RewardKitDetailPanel's own comment on that exact swap) --
+            scaled down by this same frame's own ratio instead
+            (93/123.148 ~= 160/212, both ~0.755) to keep the gem reading at
+            the same proportion of its own frame as before. */}
+        <div className="absolute left-1/2 top-1/2 size-[93px] -translate-x-1/2 -translate-y-1/2">
           <img
             key={String(showAnimated)}
             alt={kit.levelRange}
@@ -215,15 +243,24 @@ export function RewardKitCard({
           />
         </div>
       </div>
-      <div className="absolute bottom-[20px] left-1/2 flex -translate-x-1/2 flex-col items-center gap-[5px]">
+      {/* `bottom-[10px]`, not the original `20px` -- Figma's own new
+          literal value. Name text is now `text-[10px] font-bold` (was
+          `12px`, no bold), and the "前 5,000 名" line drops its own
+          previous per-span size split (`前`/`名` at 12px, the number
+          itself larger at 14px bold) for one shared `text-[10px]` across
+          all three -- Figma's new export sets `text-[10px]` on the row's
+          own wrapper div rather than each span, so this matches that by
+          moving the size up to this row's own className instead of
+          repeating it on each `<p>`. */}
+      <div className="absolute bottom-[10px] left-1/2 flex -translate-x-1/2 flex-col items-center gap-[5px]">
         <div className="flex w-full items-center gap-[5px]">
           <RankRibbonIcon />
-          <p className="whitespace-nowrap text-[12px] text-black">{kit.name}</p>
+          <p className="whitespace-nowrap text-[10px] font-bold text-black">{kit.name}</p>
         </div>
-        <div className="flex items-center gap-[5px] whitespace-nowrap">
-          <p className="text-[12px] text-[#a2a2a2]">前</p>
-          <p className="text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#23f3d5]">5,000</p>
-          <p className="text-[12px] text-[#a2a2a2]">名</p>
+        <div className="flex items-center gap-[5px] whitespace-nowrap text-[10px] leading-[18px] tracking-[0.15px]">
+          <p className="text-[#a2a2a2]">前</p>
+          <p className="font-bold text-[#23f3d5]">5,000</p>
+          <p className="text-[#a2a2a2]">名</p>
         </div>
       </div>
     </button>

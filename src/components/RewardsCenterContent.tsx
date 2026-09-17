@@ -165,25 +165,27 @@ function useFixedLayerScale() {
 }
 
 const BOTTOM_GAP = 20;
-// `262 * CURRENT_KIT_SCALE`, not a flat `262` -- the logged-in member's
-// own CURRENT tier card (its own `selected`/`current` comment below)
-// renders enlarged via `zoom: CURRENT_KIT_SCALE`, and with the row's own
-// `items-end` alignment that extra height grows the row's real rendered
-// height upward, not just that one card's own box. A flat `262` here
-// under-counted the row's true height by that same difference (about
-// 70px of design space) -- confirmed live: on a short, wide viewport,
-// this constant feeds `menuTopScreenY`/`detailPanelMaxHeight` below,
-// which under-estimating the row's real height let the detail panel's
-// own `maxHeight` run taller than the room actually left above the row,
-// visibly overlapping the two panels instead of leaving the intended
-// `BOTTOM_GAP` clearance between them. The rest (20px gap + 24px
-// level-point row) is unchanged from the row's own actual layout.
+// `168 * CURRENT_KIT_SCALE`, not a flat `168` (itself the card's own new
+// Figma height, PLAIN_KIT_CARD_WIDTH's own comment -- was `262` before
+// that revision) -- the logged-in member's own CURRENT tier card (its own
+// `selected`/`current` comment below) renders enlarged via
+// `zoom: CURRENT_KIT_SCALE`, and with the row's own `items-end` alignment
+// that extra height grows the row's real rendered height upward, not just
+// that one card's own box. A flat card height here under-counted the
+// row's true height by that same difference -- confirmed live: on a
+// short, wide viewport, this constant feeds
+// `menuTopScreenY`/`detailPanelMaxHeight` below, which under-estimating
+// the row's real height let the detail panel's own `maxHeight` run taller
+// than the room actually left above the row, visibly overlapping the two
+// panels instead of leaving the intended `BOTTOM_GAP` clearance between
+// them. The rest (20px gap + 24px level-point row) is unchanged from the
+// row's own actual layout.
 // The reference this menu's OWN scale shrinks against below. Not the
 // detail panel's height (taller, and varies per kit): that panel leans
 // on its own `maxHeight` + internal scroll instead (see
 // RewardKitDetailPanel's own comment) rather than needing this shared
 // scale to chase whichever content happens to be showing.
-const CARD_ROW_HEIGHT = 262 * CURRENT_KIT_SCALE + 20 + 24;
+const CARD_ROW_HEIGHT = 168 * CURRENT_KIT_SCALE + 20 + 24;
 
 // The bottom Reward_Kit row doubles as this page's own "bottom nav" (see
 // its own comment below) -- per the user's own direct call it should
@@ -919,7 +921,18 @@ export default function RewardsCenterContent() {
           style={{ width: HERO_WIDTH * menuScale }}
         >
           <div className="flex w-max flex-col gap-[20px] pl-[164px]" style={{ zoom: menuScale } as React.CSSProperties}>
-            <div className="flex items-end gap-[20px]">
+            {/* `gap: KIT_CARD_GAP`, not a hardcoded `gap-[20px]` Tailwind
+                literal -- confirmed live this was the actual root cause of
+                the level rail drifting out from under its own cards after
+                the card size update (PLAIN_KIT_CARD_WIDTH's own comment):
+                `kitCardCenters` above already computed each point's target
+                position off the `KIT_CARD_GAP` JS constant, but this row's
+                own REAL visual gap was a separate hardcoded `20px` that
+                never got updated alongside it -- two independent sources
+                of truth for the same value, silently drifting apart. A
+                real style binding, not a second literal, is the only way
+                this can't happen again. */}
+            <div className="flex items-end" style={{ gap: KIT_CARD_GAP }}>
               {REWARD_KITS.map((kit, index) => (
                 <RewardKitCard
                   key={`${kit.name}-${index}`}
@@ -940,7 +953,8 @@ export default function RewardsCenterContent() {
               ))}
             </div>
 
-            {/* Below the Reward_Kit row (262 card height + 20 gap), not
+            {/* Below the Reward_Kit row (its own card height + 20 gap, a
+                plain flex-col flow, not a hardcoded number here), not
                 Figma's own raw top-[1057px] -- that value actually lands
                 mid-way THROUGH the card row above, so the level rail
                 visually cut across the bottom of the cards instead of
