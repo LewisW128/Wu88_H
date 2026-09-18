@@ -9,22 +9,14 @@ export type RewardVipCardProps = {
 };
 
 // Figma "Ellipse 2", repeated in a plain 6x6 grid (node 662:16100) -- a
-// flat filled circle, not worth downloading 36 near-identical copies of
-// the same tiny asset for; a plain rounded div reproduces it exactly.
+// real Figma export (`dot-square.svg`, 62x62, white fill) now used
+// directly instead of the plain rounded-div grid an earlier version here
+// hand-rolled before this asset was available. That div version guessed
+// a dark `#3e4140` fill (this card's own text color) since the real
+// asset wasn't on hand to check against -- the actual export is white,
+// per the user's own direct swap-in request.
 function DotGrid() {
-  const rows = 6;
-  const cols = 6;
-  return (
-    <div className="absolute right-[20px] top-[20px] flex flex-col items-start gap-[7.75px]">
-      {Array.from({ length: rows }).map((_, row) => (
-        <div key={row} className="flex items-center gap-[7.75px]">
-          {Array.from({ length: cols }).map((_, col) => (
-            <div key={col} className="size-[3.875px] shrink-0 rounded-full bg-[#3e4140]" />
-          ))}
-        </div>
-      ))}
-    </div>
-  );
+  return <img alt="" src={withBasePath("/assets/rewards/dot-square.svg")} className="absolute right-[20px] top-[20px] size-[62px]" />;
 }
 
 // Figma "VIP_Card" (node 210:19103, seen live on the Reward Center's own
