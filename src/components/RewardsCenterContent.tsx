@@ -444,19 +444,49 @@ export default function RewardsCenterContent() {
   // `kitCardCenters[i]` is the actual rendered x-center of REWARD_KITS[i]'s
   // own card, computed the same way the flex row above lays them out itself
   // (running sum of each card's own width, `PLAIN_KIT_CARD_WIDTH` unless
-  // it's the current-level card, plus `KIT_CARD_GAP` between them) --  so
-  // each LevelPoint can be positioned at the exact center of the card it
-  // corresponds to, and each LevelLine stretched to the exact distance
-  // between one point and the next instead of a flat guessed width.
-  const { kitCardCenters, kitRowWidth } = (() => {
+  // it's the current-level card, plus the row's own EFFECTIVE gap between
+  // them) -- so each LevelPoint can be positioned at the exact center of
+  // the card it corresponds to, and each LevelLine stretched to the exact
+  // distance between one point and the next instead of a flat guessed
+  // width.
+  // `menuIsFluid`/`effectiveKitGap`: per the user's own direct call, on a
+  // real viewport wide (and tall) enough that the row needs no shrinking at
+  // all (`menuScale >= 1`), the leftover width between the row's own
+  // content and the chat panel's own reserved column should spread out
+  // evenly as extra gap, the same "reach the real edges, don't just sit
+  // centered in a flat 1728px canvas" treatment the mask/title panel above
+  // already got. Below that threshold (a shorter or narrower window,
+  // `menuScale < 1`), this is pixel-for-pixel unchanged from before: a flat
+  // `KIT_CARD_GAP`. `- 295` reserves the chat panel's own grid column
+  // width (its own comment elsewhere, `gridTemplateColumns`); the sidebar's
+  // own 164px reservation is already the row's existing `pl-[164px]`
+  // (below), not a second subtraction here. Feeding this SAME computed
+  // value into both the row's own actual CSS `gap` (below) and this
+  // center-math is what keeps the level rail from drifting out of sync
+  // with the cards' real positions -- exactly the failure this file
+  // already hit once with two independent sources of truth for the same
+  // gap value.
+  const menuIsFluid = menuScale >= 1;
+  const { kitCardCenters, kitRowWidth, effectiveKitGap } = (() => {
+    const numGaps = REWARD_KITS.length - 1;
+    let totalCardWidth = 0;
+    for (let i = 0; i < REWARD_KITS.length; i++) {
+      totalCardWidth += loggedIn && i === currentKitIndex ? PLAIN_KIT_CARD_WIDTH * CURRENT_KIT_SCALE : PLAIN_KIT_CARD_WIDTH;
+    }
+    let gap = KIT_CARD_GAP;
+    if (menuIsFluid) {
+      const availableForRow = Math.max(0, viewport.width - 295) - 164;
+      gap = Math.max(KIT_CARD_GAP, (availableForRow - totalCardWidth) / numGaps);
+    }
+
     const centers: number[] = [];
     let left = 0;
     for (let i = 0; i < REWARD_KITS.length; i++) {
       const width = loggedIn && i === currentKitIndex ? PLAIN_KIT_CARD_WIDTH * CURRENT_KIT_SCALE : PLAIN_KIT_CARD_WIDTH;
       centers.push(left + width / 2);
-      left += width + KIT_CARD_GAP;
+      left += width + gap;
     }
-    return { kitCardCenters: centers, kitRowWidth: left - KIT_CARD_GAP };
+    return { kitCardCenters: centers, kitRowWidth: left - gap, effectiveKitGap: gap };
   })();
 
   // The season-title/kit-detail panel used to be plain content inside
@@ -477,7 +507,19 @@ export default function RewardsCenterContent() {
   // flat 0 (its own comment below), so this panel's own `top` always lands
   // at exactly `TITLE_PANEL_TOP`/`DETAIL_PANEL_TOP` scaled -- no viewport-
   // height floor math needed any more now that the mask itself never moves.
-  const heroBoxLeft = Math.max(0, (viewport.width - HERO_WIDTH * bgScale) / 2);
+  // `isFluid` mirrors ScaleToFit's own same-named, same-formula flag
+  // (`bgScale`/`ScaleToFit`'s internal `scale` are numerically identical,
+  // both `min(1, innerWidth/1728)`) -- per the user's own direct call, the
+  // mask/title-panel/kit-row should reach the REAL viewport edges on a wide
+  // window the same way ScaleToFit's own grid (sidebar/Talking_Bar columns)
+  // already does, instead of staying centered inside a flat 1728px canvas
+  // with unused gray margins on both sides. Below the design width this is
+  // unchanged from before (a centered, capped box); at or above it,
+  // `heroBoxLeft` is a flat 0 -- the mask's own box starts flush with the
+  // real left edge, and everything else positioned off this same value
+  // (the title/detail panel below) automatically follows suit.
+  const isFluid = bgScale >= 1;
+  const heroBoxLeft = isFluid ? 0 : Math.max(0, (viewport.width - HERO_WIDTH * bgScale) / 2);
   // Per the user's own direct, repeated call ("外圈遮罩應該維持固定位子不動才對
   // 會動的是遮罩裡面的影片", then explicitly "而且我不是早說遮罩不用置中嗎?" once
   // an earlier viewport-height-based centering formula was still driving
@@ -568,18 +610,19 @@ export default function RewardsCenterContent() {
             higgsfield.ai/enterprise's own full-bleed hero video (plain
             `object-cover` inside an `absolute inset-0`, always filling the
             real viewport with no letterboxing, whatever its aspect ratio).
-            This box's WIDTH keeps its existing Figma-fixed-canvas math
-            unchanged (`bgScale`/`heroBoxLeft` still cap it at 1728px and
-            center it on an ultra-wide window) -- only the HEIGHT switches
-            from a flat Figma-derived constant to "always exactly this
-            outer `fixed inset-0` layer's own real height", so every OTHER
-            element still positioned off `bgScale`/`heroBoxLeft` (the
-            sidebar, title/detail panel, kit row) is entirely unaffected;
-            only this one box's own vertical extent changes. */}
+            `width` now follows the SAME `isFluid` rule as the height did --
+            per a later direct call, the gray letterboxed margins this box's
+            own `bgScale`/`heroBoxLeft` cap left on an ultra-wide window
+            were the same "unused space" complaint as the height one, just
+            on the other axis. Below the design width this is pixel-for-
+            pixel identical to before (`HERO_WIDTH * bgScale`, centered);
+            at or above it, `heroBoxLeft` is already 0 (its own comment
+            above) so this box's width just needs to reach the OTHER real
+            edge too, i.e. the full viewport width. */}
         <div
           className="absolute inset-y-0 shrink-0 overflow-hidden bg-[#f4f4f4]"
           style={{
-            width: HERO_WIDTH * bgScale,
+            width: isFluid ? viewport.width : HERO_WIDTH * bgScale,
             left: heroBoxLeft,
           }}
         >
@@ -903,8 +946,17 @@ export default function RewardsCenterContent() {
           Exactly the "floats up from below the screen" the user asked
           for, with nothing left to native sticky/flow positioning to get
           wrong. */}
+      {/* `menuIsFluid ? "justify-start" : "justify-center"` -- when the row
+          needs no shrinking at all (`effectiveKitGap`'s own comment above),
+          the inner scroll box below is widened to reach the chat panel's
+          own reserved edge, so centering it here (the un-fluid behavior)
+          would land its LEFT edge at `295/2` instead of flush with the
+          real left edge/sidebar column -- `justify-start` on this
+          `inset-x-0` (already full-viewport-width) wrapper puts it there
+          directly, with no separate margin needed since `heroBoxLeft` is
+          already exactly 0 in this same regime. */}
       <div
-        className="pointer-events-none fixed inset-x-0 bottom-[20px] z-[5] flex justify-center transition-transform duration-500 ease-out"
+        className={`pointer-events-none fixed inset-x-0 bottom-[20px] z-[5] flex transition-transform duration-500 ease-out ${menuIsFluid ? "justify-start" : "justify-center"}`}
         style={{
           // `+ Npx`, not just the `N%` alone -- `%` here resolves against
           // this element's OWN height, so shifting by exactly 100% only
@@ -915,24 +967,33 @@ export default function RewardsCenterContent() {
           transform: `translateY(calc(${(1 - screenTwoReveal) * 100}% + ${(1 - screenTwoReveal) * 20}px))`,
         }}
       >
+        {/* `menuIsFluid` widens this to the real available width (up to the
+            chat panel's own column, `effectiveKitGap`'s own comment) instead
+            of the flat, capped `HERO_WIDTH * menuScale` (which never
+            exceeds 1728px) -- the row's own content (below) is sized to
+            exactly fill this same width via its own now-dynamic gap, so
+            nothing here overflows into scroll that didn't need to. */}
         <div
           ref={menuScrollRef}
           className="no-scrollbar pointer-events-auto cursor-grab overflow-x-auto overflow-y-hidden active:cursor-grabbing"
-          style={{ width: HERO_WIDTH * menuScale }}
+          style={{ width: menuIsFluid ? Math.max(0, viewport.width - 295) : HERO_WIDTH * menuScale }}
         >
           <div className="flex w-max flex-col gap-[20px] pl-[164px]" style={{ zoom: menuScale } as React.CSSProperties}>
-            {/* `gap: KIT_CARD_GAP`, not a hardcoded `gap-[20px]` Tailwind
-                literal -- confirmed live this was the actual root cause of
-                the level rail drifting out from under its own cards after
-                the card size update (PLAIN_KIT_CARD_WIDTH's own comment):
-                `kitCardCenters` above already computed each point's target
-                position off the `KIT_CARD_GAP` JS constant, but this row's
-                own REAL visual gap was a separate hardcoded `20px` that
-                never got updated alongside it -- two independent sources
-                of truth for the same value, silently drifting apart. A
-                real style binding, not a second literal, is the only way
-                this can't happen again. */}
-            <div className="flex items-end" style={{ gap: KIT_CARD_GAP }}>
+            {/* `gap: effectiveKitGap`, not a hardcoded `gap-[20px]` Tailwind
+                literal or the flat `KIT_CARD_GAP` constant -- confirmed
+                live this was the actual root cause of the level rail
+                drifting out from under its own cards after the card size
+                update (PLAIN_KIT_CARD_WIDTH's own comment): `kitCardCenters`
+                above already computed each point's target position off
+                whatever gap value it used, but this row's own REAL visual
+                gap was a SEPARATE hardcoded value that never got updated
+                alongside it -- two independent sources of truth for the
+                same value, silently drifting apart. Reusing the exact same
+                `effectiveKitGap` this component already computed for
+                `kitCardCenters` (its own comment) -- now also the dynamic,
+                wide-viewport-spread value instead of always the flat
+                constant -- is the only way this can't happen again. */}
+            <div className="flex items-end" style={{ gap: effectiveKitGap }}>
               {REWARD_KITS.map((kit, index) => (
                 <RewardKitCard
                   key={`${kit.name}-${index}`}
