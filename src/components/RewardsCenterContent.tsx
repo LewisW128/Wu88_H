@@ -371,7 +371,15 @@ export default function RewardsCenterContent() {
   // the shot is a medium/close-up framing, it pans up by a flat
   // `CLOSE_UP_PAN_SHIFT` (below) instead, since by then her face fills
   // most of the frame's own height and staying top-anchored would start
-  // cutting into her chin instead of leaving room past it.
+  // cutting into her chin instead of leaving room past it. Reverted back
+  // in after a later direct call to drop it ("這裡的背景不需要再特別keyframe了")
+  // turned out to be based on a mix-up with the SEPARATE full-bleed
+  // `object-cover` fix (higgsfield.ai/enterprise's own technique, already
+  // applied to this mask box) -- that fix keeps the box itself from
+  // letterboxing at any viewport size, but has no idea where the subject's
+  // own face is in frame, so it can't on its own stop THIS specific video's
+  // face from being cropped the way this manual reframe does; confirmed
+  // live, removing this immediately brought the cropping back.
   // BackgroundSequence has no exposed playback clock (it's a plain
   // autoplaying `<img>`, not a `<video>` with `currentTime`), so this
   // approximates "has the close-up part started" with a plain timer keyed
