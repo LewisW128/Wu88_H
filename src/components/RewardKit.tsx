@@ -82,6 +82,12 @@ export const REWARD_KITS: RewardKitData[] = [
     animatedImage: "/assets/rewards/gem-lv-01-13-rotate.webp",
     rewardTable: KIT0_TABLE,
   },
+  // `gem-lv-14-27-rotate.webp` is the ONE exception to this file's own
+  // "all 8 via AI image-to-video" comment above -- swapped out per the
+  // user's own direct request for a real pre-rendered 238-frame PNG
+  // sequence instead (D:\works\09_WU88-H\source\public\Animations\
+  // Stone_02), already properly alpha-transparent (no chroma-key step
+  // needed at all, unlike every other kit's own asset).
   { name: "琥珀石寶箱", levelRange: "Lv.14-27", levelStart: 14, levelEnd: 27, image: "/assets/rewards/lv-14-27.png", animatedImage: "/assets/rewards/gem-lv-14-27-rotate.webp", rewardTable: buildRewardTable(14, 27, 1500) },
   { name: "摩根石寶箱", levelRange: "Lv.28-40", levelStart: 28, levelEnd: 40, image: "/assets/rewards/lv-28-40.png", animatedImage: "/assets/rewards/gem-lv-28-40-rotate.webp", rewardTable: buildRewardTable(28, 40, 4500) },
   { name: "血鑽石寶箱", levelRange: "Lv.41-53", levelStart: 41, levelEnd: 53, image: "/assets/rewards/lv-41-53.png", animatedImage: "/assets/rewards/gem-lv-41-53-rotate.webp", rewardTable: buildRewardTable(41, 53, 13500) },
