@@ -652,16 +652,22 @@ export default function RewardsCenterContent() {
               parent by the pan amount" relationship has to be expressed
               relative to that same 100%, not a flat Figma-derived number
               that no longer matches the mask's own (now dynamic) height.
-              `duration-1000 ease-in-out`, not `duration-700 ease-out` --
-              per the user's own direct call, an earlier version's bigger
-              pan distance read as an abrupt jump at the shorter
-              duration/`ease-out` (which front-loads nearly all of a
-              transition's motion into its first moment). `ease-in-out`
-              spreads the motion out (slow start, faster middle, slow
-              finish) and the longer duration gives it more time to cover,
-              together reading as a smooth pan instead of a jump. */}
+              `duration-1000`, not `duration-700` -- per the user's own
+              direct call, an earlier version's bigger pan distance read as
+              an abrupt jump at the shorter duration (which front-loads
+              nearly all of a transition's motion into its first moment
+              with `ease-out`). The longer duration gives the motion more
+              time to cover, reading as a smooth pan instead of a jump.
+              `ease-[cubic-bezier(0.65,0,0.35,1)]`, not Tailwind's own flat
+              `ease-in-out` (`cubic-bezier(0.4,0,0.2,1)`) -- per a later
+              direct call ("擬設的動態的線性比較不向曲線 像一直線"), that built-in
+              curve is gentle enough over this short a distance that it read
+              as close to constant-speed/linear rather than a genuine
+              slow-fast-slow S-curve. This custom curve pushes both ends
+              (the near-zero start/end velocity) much further, so the
+              easing itself is visibly a curve, not just technically one. */}
           <div
-            className="absolute inset-x-0 transition-[top] duration-1000 ease-in-out"
+            className="absolute inset-x-0 transition-[top] duration-1000 ease-[cubic-bezier(0.65,0,0.35,1)]"
             style={{
               top: videoIsCloseUp ? -videoPanShift : 0,
               height: `calc(100% + ${videoPanShift}px)`,
