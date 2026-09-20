@@ -264,11 +264,11 @@ function RewardCardLarge({ day, reward, onClaim }: { day: string; reward: string
   );
 }
 
-// The last day this row's own row of cards actually spans -- Figma's row
-// stops at DAY 6 and hands off to the "七日壓軸好禮" character art for day
-// 7, so there's no card to unlock or claim beyond this regardless of how
-// many real days have passed.
-const LAST_CARD_DAY = 6;
+// The week's own length. Days 1-6 are the row's cards; day 7 has no card of
+// its own -- Figma's row stops at DAY 6 and hands off to the "七日壓軸好禮"
+// character art, whose claim pill (立即領取 / 已經領取) is day 7's claim.
+// The whole cycle resets to zero every CYCLE_DAYS days ("每隔一周都會歸零").
+const CYCLE_DAYS = 7;
 const MS_PER_DAY = 86400000;
 const ANCHOR_STORAGE_KEY = "wu88-day-rewards-anchor";
 const CLAIMED_STORAGE_KEY = "wu88-day-rewards-claimed";
@@ -328,7 +328,19 @@ function useDayRewardsState() {
       claimedDays = [1];
     }
 
-    const today = Math.min(LAST_CARD_DAY, Math.max(1, 1 + daysSinceAnchor(anchor, new Date())));
+    // Weekly reset: once a full cycle has passed, slide the anchor forward
+    // by whole cycles (so a long absence lands on the right day of the
+    // CURRENT week) and start it with nothing claimed.
+    const now = new Date();
+    const elapsed = daysSinceAnchor(anchor, now);
+    if (elapsed >= CYCLE_DAYS) {
+      anchor += Math.floor(elapsed / CYCLE_DAYS) * CYCLE_DAYS * MS_PER_DAY;
+      claimedDays = [];
+      localStorage.setItem(ANCHOR_STORAGE_KEY, String(anchor));
+      localStorage.setItem(CLAIMED_STORAGE_KEY, JSON.stringify(claimedDays));
+    }
+
+    const today = Math.min(CYCLE_DAYS, Math.max(1, 1 + daysSinceAnchor(anchor, now)));
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setUnlockedDay(today);
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -439,6 +451,46 @@ export default function DayRewards() {
           <img alt="" src={withBasePath("/assets/day-rewards/icon-subtract.svg")} className="size-[6px]" />
           <p className="whitespace-nowrap text-[12px] font-bold leading-[18px] tracking-[0.15px] text-[#3e4140]">七日壓軸好禮</p>
         </div>
+
+        {/* The claim pill over the character art (Figma nodes 1084:9619 /
+            1015:12773): the daily claim only exists once logged in (this
+            whole component already gates on `loggedIn`). Purple "立即領取"
+            while something is claimable -- it claims the same day the large
+            card's own hover button does, i.e. the earliest unlocked-but-
+            unclaimed one, day 7 included -- and the gray "已經領取" once there
+            is nothing left to claim (the finished-week state, all six cards
+            checked). The whole cycle resets weekly (`useDayRewardsState`). */}
+        {currentDay !== null ? (
+          <button
+            type="button"
+            onClick={() => claim(currentDay)}
+            className="absolute left-[240px] top-[197px] flex items-center gap-[10px] rounded-[50px] bg-[#8d54d8] py-[10px] pl-[10px] pr-[20px]"
+          >
+            <span className="relative size-[50px] shrink-0 rounded-full border-[1.11px] border-solid border-white bg-[#f4f4f4]">
+              <img
+                alt=""
+                src={withBasePath("/assets/day-rewards/icon-receive-dark.svg")}
+                className="absolute left-[calc(50%-0.12px)] top-[calc(50%-0.12px)] size-[27.761px] -translate-x-1/2 -translate-y-1/2"
+              />
+            </span>
+            <span className="whitespace-nowrap text-right text-[14px] font-bold leading-[20px] tracking-[0.15px] text-white">立即領取</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled
+            className="absolute left-[240px] top-[197px] flex items-center gap-[10px] rounded-[50px] bg-[#f4f4f4] py-[10px] pl-[20px] pr-[10px]"
+          >
+            <span className="whitespace-nowrap text-right text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#a2a2a2]">已經領取</span>
+            <span className="relative size-[50px] shrink-0 rounded-full border-[1.11px] border-solid border-white bg-[#3e4140]">
+              <img
+                alt=""
+                src={withBasePath("/assets/day-rewards/icon-receive-white.svg")}
+                className="absolute left-[calc(50%-0.12px)] top-[calc(50%-0.12px)] size-[27.761px] -translate-x-1/2 -translate-y-1/2"
+              />
+            </span>
+          </button>
+        )}
       </div>
     </div>
   );
