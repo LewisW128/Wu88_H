@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "./AuthProvider";
 import { withBasePath } from "../lib/asset";
 
@@ -80,8 +80,13 @@ type RewardCardProps = {
 // gradient elsewhere in this file, already correct, nothing to swap there.
 function RewardCard({ day, reward, icon, claimed = false }: RewardCardProps) {
   return (
-    <div className="relative h-[167px] w-[129px] shrink-0 overflow-hidden rounded-[20px] border border-[#f4f4f4] bg-white">
-      <img alt="" src={withBasePath("/assets/day-rewards/card-frame.svg")} className="absolute inset-0 size-full" />
+    // `flex-1 basis-[129px]`, not a fixed `w-[129px]`: on a wider window every
+    // card grows by the same amount (the row's own gap stays a flat 20px) --
+    // everything inside is centered on the card, so it just re-centers.
+    <div className="relative h-[167px] min-w-[129px] flex-1 basis-[129px] overflow-hidden rounded-[20px] border border-[#f4f4f4] bg-white">
+      {/* Kept at its own native 129x167 and centered, not stretched to the
+          card (`preserveAspectRatio="none"` would warp the blob pattern). */}
+      <img alt="" src={withBasePath("/assets/day-rewards/card-frame.svg")} className="absolute left-1/2 top-0 h-[167px] w-[129px] max-w-none -translate-x-1/2" />
       <div className="absolute inset-x-0 top-0 flex h-[35px] items-center justify-center bg-[#3e4140]">
         <p className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#67e4d2]">{day}</p>
       </div>
@@ -96,7 +101,7 @@ function RewardCard({ day, reward, icon, claimed = false }: RewardCardProps) {
       {claimed && (
         <>
           <div className="absolute inset-x-0 top-[35px] h-[132px] bg-white/50 backdrop-blur-[2px]" />
-          <img alt="" src={withBasePath("/assets/day-rewards/icon-check.svg")} className="absolute left-[41px] top-[64px] size-[45px]" />
+          <img alt="" src={withBasePath("/assets/day-rewards/icon-check.svg")} className="absolute left-1/2 top-[64px] size-[45px] -translate-x-1/2" />
         </>
       )}
     </div>
@@ -127,7 +132,7 @@ function RewardCard({ day, reward, icon, claimed = false }: RewardCardProps) {
 function RewardCardLargeContent({
   day,
   reward,
-  priceLeft = "74.5px",
+  priceLeft = "50%",
   priceMaxWidth,
 }: {
   day: string;
@@ -167,12 +172,58 @@ function RewardCardLargeContent({
 // downloaded SVG asset (hover-border.svg) rather than hand-built CSS: this
 // hover export's stroke came back as a real gradient (`stroke="url(#...)"`)
 // intact, unlike the rest state's flattened-to-a-flat-color one.
-const REWARD_HOVER_CLIP_PATH =
-  'path("M149,111.917C149,122.963 140.046,131.917 129,131.917H109.105C98.0593,131.917 89.105,140.872 89.105,151.917V172C89.105,183.046 80.1507,192 69.105,192H20C8.95431,192 0,183.046 0,172V20C0,8.95431 8.9543,0 20,0H129C140.046,0 149,8.9543 149,20V111.917Z")';
+// Both shapes are parametrized on the card's real width `w` (the row's cards
+// grow on a wider window): only the notch corner and the right-hand curves
+// sit at fixed offsets from the RIGHT edge, so the notch keeps its exact
+// size while the body stretches -- the same behavior as PromotionCard's own
+// notched cards. At w=149 these reproduce Figma's original 149x192 paths.
+function hoverClipPath(w: number) {
+  const r = (dx: number) => +(w - dx).toFixed(3);
+  return `path("M${w},111.917C${w},122.963 ${r(8.954)},131.917 ${r(20)},131.917H${r(39.895)}C${r(50.9407)},131.917 ${r(59.895)},140.872 ${r(59.895)},151.917V172C${r(59.895)},183.046 ${r(68.8493)},192 ${r(79.895)},192H20C8.95431,192 0,183.046 0,172V20C0,8.95431 8.9543,0 20,0H${r(20)}C${r(8.954)},0 ${w},8.9543 ${w},20V111.917Z")`;
+}
+
+// The gradient outline that goes with `hoverClipPath` (Figma's own
+// hover-border.svg, 2px stroke inset 1px), same parametrization.
+function hoverBorderPath(w: number) {
+  const r = (dx: number) => +(w - dx).toFixed(3);
+  return `M20 1H${r(20)}C${r(9.507)} 1 ${r(1)} 9.50659 ${r(1)} 20V111.917C${r(1)} 122.41 ${r(9.507)} 130.917 ${r(20)} 130.917H${r(39.895)}C${r(51.4924)} 130.917 ${r(60.8944)} 140.319 ${r(60.8945)} 151.917V172C${r(60.8945)} 182.493 ${r(69.4013)} 191 ${r(79.8945)} 191H20C9.50659 191 1 182.493 1 172V20C1 9.50659 9.50659 1 20 1Z`;
+}
+
+const HOVER_BORDER_STOPS: [number, string][] = [
+  [0, "#01FAB0"],
+  [0.07, "#14E8B8"],
+  [0.2, "#48BACE"],
+  [0.39, "#9A71F1"],
+  [0.45, "#B65AFD"],
+  [0.68, "#8D54D8"],
+  [0.88, "#6F4FBD"],
+  [1, "#644EB3"],
+];
+
+// The card's own rendered width, kept in state so the shapes above can be
+// rebuilt as it grows/shrinks with the window.
+function useElementWidth(initial: number) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(initial);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () => setWidth(el.offsetWidth);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return { ref, width };
+}
 
 function RewardCardLarge({ day, reward, onClaim }: { day: string; reward: string; onClaim: () => void }) {
+  const { ref, width } = useElementWidth(149);
+
   return (
-    <div className="group relative h-[192px] w-[149px] shrink-0">
+    <div ref={ref} className="group relative h-[192px] min-w-[149px] flex-1 basis-[149px]">
       <div
         className="absolute inset-0 overflow-hidden rounded-[25px] border-2 border-transparent opacity-100 transition-opacity duration-200 group-hover:opacity-0"
         style={{ background: `linear-gradient(white, white) padding-box, ${REWARD_BORDER_GRADIENT} border-box` }}
@@ -180,14 +231,26 @@ function RewardCardLarge({ day, reward, onClaim }: { day: string; reward: string
         <RewardCardLargeContent day={day} reward={reward} />
       </div>
 
-      <div className="absolute inset-0 bg-white opacity-0 transition-opacity duration-200 group-hover:opacity-100" style={{ clipPath: REWARD_HOVER_CLIP_PATH }}>
-        <RewardCardLargeContent day={day} reward={reward} priceLeft="44.5px" priceMaxWidth="84px" />
+      <div className="absolute inset-0 bg-white opacity-0 transition-opacity duration-200 group-hover:opacity-100" style={{ clipPath: hoverClipPath(width) }}>
+        <RewardCardLargeContent day={day} reward={reward} priceLeft="calc(50% - 30px)" priceMaxWidth="calc(100% - 65px)" />
       </div>
-      <img
-        alt=""
-        src={withBasePath("/assets/day-rewards/hover-border.svg")}
-        className="pointer-events-none absolute inset-0 size-full opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-      />
+      <svg
+        aria-hidden
+        width={width}
+        height={192}
+        viewBox={`0 0 ${width} 192`}
+        fill="none"
+        className="pointer-events-none absolute inset-0 overflow-visible opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+      >
+        <path d={hoverBorderPath(width)} stroke="url(#day-reward-hover-border)" strokeWidth={2} />
+        <defs>
+          <linearGradient id="day-reward-hover-border" x1={(124.167 * width) / 149} y1={238.933} x2={(-142.563 * width) / 149} y2={-11.8151} gradientUnits="userSpaceOnUse">
+            {HOVER_BORDER_STOPS.map(([offset, color]) => (
+              <stop key={offset} offset={offset} stopColor={color} />
+            ))}
+          </linearGradient>
+        </defs>
+      </svg>
 
       <button
         type="button"
@@ -329,7 +392,7 @@ export default function DayRewards() {
     // `w-full` + a flexible card area (`min-w-[894px] flex-1`), not the Figma
     // canvas's fixed 1260px/894px: on a wider window the character art stays
     // pinned to the right edge and the extra width goes to the card row,
-    // whose `justify-between` (below) spreads the gaps between cards evenly.
+    // whose cards grow equally (`flex-1`) with the gap held at a flat 20px.
     // At the canvas width this is the same ~894px/20px-gap row as Figma.
     <div className="relative flex w-full items-start">
       <div className="z-10 -mr-[50px] flex min-w-[894px] flex-1 flex-col items-start gap-[15px]">
@@ -337,7 +400,7 @@ export default function DayRewards() {
           <img alt="" src={withBasePath("/assets/day-rewards/icon-title.svg")} className="size-[25px]" />
           <p className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#444242]">每日獎勵</p>
         </div>
-        <div className="flex w-full items-center justify-between gap-[20px]">
+        <div className="flex w-full items-center gap-[20px]">
           {REWARD_DAYS.map(({ day, reward, icon }) =>
             day === currentDay ? (
               <RewardCardLarge key={day} day={`DAY ${day}`} reward={reward} onClaim={() => claim(day)} />

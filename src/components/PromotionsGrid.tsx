@@ -48,12 +48,15 @@ export default function PromotionsGrid({ categories }: PromotionsGridProps) {
         ))}
       </div>
 
-      {/* `w-full`, not the Figma canvas's own fixed 1249px: on a wider window
-          the extra room lets later cards wrap up into earlier rows instead
-          of leaving them stranded below a wall of blank space. At the
-          canvas width the column is that same ~1249px, so the Figma row
-          breaks are unchanged. */}
-      <div className="flex w-full flex-wrap items-start gap-[20px]">
+      {/* `w-full` with a `min-w-[1249px]` floor, not the Figma canvas's own
+          fixed 1249px: on a wider window the extra room lets later cards
+          wrap up into earlier rows instead of leaving them stranded below
+          blank space. The floor is what keeps Figma's 3/4/3 row breaks at
+          the canvas width -- the real column there comes out a few px under
+          1249 (scrollbar, gutters), which would otherwise push a 4th small
+          card (4 x 297 + 3 gaps = 1248) onto the next row and leave every
+          row short with a stray card at the bottom. */}
+      <div className="flex w-full min-w-[1249px] flex-wrap items-start gap-[20px]">
         {activeCategory?.promotions.map(({ key, ...promo }) => (
           <PromotionCard key={key} {...promo} />
         ))}
