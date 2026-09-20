@@ -34,6 +34,25 @@ body {
   display: none;
 }
 
+/* GameCard's hover growth factor. Registered as a <number> so it can be
+   transitioned: the card's flex-grow, min-width, height and inner scale are
+   all derived from it, so they animate in lockstep whatever width the card
+   ends up at. */
+@property --card-grow {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}
+
+.game-card {
+  --card-grow: 1;
+  transition: --card-grow 300ms ease-out;
+}
+
+.game-card:hover {
+  --card-grow: 1.124;
+}
+
 @keyframes marquee {
   from {
     transform: translateX(0);
