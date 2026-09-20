@@ -307,7 +307,11 @@ function daysSinceAnchor(anchorMs: number, now: Date) {
 // claiming across days): once ANYTHING has been claimed today
 // (`claimedToday`), nothing is claimable again until the next calendar day,
 // so the week is worked through one day at a time up to day 7, and only
-// the weekly reset (below) starts it over.
+// the weekly reset (below) starts it over. The one exception is the week's
+// LAST day (day 7): a claim there collects EVERYTHING still outstanding in
+// one go, so a week with nothing claimed can still be made up entirely on
+// day 7 -- and whatever is still unclaimed when the week rolls over is
+// simply gone ("不管上一周只領了一天或兩天,過了隔周都是直接歸零").
 //
 // Both pieces persist to localStorage (not the AuthProvider Context)
 // since they need to survive a real page reload/revisit, unlike the
@@ -373,8 +377,9 @@ function useDayRewardsState() {
   // could ever drift out of sync with them. `null` once every unlocked
   // day is already claimed -- or once today's one claim is used -- so
   // nothing shows as current until tomorrow actually unlocks the next one.
+  const isFinalDay = unlockedDay === CYCLE_DAYS;
   let currentDay: number | null = null;
-  if (!claimedToday) {
+  if (!claimedToday || isFinalDay) {
     for (let day = 1; day <= unlockedDay; day++) {
       if (!claimed.has(day)) {
         currentDay = day;
@@ -384,12 +389,15 @@ function useDayRewardsState() {
   }
 
   const claim = (day: number) => {
-    if (claimedToday) return;
+    if (claimedToday && !isFinalDay) return;
     localStorage.setItem(LAST_CLAIM_STORAGE_KEY, String(startOfDay(new Date())));
     setClaimedToday(true);
     setClaimed((prev) => {
       const next = new Set(prev);
-      next.add(day);
+      // Day 7 collects the whole week's outstanding days at once; any other
+      // day claims just its own.
+      if (isFinalDay) for (let d = 1; d <= CYCLE_DAYS; d++) next.add(d);
+      else next.add(day);
       localStorage.setItem(CLAIMED_STORAGE_KEY, JSON.stringify([...next]));
       return next;
     });
