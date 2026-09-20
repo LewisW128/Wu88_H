@@ -308,10 +308,12 @@ function daysSinceAnchor(anchorMs: number, now: Date) {
 // (`claimedToday`), nothing is claimable again until the next calendar day,
 // so the week is worked through one day at a time up to day 7, and only
 // the weekly reset (below) starts it over. The one exception is the week's
-// LAST day (day 7): a claim there collects EVERYTHING still outstanding in
-// one go, so a week with nothing claimed can still be made up entirely on
-// day 7 -- and whatever is still unclaimed when the week rolls over is
-// simply gone ("不管上一周只領了一天或兩天,過了隔周都是直接歸零").
+// LAST day (day 7): the one-a-day limit is lifted there, so day 7's own
+// portion can be claimed AND every earlier day still outstanding can be
+// made up (one claim each, earliest first) -- a week with nothing claimed
+// can still be collected in full on day 7. Whatever is still unclaimed when
+// the week rolls over is simply gone ("不管上一周只領了一天或兩天,過了隔周
+// 都是直接歸零").
 //
 // Both pieces persist to localStorage (not the AuthProvider Context)
 // since they need to survive a real page reload/revisit, unlike the
@@ -388,22 +390,25 @@ function useDayRewardsState() {
     }
   }
 
+  // The claim pill over the character art ("立即領取") is built ONLY for day 7
+  // (the 七日壓軸好禮): it never claims any of the cards' days, and it isn't
+  // even shown until day 7 itself has arrived. The large card is what
+  // claims / makes up days 1-6.
+  const pillState: "hidden" | "ready" | "claimed" = !isFinalDay ? "hidden" : claimed.has(CYCLE_DAYS) ? "claimed" : "ready";
+
   const claim = (day: number) => {
     if (claimedToday && !isFinalDay) return;
     localStorage.setItem(LAST_CLAIM_STORAGE_KEY, String(startOfDay(new Date())));
     setClaimedToday(true);
     setClaimed((prev) => {
       const next = new Set(prev);
-      // Day 7 collects the whole week's outstanding days at once; any other
-      // day claims just its own.
-      if (isFinalDay) for (let d = 1; d <= CYCLE_DAYS; d++) next.add(d);
-      else next.add(day);
+      next.add(day);
       localStorage.setItem(CLAIMED_STORAGE_KEY, JSON.stringify([...next]));
       return next;
     });
   };
 
-  return { claimed, currentDay, claim };
+  return { claimed, currentDay, pillState, claim };
 }
 
 // Figma "Day Rewards" (05_WU88-H-PC-Profile-Page node 601:14802, seen live
@@ -431,7 +436,7 @@ function useDayRewardsState() {
 // used identically on both /profile and /promotions.
 export default function DayRewards() {
   const { loggedIn } = useAuth();
-  const { claimed, currentDay, claim } = useDayRewardsState();
+  const { claimed, currentDay, pillState, claim } = useDayRewardsState();
   if (!loggedIn) return null;
 
   return (
@@ -488,16 +493,16 @@ export default function DayRewards() {
 
         {/* The claim pill over the character art (Figma nodes 1084:9619 /
             1015:12773): the daily claim only exists once logged in (this
-            whole component already gates on `loggedIn`). Purple "立即領取"
-            while something is claimable -- it claims the same day the large
-            card's own hover button does, i.e. the earliest unlocked-but-
-            unclaimed one, day 7 included -- and the gray "已經領取" once there
-            is nothing left to claim (the finished-week state, all six cards
-            checked). The whole cycle resets weekly (`useDayRewardsState`). */}
-        {currentDay !== null ? (
+            whole component already gates on `loggedIn`). It is day 7's own
+            claim (the 七日壓軸好禮) and nothing else: not shown at all until
+            day 7 arrives, then purple "立即領取", and the gray "已經領取"
+            once day 7 is claimed (the finished-week state).
+            The cards' days are claimed through the large card instead. The
+            whole cycle resets weekly (`useDayRewardsState`). */}
+        {pillState === "ready" ? (
           <button
             type="button"
-            onClick={() => claim(currentDay)}
+            onClick={() => claim(CYCLE_DAYS)}
             className="absolute left-[240px] top-[197px] flex items-center gap-[10px] rounded-[50px] bg-[#8d54d8] py-[10px] pl-[10px] pr-[20px]"
           >
             <span className="relative size-[50px] shrink-0 rounded-full border-[1.11px] border-solid border-white bg-[#f4f4f4]">
@@ -509,7 +514,7 @@ export default function DayRewards() {
             </span>
             <span className="whitespace-nowrap text-right text-[14px] font-bold leading-[20px] tracking-[0.15px] text-white">立即領取</span>
           </button>
-        ) : (
+        ) : pillState === "claimed" ? (
           <button
             type="button"
             disabled
@@ -524,7 +529,7 @@ export default function DayRewards() {
               />
             </span>
           </button>
-        )}
+        ) : null}
       </div>
     </div>
   );
