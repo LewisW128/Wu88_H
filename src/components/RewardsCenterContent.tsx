@@ -7,7 +7,7 @@ import MinPanelHeight from "./MinPanelHeight";
 import ProfileSidebar from "./ProfileSidebar";
 import { CURRENT_KIT_SCALE, DETAIL_PANEL_TOP_OFFSET, KIT_CARD_GAP, PLAIN_KIT_CARD_WIDTH, REWARD_KITS, RewardKitCard, RewardKitDetailPanel } from "./RewardKit";
 import RewardVipCard from "./RewardVipCard";
-import ScaleToFit from "./ScaleToFit";
+import ScaleToFit, { useHeightCappedScale } from "./ScaleToFit";
 import TalkingBar from "./TalkingBar";
 import TopBar from "./TopBar";
 import TopUp from "./TopUp";
@@ -180,39 +180,23 @@ const BOTTOM_GAP = 20;
 // panels instead of leaving the intended `BOTTOM_GAP` clearance between
 // them. The rest (20px gap + 24px level-point row) is unchanged from the
 // row's own actual layout.
-// The reference this menu's OWN scale shrinks against below. Not the
-// detail panel's height (taller, and varies per kit): that panel leans
-// on its own `maxHeight` + internal scroll instead (see
-// RewardKitDetailPanel's own comment) rather than needing this shared
-// scale to chase whichever content happens to be showing.
+// The Reward_Kit row's own height in design space, which
+// `REWARDS_DESIGN_HEIGHT` below folds into the whole page's height budget.
+// The detail panel still leans on its own `maxHeight` + internal scroll (see
+// RewardKitDetailPanel's own comment) as a fallback for whatever that budget
+// doesn't cover, rather than this constant chasing whichever content is showing.
 const CARD_ROW_HEIGHT = 168 * CURRENT_KIT_SCALE + 20 + 24;
 
-// The bottom Reward_Kit row doubles as this page's own "bottom nav" (see
-// its own comment below) -- per the user's own direct call it should
-// shrink proportionally on a short viewport, unlike the background above
-// (which deliberately crops instead of shrinking, per that SAME user's
-// earlier direct call not to make the whole page rescale for height).
-// Also returns the real leftover height in real screen px, which the
-// detail panel's own `maxHeight` prop needs converted back to this row's
-// OWN design-space coordinates (divided by `scale` below) since it lives
-// inside this row's own zoomed subtree.
-function useBottomMenuLayout() {
-  const [state, setState] = useState({ scale: 1, availableHeight: CARD_ROW_HEIGHT });
-
-  useEffect(() => {
-    function update() {
-      const widthScale = Math.min(1, window.innerWidth / HERO_WIDTH);
-      const availableHeight = Math.max(0, window.innerHeight - BOTTOM_GAP);
-      const heightScale = Math.min(1, availableHeight / CARD_ROW_HEIGHT);
-      setState({ scale: Math.min(widthScale, heightScale), availableHeight });
-    }
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, []);
-
-  return state;
-}
+// Design-space height (px, at scale 1) this page's foreground stack needs so
+// nothing overlaps: the detail panel's own top (`DETAIL_PANEL_TOP` + its
+// `DETAIL_PANEL_TOP_OFFSET`), its tallest natural content (measured live:
+// 505px, table included, so it never has to scroll), and the Reward_Kit row
+// below it (`CARD_ROW_HEIGHT`), plus the two `BOTTOM_GAP`-sized clearances
+// between/under them (real px, not design-space -- ~45 design px at the
+// scales this lands at). Feeding this to `useHeightCappedScale` is what keeps
+// a short window from stacking the gem/table into the row: the whole
+// foreground shrinks together instead, and only width changes spread it out.
+const REWARDS_DESIGN_HEIGHT = 970;
 
 function useViewportSize() {
   const [size, setSize] = useState({ width: HERO_WIDTH, height: HERO_HEIGHT });
@@ -333,7 +317,10 @@ export default function RewardsCenterContent() {
   const [selectedKit, setSelectedKit] = useState<number | null>(null);
   const countdown = useCountdown(SEASON_COUNTDOWN_SEED);
   const bgScale = useFixedLayerScale();
-  const { scale: menuScale } = useBottomMenuLayout();
+  // Foreground (sidebar, title/detail panel, chat, bottom row) size --
+  // capped by window height as well as width, so widening the window never
+  // enlarges it. `bgScale` above stays width-only for the background.
+  const uiScale = useHeightCappedScale(REWARDS_DESIGN_HEIGHT);
   const viewport = useViewportSize();
   const menuScrollRef = useDragScroll<HTMLDivElement>();
   const scrollY = useScrollY();
@@ -457,24 +444,24 @@ export default function RewardsCenterContent() {
   // the card it corresponds to, and each LevelLine stretched to the exact
   // distance between one point and the next instead of a flat guessed
   // width.
-  // `menuIsFluid`/`effectiveKitGap`: per the user's own direct call, on a
-  // real viewport wide (and tall) enough that the row needs no shrinking at
-  // all (`menuScale >= 1`), the leftover width between the row's own
-  // content and the chat panel's own reserved column should spread out
-  // evenly as extra gap, the same "reach the real edges, don't just sit
-  // centered in a flat 1728px canvas" treatment the mask/title panel above
-  // already got. Below that threshold (a shorter or narrower window,
-  // `menuScale < 1`), this is pixel-for-pixel unchanged from before: a flat
-  // `KIT_CARD_GAP`. `- 295` reserves the chat panel's own grid column
-  // width (its own comment elsewhere, `gridTemplateColumns`); the sidebar's
-  // own 164px reservation is already the row's existing `pl-[164px]`
-  // (below), not a second subtraction here. Feeding this SAME computed
+  // `menuIsFluid`/`effectiveKitGap`: per the user's own direct call, once
+  // the window is wider than the canvas needs at the current `uiScale`, the
+  // leftover width between the row's own content and the chat panel's own
+  // reserved column spreads out evenly as extra gap -- card SIZE stays put
+  // (`uiScale` never grows with width), only the spacing changes. Until
+  // then (a window no wider than the canvas at this scale) it stays a flat
+  // `KIT_CARD_GAP`. `295 * uiScale` reserves the chat panel's own grid
+  // column width (its own comment elsewhere, `gridTemplateColumns`); the
+  // sidebar's own 164px reservation is already the row's existing
+  // `pl-[164px]` (below), not a second subtraction here. Feeding this SAME computed
   // value into both the row's own actual CSS `gap` (below) and this
   // center-math is what keeps the level rail from drifting out of sync
   // with the cards' real positions -- exactly the failure this file
   // already hit once with two independent sources of truth for the same
   // gap value.
-  const menuIsFluid = menuScale >= 1;
+  // "Fluid" now means the window is wider than the canvas at the CURRENT
+  // (height-capped) scale needs, not that the scale itself reached 1.
+  const menuIsFluid = viewport.width / uiScale > HERO_WIDTH + 1;
   const { kitCardCenters, kitRowWidth, effectiveKitGap } = (() => {
     const numGaps = REWARD_KITS.length - 1;
     let totalCardWidth = 0;
@@ -483,7 +470,9 @@ export default function RewardsCenterContent() {
     }
     let gap = KIT_CARD_GAP;
     if (menuIsFluid) {
-      const availableForRow = Math.max(0, viewport.width - 295) - 164;
+      // In design-space px: the real width left of the chat column, divided
+      // back through `uiScale`, minus the row's own sidebar-width padding.
+      const availableForRow = Math.max(0, viewport.width - 295 * uiScale) / uiScale - 164;
       gap = Math.max(KIT_CARD_GAP, (availableForRow - totalCardWidth) / numGaps);
     }
 
@@ -501,33 +490,19 @@ export default function RewardsCenterContent() {
   // ScaleToFit's own scrolling/zoomed subtree -- but per the user's own
   // direct call (echoing the background/bottom-menu treatment above) its
   // position needs to stay fixed too, so it's never one scroll away from
-  // view. It's now a THIRD fixed layer, positioned with the same `bgScale`
-  // as the background it overlays (so it visually tracks the character art
-  // consistently, rather than the height-shrinking `menuScale` the bottom
-  // row uses) -- see the layer's own JSX comment for the actual position
-  // math. `maxHeight` still caps its own height against whatever room is
-  // actually left in the real viewport below it, with internal scroll for
-  // the rest (see RewardKitDetailPanel's own comment), independent of
-  // `bgScale`'s crop-not-shrink behavior.
-  // `heroBoxLeft`/`HERO_BOX_TOP` are the background mask's own position
-  // (see that layer's JSX) -- reused here purely so this panel's `left`
-  // offset lines up with the character art beneath it. `HERO_BOX_TOP` is a
-  // flat 0 (its own comment below), so this panel's own `top` always lands
-  // at exactly `TITLE_PANEL_TOP`/`DETAIL_PANEL_TOP` scaled -- no viewport-
-  // height floor math needed any more now that the mask itself never moves.
-  // `isFluid` mirrors ScaleToFit's own same-named, same-formula flag
-  // (`bgScale`/`ScaleToFit`'s internal `scale` are numerically identical,
-  // both `min(1, innerWidth/1728)`) -- per the user's own direct call, the
-  // mask/title-panel/kit-row should reach the REAL viewport edges on a wide
-  // window the same way ScaleToFit's own grid (sidebar/Talking_Bar columns)
-  // already does, instead of staying centered inside a flat 1728px canvas
-  // with unused gray margins on both sides. Below the design width this is
-  // unchanged from before (a centered, capped box); at or above it,
-  // `heroBoxLeft` is a flat 0 -- the mask's own box starts flush with the
-  // real left edge, and everything else positioned off this same value
-  // (the title/detail panel below) automatically follows suit.
-  const isFluid = bgScale >= 1;
-  const heroBoxLeft = isFluid ? 0 : Math.max(0, (viewport.width - HERO_WIDTH * bgScale) / 2);
+  // view. It's now a THIRD fixed layer, positioned with `uiScale` -- the
+  // same height-capped scale ScaleToFit's own grid (sidebar/Talking_Bar
+  // columns) and the bottom row use, so all of the foreground keeps one
+  // size and the panel's `left` stays anchored to the sidebar column's own
+  // right edge whatever the window width. See the layer's own JSX comment
+  // for the actual position math. `maxHeight` still caps its own height
+  // against whatever room is actually left in the real viewport below it,
+  // with internal scroll for the rest (see RewardKitDetailPanel's own
+  // comment) -- a fallback now that `uiScale` already budgets for the
+  // panel's natural height (`REWARDS_DESIGN_HEIGHT`).
+  // The background mask always spans the full real viewport from a flat
+  // left 0 (its JSX below), with `bgScale` (width-only) sizing just its own
+  // video pan -- it stays independent of `uiScale` and of window size.
   // Per the user's own direct, repeated call ("外圈遮罩應該維持固定位子不動才對
   // 會動的是遮罩裡面的影片", then explicitly "而且我不是早說遮罩不用置中嗎?" once
   // an earlier viewport-height-based centering formula was still driving
@@ -547,15 +522,15 @@ export default function RewardsCenterContent() {
   const HERO_BOX_TOP = 0;
   const CLOSE_UP_PAN_SHIFT = 257;
   const videoPanShift = CLOSE_UP_PAN_SHIFT * bgScale;
-  const titlePanelScreenLeft = heroBoxLeft + TITLE_PANEL_LEFT * bgScale;
+  const titlePanelScreenLeft = TITLE_PANEL_LEFT * uiScale;
   // `DETAIL_PANEL_TOP` (its own comment) only once the detail panel is
   // actually the thing showing in this slot -- the plain season title
   // stays at its own Figma-matched `TITLE_PANEL_TOP`.
   const titlePanelTopValue = effectiveSelectedKit !== null ? DETAIL_PANEL_TOP : TITLE_PANEL_TOP;
-  const titlePanelScreenTop = titlePanelTopValue * bgScale + HERO_BOX_TOP;
+  const titlePanelScreenTop = titlePanelTopValue * uiScale + HERO_BOX_TOP;
   // Capped against the bottom MENU's own top edge, not the raw viewport
   // bottom -- that menu is a separate fixed layer occupying its own real
-  // screen space (`CARD_ROW_HEIGHT * menuScale` tall, `BOTTOM_GAP` off the
+  // screen space (`CARD_ROW_HEIGHT * uiScale` tall, `BOTTOM_GAP` off the
   // viewport bottom), invisible to a plain "how much viewport is left
   // below this panel" calc. Confirmed live: on a wide-but-not-very-tall
   // window, the fully-uncropped detail panel (no scroll needed by the OLD
@@ -570,8 +545,8 @@ export default function RewardsCenterContent() {
   // earlier version here did) let the panel's own `maxHeight` run that
   // much too tall, overlapping the Reward_Kit row below by roughly this
   // same amount -- confirmed live.
-  const menuTopScreenY = viewport.height - BOTTOM_GAP - CARD_ROW_HEIGHT * menuScale;
-  const detailPanelMaxHeight = Math.max(0, menuTopScreenY - BOTTOM_GAP - titlePanelScreenTop - DETAIL_PANEL_TOP_OFFSET * bgScale) / (bgScale || 1);
+  const menuTopScreenY = viewport.height - BOTTOM_GAP - CARD_ROW_HEIGHT * uiScale;
+  const detailPanelMaxHeight = Math.max(0, menuTopScreenY - BOTTOM_GAP - titlePanelScreenTop - DETAIL_PANEL_TOP_OFFSET * uiScale) / (uiScale || 1);
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-[#f4f4f4]">
@@ -598,9 +573,9 @@ export default function RewardsCenterContent() {
         className="pointer-events-auto fixed inset-0 z-0 overflow-hidden"
         onClick={() => setSelectedKit(null)}
       >
-        {/* `left`/`top`, not `flex items-center justify-center` -- per the
+        {/* `inset-0`, not `flex items-center justify-center` -- per the
             user's own repeated direct call, this box (the "遮罩" -- mask)
-            sits at a flat constant position (`heroBoxLeft`/`HERO_BOX_TOP`,
+            sits at a flat constant position (a fixed 0,0 corner, `HERO_BOX_TOP`
             their own comment above) and never moves for any reason,
             viewport height included -- it should "單純做遮罩的功能" (simply
             act as a mask), with the video free to control its own position
@@ -613,27 +588,13 @@ export default function RewardsCenterContent() {
             confirmed exactly equal at 31.25px on a 900px-wide viewport, yet
             still not what the user wanted here), dropping the radius
             entirely is the simplest resolution: a plain square corner.
-            `height: "100%"`, not `HERO_MASK_HEIGHT * bgScale` -- per the
-            user's own direct call to make this mask behave like
-            higgsfield.ai/enterprise's own full-bleed hero video (plain
-            `object-cover` inside an `absolute inset-0`, always filling the
-            real viewport with no letterboxing, whatever its aspect ratio).
-            `width` now follows the SAME `isFluid` rule as the height did --
-            per a later direct call, the gray letterboxed margins this box's
-            own `bgScale`/`heroBoxLeft` cap left on an ultra-wide window
-            were the same "unused space" complaint as the height one, just
-            on the other axis. Below the design width this is pixel-for-
-            pixel identical to before (`HERO_WIDTH * bgScale`, centered);
-            at or above it, `heroBoxLeft` is already 0 (its own comment
-            above) so this box's width just needs to reach the OTHER real
-            edge too, i.e. the full viewport width. */}
-        <div
-          className="absolute inset-y-0 shrink-0 overflow-hidden bg-[#f4f4f4]"
-          style={{
-            width: isFluid ? viewport.width : HERO_WIDTH * bgScale,
-            left: heroBoxLeft,
-          }}
-        >
+            Full viewport height AND width -- per the user's own direct call
+            to make this mask behave like higgsfield.ai/enterprise's own
+            full-bleed hero video (plain `object-cover` inside an `absolute
+            inset-0`, always filling the real viewport with no letterboxing,
+            whatever its aspect ratio). Independent of `uiScale`: the
+            foreground's size never touches the background. */}
+        <div className="absolute inset-0 shrink-0 overflow-hidden bg-[#f4f4f4]">
           {/* The video's own `top` carries all of this box's reframing
               logic -- top-anchored (flush with the mask's own top) during
               the wide shot, panned up by the full `videoPanShift` once
@@ -686,7 +647,7 @@ export default function RewardsCenterContent() {
           detail panel (top-left over the character art), per the user's
           own direct call to give it a fixed position too, matching the
           background/bottom-menu treatment above. Positioned directly
-          against this OUTER `inset-0` layer (real screen px, `heroBoxLeft`/
+          against this OUTER `inset-0` layer (real screen px, `titlePanelScreenLeft`/
           `titlePanelScreenTop` already computed above) rather than nested
           inside a hero-sized box the way the background layer is -- that
           box's own top goes off-screen once it's taller than the viewport
@@ -703,7 +664,7 @@ export default function RewardsCenterContent() {
             already keeps its `width`-only real-px wrapper and its `zoom`
             wrapper as two separate divs -- this now matches that. */}
         <div className="pointer-events-auto absolute" style={{ left: titlePanelScreenLeft, top: titlePanelScreenTop }}>
-          <div style={{ zoom: bgScale } as React.CSSProperties}>
+          <div style={{ zoom: uiScale } as React.CSSProperties}>
           {/* Figma's hover/selected page state (node 667:15687, this
                 page's own "screen 2" -- see `effectiveSelectedKit`'s own
                 comment) swaps this ENTIRE block for Reward_Kit's own
@@ -787,7 +748,7 @@ export default function RewardsCenterContent() {
           This page scrolls on a short viewport exactly the way those
           pages already do; it isn't a one-off exception with its own
           scale/no-scroll rule. */}
-      <ScaleToFit>
+      <ScaleToFit scale={uiScale}>
         <div className="sticky top-0 z-20">
           <TopBar onlineCount="900" totalReward="10,000,000" announcements={topBarAnnouncements} />
         </div>
@@ -911,7 +872,7 @@ export default function RewardsCenterContent() {
                 scales it back down. */}
             <div
               className="pointer-events-none"
-              style={{ height: (SCREEN_TWO_SCROLL_DISTANCE + 300) / (bgScale || 1) }}
+              style={{ height: (SCREEN_TWO_SCROLL_DISTANCE + 300) / (uiScale || 1) }}
             />
           </MinPanelHeight>
 
@@ -923,9 +884,10 @@ export default function RewardsCenterContent() {
           visible without scrolling, not just sit at a fixed design-space
           `top` offset inside the scrolling page above. Independent of
           ScaleToFit the same way the background layer above is (see its
-          own comment for why), but scaled with its OWN `menuScale` --
-          this row shrinks proportionally when the viewport is too SHORT
-          for it, unlike the background (which deliberately crops instead
+          own comment for why), but scaled with `uiScale` (height-
+          capped, shared with the rest of the foreground) -- this row shrinks
+          proportionally when the viewport is too SHORT for the page's
+          stack, unlike the background (which deliberately crops instead
           of shrinking, per that same user's earlier direct call). `zoom`
           rather than `transform: scale()` -- this row is still
           horizontally scrollable when there are more kits than fit on
@@ -960,17 +922,12 @@ export default function RewardsCenterContent() {
           Exactly the "floats up from below the screen" the user asked
           for, with nothing left to native sticky/flow positioning to get
           wrong. */}
-      {/* `menuIsFluid ? "justify-start" : "justify-center"` -- when the row
-          needs no shrinking at all (`effectiveKitGap`'s own comment above),
-          the inner scroll box below is widened to reach the chat panel's
-          own reserved edge, so centering it here (the un-fluid behavior)
-          would land its LEFT edge at `295/2` instead of flush with the
-          real left edge/sidebar column -- `justify-start` on this
-          `inset-x-0` (already full-viewport-width) wrapper puts it there
-          directly, with no separate margin needed since `heroBoxLeft` is
-          already exactly 0 in this same regime. */}
+      {/* `justify-start`: the inner scroll box below always starts flush with
+          the real left edge/sidebar column (its own width is either the full
+          viewport or stops at the chat panel's edge, `menuIsFluid`), so
+          neither case wants centering. */}
       <div
-        className={`pointer-events-none fixed inset-x-0 bottom-[20px] z-[5] flex transition-transform duration-500 ease-out ${menuIsFluid ? "justify-start" : "justify-center"}`}
+        className="pointer-events-none fixed inset-x-0 bottom-[20px] z-[5] flex justify-start transition-transform duration-500 ease-out"
         style={{
           // `+ Npx`, not just the `N%` alone -- `%` here resolves against
           // this element's OWN height, so shifting by exactly 100% only
@@ -981,18 +938,18 @@ export default function RewardsCenterContent() {
           transform: `translateY(calc(${(1 - screenTwoReveal) * 100}% + ${(1 - screenTwoReveal) * 20}px))`,
         }}
       >
-        {/* `menuIsFluid` widens this to the real available width (up to the
-            chat panel's own column, `effectiveKitGap`'s own comment) instead
-            of the flat, capped `HERO_WIDTH * menuScale` (which never
-            exceeds 1728px) -- the row's own content (below) is sized to
-            exactly fill this same width via its own now-dynamic gap, so
-            nothing here overflows into scroll that didn't need to. */}
+        {/* `menuIsFluid` stops this at the chat panel's own column
+            (`effectiveKitGap`'s own comment) -- the row's own content (below)
+            is sized to exactly fill that width via its own now-dynamic gap,
+            so nothing here overflows into scroll that didn't need to.
+            Otherwise (a window no wider than the canvas at this scale) it
+            spans the full viewport, as before. */}
         <div
           ref={menuScrollRef}
           className="no-scrollbar pointer-events-auto cursor-grab overflow-x-auto overflow-y-hidden active:cursor-grabbing"
-          style={{ width: menuIsFluid ? Math.max(0, viewport.width - 295) : HERO_WIDTH * menuScale }}
+          style={{ width: menuIsFluid ? Math.max(0, viewport.width - 295 * uiScale) : viewport.width }}
         >
-          <div className="flex w-max flex-col gap-[20px] pl-[164px]" style={{ zoom: menuScale } as React.CSSProperties}>
+          <div className="flex w-max flex-col gap-[20px] pl-[164px]" style={{ zoom: uiScale } as React.CSSProperties}>
             {/* `gap: effectiveKitGap`, not a hardcoded `gap-[20px]` Tailwind
                 literal or the flat `KIT_CARD_GAP` constant -- confirmed
                 live this was the actual root cause of the level rail

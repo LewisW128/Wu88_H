@@ -43,6 +43,27 @@ export function useMinPanelHeight(bottomGap = 20) {
   return minHeight;
 }
 
+// UI scale for pages that must keep a constant size as the window widens:
+// the smaller of the width fit (never wider than the canvas) and a height
+// fit against `designHeight` (the design-space height the page's content
+// needs at scale 1). Width beyond what the current scale needs is left over
+// as extra horizontal room for the layout to spread into, while the
+// height-based cap is what stops tall content stacking into overlaps.
+export function useHeightCappedScale(designHeight: number) {
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    function update() {
+      setScale(Math.min(1, window.innerWidth / DESIGN_WIDTH, window.innerHeight / designHeight));
+    }
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [designHeight]);
+
+  return scale;
+}
+
 // This page's whole component library is hand-built at a fixed 1728px
 // canvas (every section hardcodes its own pixel widths, matching the
 // Figma "MacBook Pro 16"" frame). At any narrower real browser width --
@@ -66,17 +87,23 @@ export function useMinPanelHeight(bottomGap = 20) {
 // any scale -- and this wrapper doesn't need to separately track/apply a
 // scaled height or width either, since zoom already makes the browser
 // treat this box as `DESIGN_WIDTH * scale` real pixels wide on its own.
-export default function ScaleToFit({ children }: { children: React.ReactNode }) {
-  const [scale, setScale] = useState(1);
+//
+// `scale` overrides the width-only default with a caller-supplied value
+// (see `useHeightCappedScale`): UI size stops being tied to window width, so
+// a wider window only adds horizontal room instead of enlarging everything.
+export default function ScaleToFit({ children, scale: scaleOverride }: { children: React.ReactNode; scale?: number }) {
+  const [widthScale, setWidthScale] = useState(1);
 
   useEffect(() => {
     function update() {
-      setScale(Math.min(1, window.innerWidth / DESIGN_WIDTH));
+      setWidthScale(Math.min(1, window.innerWidth / DESIGN_WIDTH));
     }
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
   }, []);
+
+  const scale = scaleOverride ?? widthScale;
 
   // Below the design width, this stays a fixed DESIGN_WIDTH box that zoom
   // shrinks to fit -- unchanged from before. At or above it, scale is
@@ -90,7 +117,10 @@ export default function ScaleToFit({ children }: { children: React.ReactNode }) 
   // grow with the real viewport, which is what lets rows like Hot Games
   // reveal more cards on a wide screen instead of just sitting in a
   // fixed-size box with empty space around it.
-  const isFluid = scale >= 1;
+  // A caller-supplied scale can sit BELOW `widthScale` (height-limited), in
+  // which case a fixed DESIGN_WIDTH box would zoom to less than the window's
+  // width and leave a gap on the right -- so an override is always fluid.
+  const isFluid = scaleOverride !== undefined || scale >= 1;
 
   return (
     <div style={{ width: isFluid ? "100%" : DESIGN_WIDTH, zoom: scale } as React.CSSProperties}>
