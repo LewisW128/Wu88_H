@@ -23,7 +23,7 @@ import StickyUtilityBar from "./StickyUtilityBar";
 import TalkingBar from "./TalkingBar";
 import TopBar from "./TopBar";
 import TopUp from "./TopUp";
-import VipCard from "./VipCard";
+import RewardVipCard, { VIP_CARD_CRYSTAL_IMAGE } from "./RewardVipCard";
 import { ALL_GAMES } from "../lib/games";
 import { topBarAnnouncements, talkingBarMessages, talkingBarSimulatedMessages, talkingBarFriends } from "../lib/chatMockData";
 
@@ -146,7 +146,7 @@ export default function ProfileContent({ forceGuest }: { forceGuest: boolean }) 
                 ) : (
                   <>
                     <ProfileCard loggedIn avatar="/assets/profile/avatar-placeholder.png" name="JESSICA" email="JESSICA123@gmail.com" memberId="1234567890" />
-                    <VipCard level={8} currentExp={700} maxExp={1500} continuousDeposit="10,000" />
+                    <RewardVipCard level={8} currentExp={700} maxExp={1500} continuousDeposit="10,000" crystalImage={VIP_CARD_CRYSTAL_IMAGE} className="flex-1" />
                   </>
                 )}
               </div>

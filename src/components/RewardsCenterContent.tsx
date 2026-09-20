@@ -6,7 +6,7 @@ import BackgroundSequence from "./BackgroundSequence";
 import MinPanelHeight from "./MinPanelHeight";
 import ProfileSidebar from "./ProfileSidebar";
 import { CURRENT_KIT_SCALE, DETAIL_PANEL_TOP_OFFSET, KIT_CARD_GAP, PLAIN_KIT_CARD_WIDTH, REWARD_KITS, RewardKitCard, RewardKitDetailPanel } from "./RewardKit";
-import RewardVipCard from "./RewardVipCard";
+import RewardVipCard, { VIP_CARD_CRYSTAL_IMAGE } from "./RewardVipCard";
 import ScaleToFit, { useHeightCappedScale } from "./ScaleToFit";
 import TalkingBar from "./TalkingBar";
 import TopBar from "./TopBar";
@@ -119,23 +119,11 @@ const MEMBER_LEVEL = 8;
 const MEMBER_EXP = 700;
 const MEMBER_MAX_EXP = 1500;
 const MEMBER_CONTINUOUS_DEPOSIT = "10,000";
-// Figma's own VIP_Card export (node 210:19103) uses a DIFFERENT crystal
-// crop from the square-ish `kit.image` renders RewardKitCard/
-// RewardKitDetailPanel use -- a tall 736x1308 image specifically composed
-// for this card's own narrow bleed slot, not the same asset reused at a
-// different aspect ratio (an earlier version here reused `kit.image`
-// directly, which `object-cover` then had to crop far more aggressively
-// than Figma's own export ever needed, confirmed wrong via the user's own
-// side-by-side screenshot). Only exists for the Lv.1-13 bracket (matching
-// this project's established "only bracket 0 has real per-kit art"
-// limitation, see RewardKit's own comment) -- not swapped per current
-// tier the way the small card art is.
-// Per the user's own direct call ("這裡的石頭也要" / "不就用剛剛的石頭替換上去
-// 就好了" / "是同一組阿" -- reuse the SAME rotating gem asset here instead of
-// generating a separate one from this card's own still photo): this now
-// points at the Lv.1-13 kit's own animated WebP (RewardKit.tsx's own
-// `animatedImage` comment), not this card's original static photo.
-const VIP_CARD_CRYSTAL_IMAGE = "/assets/rewards/gem-lv-01-13-rotate.webp";
+// The crystal on this page's VIP card is the Lv.1-13 kit's own rotating gem
+// (RewardKit.tsx's `animatedImage` comment), reused per the user's own direct
+// call ("是同一組阿") rather than generated from the card's original still
+// photo -- see `VIP_CARD_CRYSTAL_IMAGE` in RewardVipCard.tsx, shared with
+// /profile's card.
 
 // The background character art and the Reward_Kit row both need to stay
 // visible with no scrolling and no drift, per the user's own direct call --

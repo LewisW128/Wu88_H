@@ -6,7 +6,16 @@ export type RewardVipCardProps = {
   maxExp: number;
   continuousDeposit: string;
   crystalImage: string;
+  // Sizing beyond the fixed 282px height: Figma's own 464px width by
+  // default (Reward Center), or e.g. `flex-1` where a page lays this card
+  // out beside another one and lets it fill the leftover width (/profile).
+  className?: string;
 };
+
+// The rotating gem this card shows for the member's own bracket (Lv.1-13,
+// which covers the demo member's Lv.8) -- shared by every page that shows
+// this card so they all use the same asset.
+export const VIP_CARD_CRYSTAL_IMAGE = "/assets/rewards/gem-lv-01-13-rotate.webp";
 
 // Figma "Ellipse 2", repeated in a plain 6x6 grid (node 662:16100) -- a
 // real Figma export (`dot-square.svg`, 62x62, white fill) now used
@@ -32,11 +41,11 @@ function DotGrid() {
 // exactly -- both are the same mock member. Sized as a fixed 464x282 (this
 // page's own Figma slot), not the shared VipCard's `flex-1` -- there's no
 // sibling card it needs to split a row with here.
-export default function RewardVipCard({ level, currentExp, maxExp, continuousDeposit, crystalImage }: RewardVipCardProps) {
+export default function RewardVipCard({ level, currentExp, maxExp, continuousDeposit, crystalImage, className = "w-[464px]" }: RewardVipCardProps) {
   const progress = Math.min(100, Math.max(0, (currentExp / maxExp) * 100));
 
   return (
-    <div className="relative h-[282px] w-[464px] overflow-hidden rounded-[20px] border border-solid border-[#a2a2a2] bg-white/50 backdrop-blur-[10px]">
+    <div className={`relative h-[282px] ${className} overflow-hidden rounded-[20px] border border-solid border-[#a2a2a2] bg-white/50 backdrop-blur-[10px]`}>
       <div className="pointer-events-none absolute inset-[-1px] overflow-hidden">
         <div className="absolute right-[-21px] top-[33px] h-[335.676px] w-[408px] rotate-180">
           <img alt="" src={withBasePath("/assets/rewards/vip-stripe-1.svg")} className="size-full" />
