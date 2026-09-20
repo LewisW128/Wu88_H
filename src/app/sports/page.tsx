@@ -456,7 +456,7 @@ export default async function SportsPage() {
         </div>
 
         <div className="relative rounded-tl-[60px] bg-white">
-          <div className="pointer-events-none absolute right-0 top-0">
+          <div className="pointer-events-none absolute inset-x-0 top-0">
             <ContainerBg variant="sport" />
           </div>
 

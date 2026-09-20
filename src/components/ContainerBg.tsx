@@ -142,6 +142,12 @@ function GradientHeadline({ text, gradientId }: { text: string; gradientId: stri
 // a <video> -- MP4/H.264 can't carry alpha, and both heroes need a
 // transparent background to sit over the page like their original cutout
 // photos did.
+// Pins its children to the right edge in a 1728px box when `anchored` (see
+// ContainerBg's own comment); a plain pass-through otherwise.
+function Anchor({ anchored, children }: { anchored: boolean; children: React.ReactNode }) {
+  return anchored ? <div className="pointer-events-none absolute right-0 top-0 h-full w-[1728px]">{children}</div> : <>{children}</>;
+}
+
 const SPRITE_FRAME_COUNT = 31;
 const SPRITE_DURATION_S = SPRITE_FRAME_COUNT / 6;
 const SPORTS_SPRITE_FRAME_W = 770;
@@ -165,19 +171,31 @@ export default function ContainerBg({ variant = "home" }: ContainerBgProps) {
   const isSport = variant === "sport";
   const isPromotions = variant === "promotions";
   const isHomeEnergy = variant === "home-energy";
+  // Casino/Sport/Promotions lay their hero out across the page's full
+  // (fluid) width instead of a fixed 1728px box: the giant headline stays
+  // anchored to the LEFT edge (`left-[174px]`) while everything else -- the
+  // glow blobs, the character sprite and the twinkling dots -- stays in a
+  // 1728px box pinned to the RIGHT edge (`Anchor` below), so a wider window
+  // spreads them apart instead of dragging the headline along with the
+  // right-anchored art. The pages that use these variants give this
+  // component a full-width slot (`absolute inset-x-0 top-0`); home and
+  // home-energy keep the fixed 1728px box they always had.
+  const hasHeadline = isCasino || isSport || isPromotions;
 
   return (
-    <div className="relative h-[1078px] w-[1728px] overflow-hidden rounded-tl-[60px] bg-white">
-      <div className="pointer-events-none absolute left-[867px] top-[176px] size-[764px]">
-        <div className="absolute inset-[-13.09%]">
-          <img alt="" src={withBasePath("/assets/container-bg/glow-ellipse-1.svg")} className="block size-full max-w-none" />
+    <div className={`relative h-[1078px] overflow-hidden rounded-tl-[60px] bg-white ${hasHeadline ? "w-full" : "w-[1728px]"}`}>
+      <Anchor anchored={hasHeadline}>
+        <div className="pointer-events-none absolute left-[867px] top-[176px] size-[764px]">
+          <div className="absolute inset-[-13.09%]">
+            <img alt="" src={withBasePath("/assets/container-bg/glow-ellipse-1.svg")} className="block size-full max-w-none" />
+          </div>
         </div>
-      </div>
-      <div className="pointer-events-none absolute left-[789px] top-[54px] size-[366px]">
-        <div className="absolute inset-[-27.32%]">
-          <img alt="" src={withBasePath("/assets/container-bg/glow-ellipse-2.svg")} className="block size-full max-w-none" />
+        <div className="pointer-events-none absolute left-[789px] top-[54px] size-[366px]">
+          <div className="absolute inset-[-27.32%]">
+            <img alt="" src={withBasePath("/assets/container-bg/glow-ellipse-2.svg")} className="block size-full max-w-none" />
+          </div>
         </div>
-      </div>
+      </Anchor>
 
       {isCasino ? (
         <>
@@ -186,17 +204,19 @@ export default function ContainerBg({ variant = "home" }: ContainerBgProps) {
               763x1052 (both ~0.726 aspect) that stretching straight to the
               box size reads as object-cover would, without sports-hero's
               extra contain/centering wrapper. */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute left-[731px] top-[-8px]"
-            style={{
-              width: CASINO_SPRITE_FRAME_W,
-              height: CASINO_SPRITE_FRAME_H,
-              backgroundImage: `url(${withBasePath("/animation/casino-hero-sprite.webp")})`,
-              backgroundSize: `${CASINO_SPRITE_FRAME_W * 6}px ${CASINO_SPRITE_FRAME_H * 6}px`,
-              animation: `casino-hero-sprite ${SPRITE_DURATION_S}s steps(1, end) infinite`,
-            }}
-          />
+          <Anchor anchored={hasHeadline}>
+            <div
+              aria-hidden
+              className="pointer-events-none absolute left-[731px] top-[-8px]"
+              style={{
+                width: CASINO_SPRITE_FRAME_W,
+                height: CASINO_SPRITE_FRAME_H,
+                backgroundImage: `url(${withBasePath("/animation/casino-hero-sprite.webp")})`,
+                backgroundSize: `${CASINO_SPRITE_FRAME_W * 6}px ${CASINO_SPRITE_FRAME_H * 6}px`,
+                animation: `casino-hero-sprite ${SPRITE_DURATION_S}s steps(1, end) infinite`,
+              }}
+            />
+          </Anchor>
         </>
       ) : isSport ? (
         <>
@@ -206,18 +226,20 @@ export default function ContainerBg({ variant = "home" }: ContainerBgProps) {
               narrower fixed-size inner box inside it reproduces
               object-contain's own centering for a 804x1144-native frame
               that doesn't share the box's aspect ratio. */}
-          <div className="pointer-events-none absolute bottom-[-18px] left-[711px] flex h-[1096px] w-[877px] items-center justify-center">
-            <div
-              aria-hidden
-              style={{
-                width: SPORTS_SPRITE_FRAME_W,
-                height: SPORTS_SPRITE_FRAME_H,
-                backgroundImage: `url(${withBasePath("/animation/sports-hero-sprite.webp")})`,
-                backgroundSize: `${SPORTS_SPRITE_FRAME_W * 6}px ${SPORTS_SPRITE_FRAME_H * 6}px`,
-                animation: `sports-hero-sprite ${SPRITE_DURATION_S}s steps(1, end) infinite`,
-              }}
-            />
-          </div>
+          <Anchor anchored={hasHeadline}>
+            <div className="pointer-events-none absolute bottom-[-18px] left-[711px] flex h-[1096px] w-[877px] items-center justify-center">
+              <div
+                aria-hidden
+                style={{
+                  width: SPORTS_SPRITE_FRAME_W,
+                  height: SPORTS_SPRITE_FRAME_H,
+                  backgroundImage: `url(${withBasePath("/animation/sports-hero-sprite.webp")})`,
+                  backgroundSize: `${SPORTS_SPRITE_FRAME_W * 6}px ${SPORTS_SPRITE_FRAME_H * 6}px`,
+                  animation: `sports-hero-sprite ${SPRITE_DURATION_S}s steps(1, end) infinite`,
+                }}
+              />
+            </div>
+          </Anchor>
         </>
       ) : isPromotions ? (
         <>
@@ -235,17 +257,19 @@ export default function ContainerBg({ variant = "home" }: ContainerBgProps) {
               (1176x784) shares the exact same 1.5 aspect as this box
               (1536x1024), so stretching straight to the box size introduces
               no distortion. */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute left-[276px] top-[27px]"
-            style={{
-              width: PROMO_SPRITE_FRAME_W,
-              height: PROMO_SPRITE_FRAME_H,
-              backgroundImage: `url(${withBasePath("/assets/promotions/hero-sprite.webp")})`,
-              backgroundSize: `${PROMO_SPRITE_FRAME_W * 6}px ${PROMO_SPRITE_FRAME_H * 6}px`,
-              animation: `promo-hero-sprite ${SPRITE_DURATION_S}s steps(1, end) infinite`,
-            }}
-          />
+          <Anchor anchored={hasHeadline}>
+            <div
+              aria-hidden
+              className="pointer-events-none absolute left-[276px] top-[27px]"
+              style={{
+                width: PROMO_SPRITE_FRAME_W,
+                height: PROMO_SPRITE_FRAME_H,
+                backgroundImage: `url(${withBasePath("/assets/promotions/hero-sprite.webp")})`,
+                backgroundSize: `${PROMO_SPRITE_FRAME_W * 6}px ${PROMO_SPRITE_FRAME_H * 6}px`,
+                animation: `promo-hero-sprite ${SPRITE_DURATION_S}s steps(1, end) infinite`,
+              }}
+            />
+          </Anchor>
         </>
       ) : isHomeEnergy ? (
         // Sprite replaces the plain static photo: 20 frames of a confident,
@@ -283,15 +307,17 @@ export default function ContainerBg({ variant = "home" }: ContainerBgProps) {
         />
       )}
 
-      <TwinklingDots
-        className={`pointer-events-none absolute top-[82px] h-[361px] w-[378.536px] -translate-x-1/2 ${
-          isCasino
-            ? "left-[calc(50%+158.27px)]"
-            : isSport || isPromotions
-              ? "left-[calc(50%+248.27px)]"
-              : "left-[calc(50%+238.27px)]"
-        }`}
-      />
+      <Anchor anchored={hasHeadline}>
+        <TwinklingDots
+          className={`pointer-events-none absolute top-[82px] h-[361px] w-[378.536px] -translate-x-1/2 ${
+            isCasino
+              ? "left-[calc(50%+158.27px)]"
+              : isSport || isPromotions
+                ? "left-[calc(50%+248.27px)]"
+                : "left-[calc(50%+238.27px)]"
+          }`}
+        />
+      </Anchor>
 
       {/* Covers the FULL container (`inset-0`), not a shorter band pinned
           to some `top` offset -- an earlier version's bug: shifting `top`
