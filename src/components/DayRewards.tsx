@@ -272,6 +272,12 @@ const CYCLE_DAYS = 7;
 const MS_PER_DAY = 86400000;
 const ANCHOR_STORAGE_KEY = "wu88-day-rewards-anchor";
 const CLAIMED_STORAGE_KEY = "wu88-day-rewards-claimed";
+// Start-of-day timestamp of the last claim, so the one-claim-per-calendar-day
+// rule survives a reload.
+const LAST_CLAIM_STORAGE_KEY = "wu88-day-rewards-last-claim";
+// How often the open page re-checks the date, so it rolls over at midnight
+// (unlocking the next day / resetting the week) without needing a reload.
+const DATE_CHECK_INTERVAL_MS = 30000;
 
 function startOfDay(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
@@ -297,6 +303,12 @@ function daysSinceAnchor(anchorMs: number, now: Date) {
 // every missed day's claim button simultaneously -- there's only ever
 // one large-card slot in this row to begin with.
 //
+// One claim per calendar day ("當天的分領完 隔天的分要隔天才能領" -- no
+// claiming across days): once ANYTHING has been claimed today
+// (`claimedToday`), nothing is claimable again until the next calendar day,
+// so the week is worked through one day at a time up to day 7, and only
+// the weekly reset (below) starts it over.
+//
 // Both pieces persist to localStorage (not the AuthProvider Context)
 // since they need to survive a real page reload/revisit, unlike the
 // rest of this project's mock login state. First-ever visit seeds the
@@ -306,6 +318,7 @@ function daysSinceAnchor(anchorMs: number, now: Date) {
 function useDayRewardsState() {
   const [claimed, setClaimed] = useState<Set<number>>(() => new Set([1]));
   const [unlockedDay, setUnlockedDay] = useState(2);
+  const [claimedToday, setClaimedToday] = useState(false);
 
   useEffect(() => {
     // Same reasoning as this file's earlier version of this effect: a
@@ -314,53 +327,66 @@ function useDayRewardsState() {
     // available there, so the effect is what keeps the first client
     // render matching the server's own default markup instead of
     // risking a hydration mismatch, only correcting it once mounted.
-    let anchor = Number(localStorage.getItem(ANCHOR_STORAGE_KEY));
-    if (!anchor) {
-      anchor = startOfDay(new Date()) - MS_PER_DAY;
-      localStorage.setItem(ANCHOR_STORAGE_KEY, String(anchor));
+    // Re-run on an interval too, so the date rolling over while the page
+    // stays open unlocks the next day / resets the week by itself.
+    function sync() {
+      let anchor = Number(localStorage.getItem(ANCHOR_STORAGE_KEY));
+      if (!anchor) {
+        anchor = startOfDay(new Date()) - MS_PER_DAY;
+        localStorage.setItem(ANCHOR_STORAGE_KEY, String(anchor));
+      }
+
+      let claimedDays: number[] = [1];
+      try {
+        const stored = localStorage.getItem(CLAIMED_STORAGE_KEY);
+        if (stored) claimedDays = JSON.parse(stored);
+      } catch {
+        claimedDays = [1];
+      }
+
+      // Weekly reset: once a full cycle has passed, slide the anchor forward
+      // by whole cycles (so a long absence lands on the right day of the
+      // CURRENT week) and start it with nothing claimed.
+      const now = new Date();
+      const elapsed = daysSinceAnchor(anchor, now);
+      if (elapsed >= CYCLE_DAYS) {
+        anchor += Math.floor(elapsed / CYCLE_DAYS) * CYCLE_DAYS * MS_PER_DAY;
+        claimedDays = [];
+        localStorage.setItem(ANCHOR_STORAGE_KEY, String(anchor));
+        localStorage.setItem(CLAIMED_STORAGE_KEY, JSON.stringify(claimedDays));
+      }
+
+      const today = Math.min(CYCLE_DAYS, Math.max(1, 1 + daysSinceAnchor(anchor, now)));
+      const lastClaim = Number(localStorage.getItem(LAST_CLAIM_STORAGE_KEY)) || 0;
+      setUnlockedDay(today);
+      setClaimed((prev) => (prev.size === claimedDays.length && claimedDays.every((d) => prev.has(d)) ? prev : new Set(claimedDays)));
+      setClaimedToday(lastClaim === startOfDay(now));
     }
 
-    let claimedDays: number[] = [1];
-    try {
-      const stored = localStorage.getItem(CLAIMED_STORAGE_KEY);
-      if (stored) claimedDays = JSON.parse(stored);
-    } catch {
-      claimedDays = [1];
-    }
-
-    // Weekly reset: once a full cycle has passed, slide the anchor forward
-    // by whole cycles (so a long absence lands on the right day of the
-    // CURRENT week) and start it with nothing claimed.
-    const now = new Date();
-    const elapsed = daysSinceAnchor(anchor, now);
-    if (elapsed >= CYCLE_DAYS) {
-      anchor += Math.floor(elapsed / CYCLE_DAYS) * CYCLE_DAYS * MS_PER_DAY;
-      claimedDays = [];
-      localStorage.setItem(ANCHOR_STORAGE_KEY, String(anchor));
-      localStorage.setItem(CLAIMED_STORAGE_KEY, JSON.stringify(claimedDays));
-    }
-
-    const today = Math.min(CYCLE_DAYS, Math.max(1, 1 + daysSinceAnchor(anchor, now)));
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setUnlockedDay(today);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setClaimed(new Set(claimedDays));
+    sync();
+    const timer = setInterval(sync, DATE_CHECK_INTERVAL_MS);
+    return () => clearInterval(timer);
   }, []);
 
   // Derived, not its own state: computing it fresh from `claimed` +
   // `unlockedDay` every render means there's no separate value that
   // could ever drift out of sync with them. `null` once every unlocked
-  // day is already claimed -- today's done, nothing to show as current
-  // until tomorrow actually unlocks the next one.
+  // day is already claimed -- or once today's one claim is used -- so
+  // nothing shows as current until tomorrow actually unlocks the next one.
   let currentDay: number | null = null;
-  for (let day = 1; day <= unlockedDay; day++) {
-    if (!claimed.has(day)) {
-      currentDay = day;
-      break;
+  if (!claimedToday) {
+    for (let day = 1; day <= unlockedDay; day++) {
+      if (!claimed.has(day)) {
+        currentDay = day;
+        break;
+      }
     }
   }
 
   const claim = (day: number) => {
+    if (claimedToday) return;
+    localStorage.setItem(LAST_CLAIM_STORAGE_KEY, String(startOfDay(new Date())));
+    setClaimedToday(true);
     setClaimed((prev) => {
       const next = new Set(prev);
       next.add(day);
