@@ -326,13 +326,18 @@ export default function DayRewards() {
   if (!loggedIn) return null;
 
   return (
-    <div className="relative flex w-[1260px] items-start">
-      <div className="z-10 -mr-[50px] flex w-[894px] flex-col items-start gap-[15px]">
+    // `w-full` + a flexible card area (`min-w-[894px] flex-1`), not the Figma
+    // canvas's fixed 1260px/894px: on a wider window the character art stays
+    // pinned to the right edge and the extra width goes to the card row,
+    // whose `justify-between` (below) spreads the gaps between cards evenly.
+    // At the canvas width this is the same ~894px/20px-gap row as Figma.
+    <div className="relative flex w-full items-start">
+      <div className="z-10 -mr-[50px] flex min-w-[894px] flex-1 flex-col items-start gap-[15px]">
         <div className="flex items-center gap-[10px]">
           <img alt="" src={withBasePath("/assets/day-rewards/icon-title.svg")} className="size-[25px]" />
           <p className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#444242]">每日獎勵</p>
         </div>
-        <div className="flex w-full items-center gap-[20px]">
+        <div className="flex w-full items-center justify-between gap-[20px]">
           {REWARD_DAYS.map(({ day, reward, icon }) =>
             day === currentDay ? (
               <RewardCardLarge key={day} day={`DAY ${day}`} reward={reward} onClaim={() => claim(day)} />
@@ -343,7 +348,7 @@ export default function DayRewards() {
         </div>
       </div>
 
-      <div className="relative h-[291.589px] w-[416px]">
+      <div className="relative h-[291.589px] w-[416px] shrink-0">
         <div className="absolute left-[136px] top-[38px] size-[198px]">
           <div className="absolute inset-[-50.51%]">
             <img alt="" src={withBasePath("/assets/day-rewards/glow.svg")} className="size-full" />
