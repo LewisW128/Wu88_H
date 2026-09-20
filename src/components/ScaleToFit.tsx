@@ -43,13 +43,19 @@ export function useMinPanelHeight(bottomGap = 20) {
   return minHeight;
 }
 
-// UI scale for pages that must keep a constant size as the window widens:
-// the smaller of the width fit (never wider than the canvas) and a height
-// fit against `designHeight` (the design-space height the page's content
-// needs at scale 1). Width beyond what the current scale needs is left over
-// as extra horizontal room for the layout to spread into, while the
-// height-based cap is what stops tall content stacking into overlaps.
-export function useHeightCappedScale(designHeight: number) {
+// Design-space height (px, at scale 1) the site's foreground chrome needs
+// so nothing stacks into anything else. Set by the tallest fixed stack on
+// any page (Reward Center: detail panel + its 505px table + the Reward_Kit
+// row + the real-px gaps around them), and shared by every page so the same
+// sidebar/top bar/chat panel are the same size wherever you navigate.
+export const PAGE_DESIGN_HEIGHT = 970;
+
+// UI scale that stays constant as the window widens: the smaller of the
+// width fit (never wider than the canvas) and a height fit against
+// `designHeight`. Width beyond what the current scale needs is left over as
+// extra horizontal room for the layout to spread into, while the height-
+// based cap is what stops tall content stacking into overlaps.
+export function useHeightCappedScale(designHeight: number = PAGE_DESIGN_HEIGHT) {
   const [scale, setScale] = useState(1);
 
   useEffect(() => {
@@ -88,42 +94,23 @@ export function useHeightCappedScale(designHeight: number) {
 // scaled height or width either, since zoom already makes the browser
 // treat this box as `DESIGN_WIDTH * scale` real pixels wide on its own.
 //
-// `scale` overrides the width-only default with a caller-supplied value
-// (see `useHeightCappedScale`): UI size stops being tied to window width, so
-// a wider window only adds horizontal room instead of enlarging everything.
+// The scale is `useHeightCappedScale`'s (width AND height fit), not width
+// alone: UI size no longer grows with the window's width, so a wider window
+// only adds horizontal room. `scale` lets a page that already computes the
+// same value for its own fixed layers pass it in instead of computing it twice.
 export default function ScaleToFit({ children, scale: scaleOverride }: { children: React.ReactNode; scale?: number }) {
-  const [widthScale, setWidthScale] = useState(1);
+  const heightCappedScale = useHeightCappedScale();
+  const scale = scaleOverride ?? heightCappedScale;
 
-  useEffect(() => {
-    function update() {
-      setWidthScale(Math.min(1, window.innerWidth / DESIGN_WIDTH));
-    }
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, []);
-
-  const scale = scaleOverride ?? widthScale;
-
-  // Below the design width, this stays a fixed DESIGN_WIDTH box that zoom
-  // shrinks to fit -- unchanged from before. At or above it, scale is
-  // pinned at exactly 1 (never scales up), so this box would otherwise
-  // render at a hard 1728px and just sit centered with gray margins on
-  // either side no matter how much wider the real window is -- the
-  // layout inside never actually saw that extra space to do anything
-  // with it. Switching to a fluid 100% width in that case (zoom:1 has no
-  // scaling effect either way, so this changes nothing about the zoomed-
-  // shrink behavior) lets the grid's own fluid middle column actually
-  // grow with the real viewport, which is what lets rows like Hot Games
-  // reveal more cards on a wide screen instead of just sitting in a
-  // fixed-size box with empty space around it.
-  // A caller-supplied scale can sit BELOW `widthScale` (height-limited), in
-  // which case a fixed DESIGN_WIDTH box would zoom to less than the window's
-  // width and leave a gap on the right -- so an override is always fluid.
-  const isFluid = scaleOverride !== undefined || scale >= 1;
-
+  // Always a fluid 100% width, never a fixed DESIGN_WIDTH box: `zoom`
+  // multiplies this box's layout width back up, so 100% of the real window
+  // is `window width / scale` design px -- exactly DESIGN_WIDTH when the
+  // width fit is what limits the scale (unchanged from before), and wider
+  // than that when the height fit does, which is the extra room the grid's
+  // own fluid middle column (Hot Games' extra cards, etc.) and any
+  // edge-anchored layout spread into instead of the whole UI growing.
   return (
-    <div style={{ width: isFluid ? "100%" : DESIGN_WIDTH, zoom: scale } as React.CSSProperties}>
+    <div style={{ width: "100%", zoom: scale } as React.CSSProperties}>
       <ScaleContext.Provider value={scale}>{children}</ScaleContext.Provider>
     </div>
   );

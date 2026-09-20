@@ -181,22 +181,22 @@ const BOTTOM_GAP = 20;
 // them. The rest (20px gap + 24px level-point row) is unchanged from the
 // row's own actual layout.
 // The Reward_Kit row's own height in design space, which
-// `REWARDS_DESIGN_HEIGHT` below folds into the whole page's height budget.
+// `PAGE_DESIGN_HEIGHT` folds into the whole page's height budget.
 // The detail panel still leans on its own `maxHeight` + internal scroll (see
 // RewardKitDetailPanel's own comment) as a fallback for whatever that budget
 // doesn't cover, rather than this constant chasing whichever content is showing.
 const CARD_ROW_HEIGHT = 168 * CURRENT_KIT_SCALE + 20 + 24;
 
-// Design-space height (px, at scale 1) this page's foreground stack needs so
-// nothing overlaps: the detail panel's own top (`DETAIL_PANEL_TOP` + its
+// `PAGE_DESIGN_HEIGHT` (ScaleToFit.tsx) is derived from THIS page's foreground
+// stack: the detail panel's own top (`DETAIL_PANEL_TOP` + its
 // `DETAIL_PANEL_TOP_OFFSET`), its tallest natural content (measured live:
 // 505px, table included, so it never has to scroll), and the Reward_Kit row
 // below it (`CARD_ROW_HEIGHT`), plus the two `BOTTOM_GAP`-sized clearances
-// between/under them (real px, not design-space -- ~45 design px at the
-// scales this lands at). Feeding this to `useHeightCappedScale` is what keeps
-// a short window from stacking the gem/table into the row: the whole
-// foreground shrinks together instead, and only width changes spread it out.
-const REWARDS_DESIGN_HEIGHT = 970;
+// between/under them (real px, ~50 design px at the scales this lands at).
+// Sharing it with every other page keeps the sidebar/chat/top bar the same
+// size on all of them. It keeps a short window from stacking the gem/table
+// into the row: the whole foreground shrinks together instead, and only
+// width changes spread it out.
 
 function useViewportSize() {
   const [size, setSize] = useState({ width: HERO_WIDTH, height: HERO_HEIGHT });
@@ -320,7 +320,7 @@ export default function RewardsCenterContent() {
   // Foreground (sidebar, title/detail panel, chat, bottom row) size --
   // capped by window height as well as width, so widening the window never
   // enlarges it. `bgScale` above stays width-only for the background.
-  const uiScale = useHeightCappedScale(REWARDS_DESIGN_HEIGHT);
+  const uiScale = useHeightCappedScale();
   const viewport = useViewportSize();
   const menuScrollRef = useDragScroll<HTMLDivElement>();
   const scrollY = useScrollY();
@@ -499,7 +499,7 @@ export default function RewardsCenterContent() {
   // against whatever room is actually left in the real viewport below it,
   // with internal scroll for the rest (see RewardKitDetailPanel's own
   // comment) -- a fallback now that `uiScale` already budgets for the
-  // panel's natural height (`REWARDS_DESIGN_HEIGHT`).
+  // panel's natural height (`PAGE_DESIGN_HEIGHT`).
   // The background mask always spans the full real viewport from a flat
   // left 0 (its JSX below), with `bgScale` (width-only) sizing just its own
   // video pan -- it stays independent of `uiScale` and of window size.
