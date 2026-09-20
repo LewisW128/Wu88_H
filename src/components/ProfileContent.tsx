@@ -146,7 +146,7 @@ export default function ProfileContent({ forceGuest }: { forceGuest: boolean }) 
                 ) : (
                   <>
                     <ProfileCard loggedIn avatar="/assets/profile/avatar-placeholder.png" name="JESSICA" email="JESSICA123@gmail.com" memberId="1234567890" />
-                    <RewardVipCard level={8} currentExp={700} maxExp={1500} continuousDeposit="10,000" crystalImage={VIP_CARD_CRYSTAL_IMAGE} className="flex-1" />
+                    <RewardVipCard level={8} currentExp={700} maxExp={1500} continuousDeposit="10,000" crystalImage={VIP_CARD_CRYSTAL_IMAGE} className="h-[236px] flex-1" borderColor="#f4f4f4" />
                   </>
                 )}
               </div>

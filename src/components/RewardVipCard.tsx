@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import { withBasePath } from "../lib/asset";
 
 export type RewardVipCardProps = {
@@ -6,16 +9,41 @@ export type RewardVipCardProps = {
   maxExp: number;
   continuousDeposit: string;
   crystalImage: string;
-  // Sizing beyond the fixed 282px height: Figma's own 464px width by
-  // default (Reward Center), or e.g. `flex-1` where a page lays this card
-  // out beside another one and lets it fill the leftover width (/profile).
+  // The card's size: Figma's own 464x282 (Reward Center) by default, or
+  // e.g. `h-[236px] flex-1` where a page lays it out beside another card at
+  // that card's own height and lets it fill the leftover width (/profile).
   className?: string;
+  // The frame line's color: Figma's own #a2a2a2 over the Reward Center's busy
+  // background, or e.g. #f4f4f4 on /profile to match ProfileCard's own frame.
+  borderColor?: string;
 };
 
 // The rotating gem this card shows for the member's own bracket (Lv.1-13,
 // which covers the demo member's Lv.8) -- shared by every page that shows
 // this card so they all use the same asset.
 export const VIP_CARD_CRYSTAL_IMAGE = "/assets/rewards/gem-lv-01-13-rotate.webp";
+
+// Figma's own card height (282px): the gem + dot grid art is drawn to fit
+// this. A shorter card (/profile lays it out at 236px beside ProfileCard)
+// scales that art down by the same ratio so it never crowds the exp bar.
+const ART_DESIGN_HEIGHT = 282;
+
+function useElementHeight(initial: number) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState(initial);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () => setHeight(el.offsetHeight);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return { ref, height };
+}
 
 // Figma "Ellipse 2", repeated in a plain 6x6 grid (node 662:16100) -- a
 // real Figma export (`dot-square.svg`, 62x62, white fill) now used
@@ -41,11 +69,17 @@ function DotGrid() {
 // exactly -- both are the same mock member. Sized as a fixed 464x282 (this
 // page's own Figma slot), not the shared VipCard's `flex-1` -- there's no
 // sibling card it needs to split a row with here.
-export default function RewardVipCard({ level, currentExp, maxExp, continuousDeposit, crystalImage, className = "w-[464px]" }: RewardVipCardProps) {
+export default function RewardVipCard({ level, currentExp, maxExp, continuousDeposit, crystalImage, className = "h-[282px] w-[464px]", borderColor = "#a2a2a2" }: RewardVipCardProps) {
   const progress = Math.min(100, Math.max(0, (currentExp / maxExp) * 100));
+  const { ref, height } = useElementHeight(ART_DESIGN_HEIGHT);
+  const artScale = Math.min(1, height / ART_DESIGN_HEIGHT);
 
   return (
-    <div className={`relative h-[282px] ${className} overflow-hidden rounded-[20px] border border-solid border-[#a2a2a2] bg-white/50 backdrop-blur-[10px]`}>
+    <div
+      ref={ref}
+      className={`relative ${className} overflow-hidden rounded-[20px] border border-solid bg-white/50 backdrop-blur-[10px]`}
+      style={{ borderColor }}
+    >
       <div className="pointer-events-none absolute inset-[-1px] overflow-hidden">
         <div className="absolute right-[-21px] top-[33px] h-[335.676px] w-[408px] rotate-180">
           <img alt="" src={withBasePath("/assets/rewards/vip-stripe-1.svg")} className="size-full" />
@@ -60,6 +94,10 @@ export default function RewardVipCard({ level, currentExp, maxExp, continuousDep
           <img alt="" src={withBasePath("/assets/rewards/vip-stripe-4.svg")} className="size-full" />
         </div>
 
+        {/* The gem and dot grid scale together, pinned to the card's top-right
+            corner (`origin-top-right`), so a card too short for them shrinks
+            them up into that corner instead of pushing into the exp bar. */}
+        <div className="absolute inset-0 origin-top-right" style={{ scale: artScale }}>
         <div className="absolute right-[-43px] top-[-14px] size-[237px] overflow-hidden">
           {/* `object-contain` + `size-[230px]`, not the original
               `object-cover` `h-[221.2px] w-[124.467px]` -- that narrow
@@ -84,6 +122,7 @@ export default function RewardVipCard({ level, currentExp, maxExp, continuousDep
         </div>
 
         <DotGrid />
+        </div>
       </div>
 
       <div className="absolute left-[19px] top-[18px] flex items-center gap-[20px]">
