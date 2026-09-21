@@ -28,6 +28,11 @@ export type ProductCardProps = {
   // keep their size, only the body between them grows (Casino's grid, where a
   // wider window should widen the cards, not the gaps between them).
   fluid?: boolean;
+  // CSS object-position for the photo. A wide card crops the picture's top and
+  // bottom (object-cover), and most art has its subject's face in the upper
+  // part, so the default sits high (50% 20%) rather than dead centre; pass a
+  // lower value for the odd picture whose subject sits low.
+  focus?: string;
 };
 
 // The "L" (225px) photo mask as a path parametrized on the card's real width
@@ -72,7 +77,7 @@ function maskLDataUrl(w: number) {
 // that would vanish the moment they actually logged in. It does NOT
 // auto-apply the like once they log in; they just click it again now that
 // the button works.
-export default function ProductCard({ image, title, category, views, wins, labels = ["HOT"], like = true, size = "S", fluid = false }: ProductCardProps) {
+export default function ProductCard({ image, title, category, views, wins, labels = ["HOT"], like = true, size = "S", fluid = false, focus = "50% 20%" }: ProductCardProps) {
   const { loggedIn, setLoggedIn } = useAuth();
   const { liked: likedTitles, toggleLiked } = useFavorites();
   const liked = likedTitles.has(title);
@@ -116,7 +121,7 @@ export default function ProductCard({ image, title, category, views, wins, label
       onMouseLeave={() => setHovered(false)}
       style={{ width: isFluid ? "100%" : `${width}px` }}
     >
-      <img alt="" src={image} className="pointer-events-none absolute inset-0 size-full object-cover" style={maskStyle} />
+      <img alt="" src={image} className="pointer-events-none absolute inset-0 size-full object-cover" style={{ ...maskStyle, objectPosition: focus }} />
 
       <img
         alt=""

@@ -55,7 +55,7 @@ export const casinoGames: ProductCardProps[] = [
   { image: "/assets/hot-games/rank3-aladdin.png", title: "阿拉丁", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "NEW"], size: "L" },
   { image: "/assets/hot-games/rank5-penguin.png", title: "企鵝打磚塊", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L" },
   { image: "/assets/hot-games/rank6-empire.png", title: "帝國崛起", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L" },
-  { image: "/assets/general-games/swordsmith.png", title: "鑄劍大師", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L" },
+  { image: "/assets/general-games/swordsmith.png", title: "鑄劍大師", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L", focus: "50% 55%" },
   { image: "/assets/hot-games/rank1-super-sports.png", title: "SUPER 體育", category: "體育", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L" },
   { image: "/assets/hot-games/rank4-dragon-legend.png", title: "魔龍傳奇", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "NEW", "WU88"], size: "L" },
   { image: "/assets/hot-games/rank7-fishing.png", title: "瘋狂釣魚", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L" },
@@ -77,7 +77,7 @@ export const slotGames: ProductCardProps[] = [
   { image: "/assets/casino/slot/gold-hunt.jpg", title: "掏金歷險", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "NEW", "WU88"], size: "L" },
   { image: "/assets/casino/slot/aladdin.jpg", title: "阿拉丁", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L" },
   { image: "/assets/casino/slot/penguin.jpg", title: "企鵝打磚塊", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "NEW", "WU88"], size: "L" },
-  { image: "/assets/casino/slot/kingdom-rise.jpg", title: "王國崛起", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L" },
+  { image: "/assets/casino/slot/kingdom-rise.jpg", title: "王國崛起", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L", focus: "50% 55%" },
   { image: "/assets/casino/slot/war-god-set.jpg", title: "戰神賽特", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT", "NEW"], size: "L" },
   { image: "/assets/casino/slot/swordsmith.jpg", title: "鑄劍大師", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L" },
   { image: "/assets/casino/slot/viking.jpg", title: "維京傳奇", category: "電子", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L" },
@@ -115,7 +115,7 @@ export const fishingGames: ProductCardProps[] = [
   { image: "/assets/casino/fishing/crazy.jpg", title: "瘋狂捕魚", category: "捕魚", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L" },
   { image: "/assets/casino/fishing/happy.jpg", title: "開心捕魚", category: "捕魚", views: "10,000", wins: "1,000", labels: ["HOT"], size: "L" },
   { image: "/assets/casino/fishing/fish-among-fish.jpg", title: "魚中魚", category: "捕魚", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L" },
-  { image: "/assets/casino/fishing/fish-and-chips.jpg", title: "炸魚薯條", category: "捕魚", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L" },
+  { image: "/assets/casino/fishing/fish-and-chips.jpg", title: "炸魚薯條", category: "捕魚", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L", focus: "50% 55%" },
   { image: "/assets/casino/fishing/fishing-master.jpg", title: "摸魚高手", category: "捕魚", views: "10,000", wins: "1,000", labels: ["HOT", "WU88"], size: "L" },
 ];
 
