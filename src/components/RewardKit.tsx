@@ -318,6 +318,10 @@ const SCROLLBAR_CORNER_INSET = 50;
 // on the right side, so a scrollbar thumb hugging that edge has to stop
 // before it -- the bottom counterpart of SCROLLBAR_CORNER_INSET.
 const SCROLLBAR_NOTCH_INSET = 140;
+// The box keeps 30px of empty padding under its last table row, so a cap that
+// clips up to that much (less a small margin) still shows every word of the
+// copy -- nothing to scroll to, hence no scrollbar (and no scrolling).
+const FITS_TOLERANCE = 24;
 
 // The panel is a fixed 441px wide (361px of content + 40px each side). Its
 // outline is Figma's "Subtract" shape (Frame 1374, nodes 730:16932 /
@@ -384,6 +388,7 @@ export function RewardKitDetailPanel({
   // style here rather than a native browser scrollbar.
   const scrollRef = useRef<HTMLDivElement>(null);
   const [thumb, setThumb] = useState({ height: 0, top: 0 });
+  const [fits, setFits] = useState(true);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -392,7 +397,9 @@ export function RewardKitDetailPanel({
     function update() {
       if (!el) return;
       const { scrollTop, scrollHeight, clientHeight } = el;
-      if (scrollHeight <= clientHeight) {
+      const fitsNow = scrollHeight - clientHeight <= FITS_TOLERANCE;
+      setFits(fitsNow);
+      if (fitsNow) {
         setThumb({ height: 0, top: 0 });
         return;
       }
@@ -531,7 +538,7 @@ export function RewardKitDetailPanel({
         </svg>
         <div
           ref={scrollRef}
-          className="no-scrollbar flex items-start overflow-y-auto px-[40px] pb-[30px] pt-[20px]"
+          className={`no-scrollbar flex items-start px-[40px] pb-[30px] pt-[20px] ${fits ? "overflow-y-hidden" : "overflow-y-auto"}`}
           style={{ ...(maxHeight !== undefined ? { maxHeight } : null), clipPath: `path("${panelPath(boxHeight)}")` }}
         >
           <div className="flex w-[361px] flex-col items-start gap-[20px]">
