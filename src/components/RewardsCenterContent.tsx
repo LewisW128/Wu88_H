@@ -95,6 +95,8 @@ function LevelLine({ progress, width }: { progress: number; width: number }) {
   );
 }
 
+const CLAIMED_KITS_STORAGE_KEY = "wu88-reward-kits-claimed";
+
 const SEASON_COUNTDOWN_SEED = { days: "08", hours: "08", minutes: "12", seconds: "32" };
 
 const HERO_WIDTH = 1728;
@@ -315,6 +317,28 @@ function useDragScroll<T extends HTMLElement>() {
 export default function RewardsCenterContent() {
   const { loggedIn } = useAuth();
   const [selectedKit, setSelectedKit] = useState<number | null>(null);
+  // Which kits the member has already claimed (their own "立即領取" in the
+  // detail panel), by index into REWARD_KITS -- persisted, since a claim
+  // has to survive a reload the same way the Day Rewards ones do.
+  const [claimedKits, setClaimedKits] = useState<Set<number>>(() => new Set());
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(CLAIMED_KITS_STORAGE_KEY);
+      // Loaded from localStorage after mount (not a lazy initializer) so the
+      // first client render matches the server's markup.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (stored) setClaimedKits(new Set(JSON.parse(stored) as number[]));
+    } catch {
+      /* unreadable storage: start with nothing claimed */
+    }
+  }, []);
+  const claimKit = (index: number) => {
+    setClaimedKits((prev) => {
+      const next = new Set(prev).add(index);
+      localStorage.setItem(CLAIMED_KITS_STORAGE_KEY, JSON.stringify([...next]));
+      return next;
+    });
+  };
   const countdown = useCountdown(SEASON_COUNTDOWN_SEED);
   const bgScale = useFixedLayerScale();
   // Foreground (sidebar, title/detail panel, chat, bottom row) size --
@@ -680,6 +704,8 @@ export default function RewardsCenterContent() {
                 maxHeight={detailPanelMaxHeight}
                 loggedIn={loggedIn}
                 canClaim={loggedIn && MEMBER_LEVEL >= REWARD_KITS[effectiveSelectedKit].levelStart}
+                claimed={loggedIn && claimedKits.has(effectiveSelectedKit)}
+                onClaim={() => claimKit(effectiveSelectedKit)}
               />
             ) : (
               <>

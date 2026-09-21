@@ -342,6 +342,8 @@ export function RewardKitDetailPanel({
   maxHeight,
   loggedIn = false,
   canClaim = false,
+  claimed = false,
+  onClaim,
 }: {
   kit: RewardKitData;
   maxHeight?: number;
@@ -351,6 +353,10 @@ export function RewardKitDetailPanel({
   // Whether the 立即領取 pill is live (purple) or the greyed "can't claim"
   // style -- a guest, or a member whose level hasn't reached this kit yet.
   canClaim?: boolean;
+  // This kit was already claimed: the pill turns into Figma's "已經領取"
+  // style (node 1015:12773) and stops being clickable.
+  claimed?: boolean;
+  onClaim?: () => void;
 }) {
   // The right-hand column stays short (at most 5 rows) so it clears the
   // bottom-right notch; the left column takes the rest (Lv.1-8 | Lv.9-13 for
@@ -572,24 +578,43 @@ export function RewardKitDetailPanel({
 
         {/* Figma's "立即領取" pill, nested in the notch (right-0 / bottom-0 --
             top-471 of the 541px frame). Purple and live when the member can
-            claim this kit (logged in and their level has reached it); the
-            greyed "can't claim" style for a guest or a not-yet-eligible kit. */}
-        <button
-          type="button"
-          disabled={!canClaim}
-          className={`absolute bottom-0 right-0 flex items-center gap-[20px] rounded-[50px] py-[10px] pl-[10px] pr-[20px] ${canClaim ? "bg-[#8d54d8]" : "cursor-not-allowed bg-[#f4f4f4]"}`}
-        >
-          <span
-            className={`relative size-[50px] shrink-0 rounded-full ${canClaim ? "border-[1.11px] border-solid border-white bg-[#f4f4f4]" : "bg-[#a2a2a2]"}`}
+            claim this kit (logged in and their level has reached it).
+            Every disabled state -- a guest, a not-yet-eligible kit, and an
+            already-claimed one -- shares ONE style (Figma node 1015:12773,
+            per the user's own call to unify them): a light-gray pill with
+            grey text and a dark round button, the text reading "已經領取"
+            only once actually claimed. */}
+        {canClaim && !claimed ? (
+          <button
+            type="button"
+            onClick={onClaim}
+            className="absolute bottom-0 right-0 flex items-center gap-[20px] rounded-[50px] bg-[#8d54d8] py-[10px] pl-[10px] pr-[20px]"
           >
-            <img
-              alt=""
-              src={withBasePath(canClaim ? "/assets/day-rewards/icon-receive-dark.svg" : "/assets/day-rewards/icon-receive-white.svg")}
-              className="absolute left-[calc(50%-0.12px)] top-[calc(50%-0.12px)] size-[27.761px] -translate-x-1/2 -translate-y-1/2"
-            />
-          </span>
-          <span className={`whitespace-nowrap text-right text-[14px] font-bold leading-[20px] tracking-[0.15px] ${canClaim ? "text-white" : "text-[#a2a2a2]"}`}>立即領取</span>
-        </button>
+            <span className="relative size-[50px] shrink-0 rounded-full border-[1.11px] border-solid border-white bg-[#f4f4f4]">
+              <img
+                alt=""
+                src={withBasePath("/assets/day-rewards/icon-receive-dark.svg")}
+                className="absolute left-[calc(50%-0.12px)] top-[calc(50%-0.12px)] size-[27.761px] -translate-x-1/2 -translate-y-1/2"
+              />
+            </span>
+            <span className="whitespace-nowrap text-right text-[14px] font-bold leading-[20px] tracking-[0.15px] text-white">立即領取</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled
+            className="absolute bottom-0 right-0 flex cursor-not-allowed items-center gap-[10px] rounded-[50px] bg-[#f4f4f4] py-[10px] pl-[20px] pr-[10px]"
+          >
+            <span className="whitespace-nowrap text-right text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#a2a2a2]">{claimed ? "已經領取" : "立即領取"}</span>
+            <span className="relative size-[50px] shrink-0 rounded-full border-[1.11px] border-solid border-white bg-[#3e4140]">
+              <img
+                alt=""
+                src={withBasePath("/assets/day-rewards/icon-receive-white.svg")}
+                className="absolute left-[calc(50%-0.12px)] top-[calc(50%-0.12px)] size-[27.761px] -translate-x-1/2 -translate-y-1/2"
+              />
+            </span>
+          </button>
+        )}
       </div>
     </div>
   );
