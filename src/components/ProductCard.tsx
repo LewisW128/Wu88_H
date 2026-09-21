@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { withBasePath } from "../lib/asset";
 import AnimatedArrowSpecial from "./AnimatedArrowSpecial";
 import { useAuth } from "./AuthProvider";
@@ -23,7 +23,27 @@ export type ProductCardProps = {
   // photo-mask.svg) rather than one shape that scales, since the notch's
   // curve radii don't scale linearly with width.
   size?: "S" | "L";
+  // Stretch to fill the width of whatever cell holds it (L only) instead of
+  // staying a fixed 225px: the notch and everything pinned to the bottom-right
+  // keep their size, only the body between them grows (Casino's grid, where a
+  // wider window should widen the cards, not the gaps between them).
+  fluid?: boolean;
 };
+
+// The "L" (225px) photo mask as a path parametrized on the card's real width
+// `w`: everything from the notch rightward is anchored to the RIGHT edge, so
+// the notch keeps its exact size while the body stretches. At w=225 this is
+// photo-mask-l.svg's own path.
+function maskLPath(w: number) {
+  const k = w - 225;
+  const x = (n: number) => +(n + k).toFixed(3);
+  return `M${x(225)} 173C${x(225)} 186.807 ${x(213.807)} 198 ${x(200)} 198H${x(170)}C${x(156.193)} 198 ${x(145)} 209.193 ${x(145)} 223V241C${x(145)} 254.807 ${x(133.807)} 266 ${x(120)} 266H0V0H${x(225)}V173Z`;
+}
+
+function maskLDataUrl(w: number) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="266" viewBox="0 0 ${w} 266"><path d="${maskLPath(w)}" fill="#D9D9D9"/></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
 
 // Figma "Products" component (Components Library node 1:491, hover state
 // node 631:5929, "L" 225px variant seen on 02_WU88-H-PC-Casino node
@@ -52,7 +72,7 @@ export type ProductCardProps = {
 // that would vanish the moment they actually logged in. It does NOT
 // auto-apply the like once they log in; they just click it again now that
 // the button works.
-export default function ProductCard({ image, title, category, views, wins, labels = ["HOT"], like = true, size = "S" }: ProductCardProps) {
+export default function ProductCard({ image, title, category, views, wins, labels = ["HOT"], like = true, size = "S", fluid = false }: ProductCardProps) {
   const { loggedIn, setLoggedIn } = useAuth();
   const { liked: likedTitles, toggleLiked } = useFavorites();
   const liked = likedTitles.has(title);
@@ -67,20 +87,34 @@ export default function ProductCard({ image, title, category, views, wins, label
     toggleLiked(title);
   }
 
-  const width = size === "L" ? 225 : 200;
+  const baseWidth = size === "L" ? 225 : 200;
+  const isFluid = fluid && size === "L";
+  // A fluid card's real width, measured off its own box so the mask can be
+  // rebuilt to match it.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [measuredWidth, setMeasuredWidth] = useState(baseWidth);
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el || !isFluid) return;
+    const observer = new ResizeObserver(([entry]) => setMeasuredWidth(entry.contentRect.width));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [isFluid]);
+  const width = isFluid ? measuredWidth : baseWidth;
   const maskAsset = size === "L" ? "photo-mask-l.svg" : "photo-mask.svg";
   const maskStyle = {
-    maskImage: `url("${withBasePath(`/assets/product-card/${maskAsset}`)}")`,
+    maskImage: `url("${isFluid ? maskLDataUrl(width) : withBasePath(`/assets/product-card/${maskAsset}`)}")`,
     maskSize: `${width}px 266px`,
     maskRepeat: "no-repeat",
   };
 
   return (
     <div
+      ref={rootRef}
       className="group relative h-[266px] shrink-0 overflow-clip rounded-bl-[25px] rounded-br-[25px] rounded-tr-[25px]"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{ width: `${width}px` }}
+      style={{ width: isFluid ? "100%" : `${width}px` }}
     >
       <img alt="" src={image} className="pointer-events-none absolute inset-0 size-full object-cover" style={maskStyle} />
 

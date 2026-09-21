@@ -51,9 +51,13 @@ export default function CasinoGameGrid({ categories, initialTab }: CasinoGameGri
             that's settled. */}
       </div>
 
-      <div className="grid grid-cols-5 gap-[20px]">
+      {/* Five equal columns with a fixed gap, and the cards fill their column
+          (`fluid`): a wider window widens the cards instead of spreading the
+          gaps. `gap-x-[30px]` is what the old fixed 225px cards left visible at
+          the canvas width (~29px), so that width still lands on 225px cards. */}
+      <div className="grid grid-cols-5 gap-x-[30px] gap-y-[20px]">
         {activeCategory?.games.map((game, i) => (
-          <ProductCard key={`${activeCategory.key}-${i}`} {...game} />
+          <ProductCard key={`${activeCategory.key}-${i}`} {...game} fluid />
         ))}
       </div>
     </div>
