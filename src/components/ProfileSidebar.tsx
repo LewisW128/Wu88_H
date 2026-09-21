@@ -265,7 +265,16 @@ export default function ProfileSidebar() {
           />
         </div>
 
-        <NavIcon icon="/assets/sidebar/profile-nav/help.svg" label="排行榜" />
+        {/* The "?" icon is the help center (Figma's own help-center frame,
+            05_WU88-H-PC-Profile-Page node 211:23224, shows exactly this icon
+            glowing) -- it was labeled "排行榜" from icon shape alone before that
+            page existed. */}
+        <NavIcon
+          icon="/assets/sidebar/profile-nav/help.svg"
+          activeIcon="/assets/sidebar/profile-nav/help-active.svg"
+          label="幫助中心"
+          href="/profile/help"
+        />
 
         <Divider />
 
