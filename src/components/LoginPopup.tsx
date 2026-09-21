@@ -168,9 +168,6 @@ export default function LoginPopup({
               <AnimatedArrowSpecial hovered={loginArrow.hovered} size={25} color="#3e4140" />
             </button>
           </div>
-          <button type="button" onClick={onClose} className="whitespace-nowrap text-[12px] leading-[18px] tracking-[0.15px] text-[#a2a2a2]">
-            進去逛逛
-          </button>
         </div>
       </div>
 
