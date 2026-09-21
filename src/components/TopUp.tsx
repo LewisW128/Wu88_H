@@ -59,6 +59,8 @@ export default function TopUp() {
   const [modalView, setModalView] = useState<AuthModalView>("login");
   const { loggedIn, setLoggedIn } = useAuth();
   const topUpArrow = useArrowPulse();
+  const registerArrow = useArrowPulse();
+  const loginArrow = useArrowPulse();
 
   return (
     <div
@@ -125,10 +127,11 @@ export default function TopUp() {
                   setModalView("register");
                   setShowLogin(true);
                 }}
+                onMouseEnter={registerArrow.pulse}
                 className="flex h-[40px] items-center justify-between gap-[10px] rounded-[15px] bg-[#8d54d8] p-[10px]"
               >
                 <span className="whitespace-nowrap text-[12px] font-bold leading-[18px] tracking-[0.15px] text-white">註冊</span>
-                <img alt="" src={withBasePath("/assets/top-up/arrow-register.svg")} className="size-[25px]" />
+                <AnimatedArrowSpecial hovered={registerArrow.hovered} size={25} color="white" />
               </button>
 
               <button
@@ -137,10 +140,11 @@ export default function TopUp() {
                   setModalView("login");
                   setShowLogin(true);
                 }}
+                onMouseEnter={loginArrow.pulse}
                 className="flex h-[40px] items-center justify-between gap-[10px] rounded-[15px] bg-[#23f3d5] p-[10px]"
               >
                 <span className="whitespace-nowrap text-[12px] font-bold leading-[18px] tracking-[0.15px] text-[#3e4140]">登入</span>
-                <img alt="" src={withBasePath("/assets/top-up/arrow-topup.svg")} className="size-[25px]" />
+                <AnimatedArrowSpecial hovered={loginArrow.hovered} size={25} color="#3e4140" />
               </button>
             </div>
           )}
