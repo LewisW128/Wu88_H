@@ -6,6 +6,7 @@ import { useAuth } from "./AuthProvider";
 import Footer from "./Footer";
 import Language from "./Language";
 import MinPanelHeight from "./MinPanelHeight";
+import RechargeModal from "./RechargeModal";
 import ProfileSidebar from "./ProfileSidebar";
 import ScaleToFit from "./ScaleToFit";
 import Search from "./Search";
@@ -197,6 +198,7 @@ export default function AccountWallet() {
   const isGuest = !loggedIn;
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("交易明細");
   const topUpArrow = useArrowPulse();
+  const [showRecharge, setShowRecharge] = useState(false);
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-[#f4f4f4]">
@@ -249,12 +251,14 @@ export default function AccountWallet() {
                   </div>
                   <button
                     type="button"
+                    onClick={() => setShowRecharge(true)}
                     onMouseEnter={topUpArrow.pulse}
                     className="flex items-center gap-[20px] overflow-hidden rounded-bl-[20px] rounded-br-[20px] rounded-tr-[20px] bg-[#23f3d5] px-[20px] py-[10px]"
                   >
                     <span className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#3e4140]">儲值</span>
                     <AnimatedArrowSpecial hovered={topUpArrow.hovered} size={25} color="#3e4140" />
                   </button>
+                  {showRecharge && <RechargeModal onClose={() => setShowRecharge(false)} />}
                 </div>
               </div>
 

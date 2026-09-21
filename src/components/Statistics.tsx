@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { withBasePath } from "../lib/asset";
 import AnimatedArrowSpecial, { useArrowPulse } from "./AnimatedArrowSpecial";
+import RechargeModal from "./RechargeModal";
 
 // A plain numeric string ("10,000", "100,000%", "6") counts up from 0;
 // anything else (guest's "---" placeholder) just renders as-is, no
@@ -111,6 +112,7 @@ export type StatisticsProps = {
 // guest one without needing to hardcode that difference anywhere.
 export default function Statistics({ stats, balance, guest = false }: StatisticsProps) {
   const topUpArrow = useArrowPulse();
+  const [showRecharge, setShowRecharge] = useState(false);
   const valueColor = guest ? "text-[#a2a2a2]" : "text-[#3e4140]";
 
   const animatedBalance = useCountUpText(balance);
@@ -141,12 +143,14 @@ export default function Statistics({ stats, balance, guest = false }: Statistics
           </div>
           <button
             type="button"
+            onClick={() => setShowRecharge(true)}
             onMouseEnter={topUpArrow.pulse}
             className="flex w-[100px] items-center justify-between overflow-hidden rounded-bl-[20px] rounded-br-[20px] rounded-tr-[20px] bg-[#23f3d5] px-[15px] py-[10px]"
           >
             <span className="whitespace-nowrap text-[12px] font-bold leading-[18px] tracking-[0.15px] text-[#3e4140]">儲值</span>
             <AnimatedArrowSpecial hovered={topUpArrow.hovered} size={25} color="#3e4140" />
           </button>
+          {showRecharge && <RechargeModal onClose={() => setShowRecharge(false)} />}
         </div>
       </div>
 

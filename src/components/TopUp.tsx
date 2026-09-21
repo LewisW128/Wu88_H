@@ -7,6 +7,7 @@ import Avatar from "./Avatar";
 import AnimatedArrowSpecial, { useArrowPulse } from "./AnimatedArrowSpecial";
 import { useAuth } from "./AuthProvider";
 import LoginModal, { type AuthModalView } from "./LoginModal";
+import RechargeModal from "./RechargeModal";
 
 // Figma "TopUp" component (Components Library). Two independent instances,
 // each with its own Hover=off/on pair -- guest (node 750:8076 / 750:8115)
@@ -57,6 +58,7 @@ const MOCK_MEMBER = { avatar: "/assets/profile/avatar-placeholder-thumb.png", na
 export default function TopUp() {
   const [showLogin, setShowLogin] = useState(false);
   const [modalView, setModalView] = useState<AuthModalView>("login");
+  const [showRecharge, setShowRecharge] = useState(false);
   const { loggedIn, setLoggedIn } = useAuth();
   const topUpArrow = useArrowPulse();
   const registerArrow = useArrowPulse();
@@ -112,6 +114,7 @@ export default function TopUp() {
 
               <button
                 type="button"
+                onClick={() => setShowRecharge(true)}
                 onMouseEnter={topUpArrow.pulse}
                 className="flex h-[40px] shrink-0 items-center justify-between gap-[10px] rounded-[15px] bg-[#23f3d5] p-[10px]"
               >
@@ -159,6 +162,7 @@ export default function TopUp() {
         className="ml-0 size-[25px] shrink-0 transition-[margin] duration-300 group-hover:ml-[20px]"
       />
 
+      {showRecharge && <RechargeModal onClose={() => setShowRecharge(false)} />}
       {showLogin && <LoginModal initialView={modalView} onClose={() => setShowLogin(false)} onLoginSuccess={() => { setLoggedIn(true); setShowLogin(false); }} />}
     </div>
   );
