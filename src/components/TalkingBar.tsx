@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import Avatar from "./Avatar";
-import AnimatedArrowSpecial from "./AnimatedArrowSpecial";
 import { useAuth } from "./AuthProvider";
 import LevelBadge from "./LevelBadge";
 import TalkSection, { type TalkSectionProps } from "./TalkSection";
@@ -115,48 +113,67 @@ function ChannelButton({ active, icon, onClick, label }: { active: boolean; icon
   );
 }
 
-// Figma "Talk section" (Components Library, the friend-list row inside
-// node 754:9317's "All Friends" TalkingBar variant) -- distinct from
-// Talk_section (TalkSection.tsx), which is a chat MESSAGE row, not a
-// friend-list row. Fixed 71px tall even for a friend with no
-// `lastMessage` (Arick's own card in the reference), so the list stays
+// Figma "AvatarMassage" (Components Library node 998:9998): a 46x45 block with
+// the 45px photo circle inside a 1.406px ring (`ring`, a solid color or CSS
+// gradient) and the 11px status dot on its bottom-right corner. Shared by the
+// friend-list rows and the panel's own header avatar.
+function FriendAvatar({ photo, ring, status }: { photo: string; ring: string; status: Friend["status"] }) {
+  return (
+    <div className="relative h-[45px] w-[46px] shrink-0">
+      <div className="absolute left-px top-0 size-[45px] overflow-hidden rounded-full" style={{ background: ring }}>
+        <img alt="" src={photo} className="pointer-events-none absolute inset-[1.406px] size-[calc(100%-2.812px)] rounded-full object-cover" />
+      </div>
+      <svg className="absolute left-[35px] top-[34px]" width={11} height={11} viewBox="0 0 11 11" fill="none">
+        <circle cx={5.5} cy={5.5} r={4.5} fill={STATUS_DOT_COLOR[status]} stroke="white" strokeWidth={2} />
+      </svg>
+    </div>
+  );
+}
+
+// Figma "Talk section" (Components Library node 988:9537, style="friend box" --
+// the friend-list row inside node 754:9317's "All Friends" TalkingBar
+// variant) -- distinct from Talk_section (TalkSection.tsx), which is a chat
+// MESSAGE row, not a friend-list row. Fixed 71px tall even for a friend with
+// no `lastMessage` (Arick's own card in the reference), so the list stays
 // evenly spaced rather than each row hugging its own content height.
-// The corner arrow reuses AnimatedArrowSpecial (the same glyph family as
-// ProfileSidebar's own back-arrow.svg) instead of a new static asset,
-// statically fully-drawn (`hovered` pinned true) since this row isn't
-// itself hover-tracked -- only the click matters here.
+//
+// Laid out the way Figma does it: the avatar block (46x45, a 45px photo
+// circle inside a 1.406px level-colored ring, status dot at its bottom-right
+// corner) and the text column sit in ONE row at `left/top 10`, vertically
+// CENTERED against each other -- so a friend with no message preview has
+// its name row centered beside the avatar, and one with a bubble has the
+// avatar centered against the taller name+bubble column, rather than
+// everything hanging from the top. The corner arrow is Figma's own static
+// 12px "open" arrow, which points up-RIGHT (the Play buttons' arrow points
+// up-left, so AnimatedArrowSpecial isn't the same glyph here).
 function FriendCard({ friend, onClick }: { friend: Friend; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="relative flex h-[71px] w-full shrink-0 items-start gap-[10px] rounded-[10px] border border-[#f4f4f4] bg-white/50 p-[10px] text-left"
+      className="relative h-[71px] w-full shrink-0 rounded-[10px] border border-[#f4f4f4] bg-white/50 text-left"
     >
-      <div className="relative shrink-0">
-        <Avatar photo={withBasePath(friend.avatar)} size={46} badge={false} ringColor={friend.levelBackground} />
-        <div
-          className="absolute bottom-0 right-0 size-[11px] rounded-full border-2 border-white"
-          style={{ background: STATUS_DOT_COLOR[friend.status] }}
-        />
-      </div>
+      <div className="absolute inset-x-[10px] top-[10px] flex items-center gap-[10px]">
+        <FriendAvatar photo={withBasePath(friend.avatar)} ring={friend.levelBackground} status={friend.status} />
 
-      <div className="flex min-w-0 flex-1 flex-col items-start gap-[5px]">
-        <div className="flex w-full items-center justify-between gap-[10px]">
-          <div className="flex min-w-0 items-center gap-[5px]">
-            <p className="whitespace-nowrap text-[12px] font-bold leading-[18px] tracking-[0.15px] text-[#3e4140]">{friend.name}</p>
-            <LevelBadge label={friend.levelLabel} background={friend.levelBackground} />
+        <div className="flex min-w-0 flex-1 flex-col items-start justify-center gap-[5px]">
+          <div className="flex w-full items-center justify-between">
+            <div className="flex min-w-0 items-center gap-[5px]">
+              <p className="whitespace-nowrap text-[12px] font-bold leading-[18px] tracking-[0.15px] text-[#3e4140]">{friend.name}</p>
+              <LevelBadge label={friend.levelLabel} background={friend.levelBackground} weight="regular" />
+            </div>
+            <p className="whitespace-nowrap px-[2px] text-right text-[8px] leading-[18px] tracking-[0.15px] text-[#a2a2a2]">{friend.timestamp}</p>
           </div>
-          <p className="whitespace-nowrap text-[8px] leading-[18px] tracking-[0.15px] text-[#a2a2a2]">{friend.timestamp}</p>
+
+          {friend.lastMessage && (
+            <div className="max-w-full rounded-bl-[10px] rounded-br-[10px] rounded-tr-[10px] bg-[#f4f4f4] px-[10px] py-[4px]">
+              <p className="truncate text-[12px] leading-[18px] tracking-[0.15px] text-[#3e4140]">{friend.lastMessage}</p>
+            </div>
+          )}
         </div>
-
-        {friend.lastMessage && (
-          <div className="max-w-full rounded-bl-[10px] rounded-br-[10px] rounded-tr-[10px] bg-[#f4f4f4] px-[10px] py-[4px]">
-            <p className="truncate text-[12px] leading-[18px] tracking-[0.15px] text-[#3e4140]">{friend.lastMessage}</p>
-          </div>
-        )}
       </div>
 
-      <AnimatedArrowSpecial hovered size={12} color="#3e4140" className="absolute bottom-[9px] right-[10px] shrink-0" />
+      <img alt="" src={withBasePath("/assets/talk-section/arrow-open.svg")} className="pointer-events-none absolute bottom-[9px] right-[11px] size-[12px]" />
     </button>
   );
 }
@@ -359,8 +376,7 @@ export default function TalkingBar({ messages, friends, simulatedMessages = [] }
           </button>
         ) : loggedIn ? (
           <div className="absolute left-[30px] top-[20px]">
-            <Avatar photo={withBasePath("/assets/talk-section/avatar-jessica.png")} size={45} badge={false} ringColor="#01fab0" />
-            <div className="absolute bottom-0 right-0 size-[11px] rounded-full border-2 border-white" style={{ background: STATUS_DOT_COLOR.online }} />
+            <FriendAvatar photo={withBasePath("/assets/talk-section/avatar-jessica.png")} ring="#23f3d5" status="online" />
           </div>
         ) : (
           // Same generic silhouette the guest ProfileCard itself uses
@@ -375,7 +391,7 @@ export default function TalkingBar({ messages, friends, simulatedMessages = [] }
         <button
           type="button"
           aria-label="新增好友"
-          className="absolute bottom-[20px] right-[20px] flex size-[45px] items-center justify-center rounded-full bg-[#3e4140]"
+          className="absolute bottom-[20px] right-[20px] flex size-[61px] items-center justify-center rounded-bl-[50px] rounded-br-[50px] rounded-tl-[50px] bg-[#3e4140]"
         >
           <img alt="" src={withBasePath("/assets/talk-section/icon-add-friend.svg")} className="size-[15px]" />
         </button>
