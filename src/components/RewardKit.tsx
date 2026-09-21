@@ -314,11 +314,63 @@ function RewardTableColumn({ rows }: { rows: RewardKitLevelRow[] }) {
 // Matches the scroll box's own `rounded-tr-[50px]`/`rounded-br-[50px]`
 // corner radius (see the thumb-tracking effect's own comment below).
 const SCROLLBAR_CORNER_INSET = 50;
+// The box's bottom-right notch (below) begins this far above its bottom edge
+// on the right side, so a scrollbar thumb hugging that edge has to stop
+// before it -- the bottom counterpart of SCROLLBAR_CORNER_INSET.
+const SCROLLBAR_NOTCH_INSET = 140;
 
-export function RewardKitDetailPanel({ kit, maxHeight }: { kit: RewardKitData; maxHeight?: number }) {
-  const half = Math.ceil(kit.rewardTable.length / 2);
-  const left = kit.rewardTable.slice(0, half);
-  const right = kit.rewardTable.slice(half);
+// The panel is a fixed 441px wide (361px of content + 40px each side). Its
+// outline is Figma's "Subtract" shape (Frame 1374, nodes 730:16932 /
+// 652:17081): a plain top-left corner, 50px radii on the other three, and a
+// notch cut out of the bottom-right for the 立即領取 pill to sit in. Only the
+// HEIGHT varies (the box scrolls once it's capped), so the path is
+// parametrized on `h` -- everything below the notch's start is anchored to the
+// bottom edge. At h=541 this is Figma's own path.
+const PANEL_WIDTH = 441;
+function panelPath(h: number) {
+  const b = (dy: number) => +(h - dy).toFixed(3);
+  return `M391 0.5C418.338 0.5 440.5 22.6619 440.5 50V${b(140)}C440.5 ${b(112.662)} 418.338 ${b(90.5)} 391 ${b(90.5)}H310C284.871 ${b(90.5)} 264.5 ${b(70.129)} 264.5 ${b(45)}C264.5 ${b(20.423)} 244.577 ${b(0.5)} 220 ${b(0.5)}H50C22.6619 ${b(0.5)} 0.5 ${b(22.662)} 0.5 ${b(50)}V0.5H391Z`;
+}
+
+// A keyword picked out in the description's teal.
+function Hl({ children }: { children: React.ReactNode }) {
+  return <span className="text-[#14d8bb]">{children}</span>;
+}
+
+export function RewardKitDetailPanel({
+  kit,
+  maxHeight,
+  loggedIn = false,
+  canClaim = false,
+}: {
+  kit: RewardKitData;
+  maxHeight?: number;
+  // Only changes the description's "Lv.x-y" weight (bold for a guest, per
+  // Figma's two frames).
+  loggedIn?: boolean;
+  // Whether the 立即領取 pill is live (purple) or the greyed "can't claim"
+  // style -- a guest, or a member whose level hasn't reached this kit yet.
+  canClaim?: boolean;
+}) {
+  // The right-hand column stays short (at most 5 rows) so it clears the
+  // bottom-right notch; the left column takes the rest (Lv.1-8 | Lv.9-13 for
+  // a 13-level kit, as in Figma).
+  const rightCount = Math.min(5, Math.floor(kit.rewardTable.length / 2));
+  const left = kit.rewardTable.slice(0, kit.rewardTable.length - rightCount);
+  const right = kit.rewardTable.slice(kit.rewardTable.length - rightCount);
+
+  // The box's real rendered height, for the height-parametrized outline.
+  const boxRef = useRef<HTMLDivElement>(null);
+  const [boxHeight, setBoxHeight] = useState(541);
+  useEffect(() => {
+    const el = boxRef.current;
+    if (!el) return;
+    const update = () => setBoxHeight(el.offsetHeight);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // Same thin teal scrollbar thumb this project already uses for its other
   // two scrollable panels (ProfileSidebar's own rail, Talking_Bar's own
@@ -338,15 +390,15 @@ export function RewardKitDetailPanel({ kit, maxHeight }: { kit: RewardKitData; m
         setThumb({ height: 0, top: 0 });
         return;
       }
-      // The box's own `rounded-tr-[50px]`/`rounded-br-[50px]` corners curve
-      // inward well past this scroll container's own 20px vertical padding
-      // -- a thumb track inset by just that padding (an earlier version
-      // here did) poked out past the rounded silhouette at both ends,
-      // confirmed live via a zoomed screenshot showing the thumb sticking
-      // out past the curve. Insetting the TRACK by the corner radius
-      // itself instead keeps the thumb inside the box's actual rounded
-      // shape at any scroll position.
-      const trackHeight = Math.max(0, clientHeight - 2 * SCROLLBAR_CORNER_INSET);
+      // The box's own top-right corner curves inward well past this scroll
+      // container's own 20px vertical padding -- a thumb track inset by just
+      // that padding (an earlier version here did) poked out past the
+      // rounded silhouette, confirmed live via a zoomed screenshot showing
+      // the thumb sticking out past the curve. Insetting the TRACK by the
+      // corner radius at the top and by where the bottom-right notch begins
+      // at the bottom keeps the thumb inside the box's actual shape at any
+      // scroll position.
+      const trackHeight = Math.max(0, clientHeight - SCROLLBAR_CORNER_INSET - SCROLLBAR_NOTCH_INSET);
       const height = Math.max(24, Math.min(trackHeight, (clientHeight / scrollHeight) * trackHeight));
       const maxTop = Math.max(0, trackHeight - height);
       const top = (scrollTop / (scrollHeight - clientHeight)) * maxTop;
@@ -460,11 +512,21 @@ export function RewardKitDetailPanel({ kit, maxHeight }: { kit: RewardKitData; m
           mask-image convention; reverted per a later direct call
           ("這裡的文案我改不做淡出了"), back to a plain hard clip at the box's
           own edge. */}
-      <div className="relative shrink-0">
+      <div ref={boxRef} className="relative shrink-0" style={{ width: PANEL_WIDTH }}>
+        {/* The frosted fill (white/50 + 10px backdrop blur) and the 1px #f4f4f4
+            outline, both cut to `panelPath` -- a plain `rounded-*` box can't
+            express the bottom-right notch. */}
+        <div
+          className="pointer-events-none absolute inset-0 bg-white/50 backdrop-blur-[10px]"
+          style={{ clipPath: `path("${panelPath(boxHeight)}")` }}
+        />
+        <svg aria-hidden width={PANEL_WIDTH} height={boxHeight} viewBox={`0 0 ${PANEL_WIDTH} ${boxHeight}`} fill="none" className="pointer-events-none absolute inset-0 overflow-visible">
+          <path d={panelPath(boxHeight)} stroke="#F4F4F4" />
+        </svg>
         <div
           ref={scrollRef}
-          className="no-scrollbar flex items-start overflow-y-auto rounded-tr-[50px] rounded-bl-[50px] rounded-br-[50px] border border-solid border-[#f4f4f4] bg-white/50 px-[40px] py-[20px] backdrop-blur-[10px]"
-          style={maxHeight !== undefined ? { maxHeight } : undefined}
+          className="no-scrollbar flex items-start overflow-y-auto px-[40px] pb-[30px] pt-[20px]"
+          style={{ ...(maxHeight !== undefined ? { maxHeight } : null), clipPath: `path("${panelPath(boxHeight)}")` }}
         >
           <div className="flex w-[361px] flex-col items-start gap-[20px]">
             <div className="flex flex-col items-start gap-[10px] tracking-[0.15px]">
@@ -475,7 +537,7 @@ export function RewardKitDetailPanel({ kit, maxHeight }: { kit: RewardKitData; m
                 限前 <span className="text-[#14d8bb]">5,000</span> 名領取。
               </p>
               <p className="text-[12px] leading-[18px] text-[#a2a2a2]">
-                以下為 Lv.{kit.levelStart}–{kit.levelEnd} 累積儲值等級的暫定範例。玩家的累積儲值金額達到對應門檻後，即可進入下一個等級，並逐步解鎖更高階的{kit.name}與成長回饋。前期等級門檻較容易達成，適合新手快速體驗升級節奏；中期開始提高累積需求，讓每次儲值都能明確推進進度；高階等級則提供更具挑戰性的長期目標，鼓勵玩家持續累積並朝 Lv.{kit.levelEnd} 邁進。等級越高，代表完成的累積里程碑越多，也能展現更高的會員身份與參與程度。下方金額皆以 USDT 計算，僅供版面與活動規劃參考，實際門檻、獎勵內容、發放條件及活動期間，仍應以最終公告與正式規則為準。請在儲值前確認目前累積進度與對應級別，避免因活動結算時間、資料更新或其他條件而影響資格判定。
+                以下為 <span className={`text-[#14d8bb] ${loggedIn ? "" : "font-bold"}`}>Lv.{kit.levelStart}–{kit.levelEnd}</span> <Hl>累積儲值等級</Hl>的暫定範例。玩家的<Hl>累積儲值金額</Hl>達到<Hl>對應門檻</Hl>後，即可進入<Hl>下一個等級</Hl>，並逐步解鎖更高階的<Hl>{kit.name}</Hl>與<Hl>成長回饋</Hl>。前期等級門檻較容易達成，適合<Hl>新手快速體驗升級節奏</Hl>；中期開始提高累積需求，讓每次儲值都能<Hl>明確推進進度</Hl>；高階等級則提供更具挑戰性的<Hl>長期目標</Hl>，鼓勵玩家持續累積並朝 <Hl>Lv.{kit.levelEnd}</Hl> 邁進。等級越高，代表完成的<Hl>累積里程碑</Hl>越多，也能展現更高的<Hl>會員身份與參與程度</Hl>。下方金額皆以 <Hl>USDT</Hl> 計算，僅供版面與活動規劃參考，實際門檻、獎勵內容、發放條件及活動期間，仍應以<Hl>最終公告與正式規則</Hl>為準。請在儲值前確認<Hl>目前累積進度與對應級別</Hl>，避免因活動結算時間、資料更新或其他條件而影響資格判定。
               </p>
             </div>
 
@@ -507,6 +569,27 @@ export function RewardKitDetailPanel({ kit, maxHeight }: { kit: RewardKitData; m
             style={{ top: SCROLLBAR_CORNER_INSET + thumb.top, height: thumb.height }}
           />
         )}
+
+        {/* Figma's "立即領取" pill, nested in the notch (right-0 / bottom-0 --
+            top-471 of the 541px frame). Purple and live when the member can
+            claim this kit (logged in and their level has reached it); the
+            greyed "can't claim" style for a guest or a not-yet-eligible kit. */}
+        <button
+          type="button"
+          disabled={!canClaim}
+          className={`absolute bottom-0 right-0 flex items-center gap-[20px] rounded-[50px] py-[10px] pl-[10px] pr-[20px] ${canClaim ? "bg-[#8d54d8]" : "cursor-not-allowed bg-[#f4f4f4]"}`}
+        >
+          <span
+            className={`relative size-[50px] shrink-0 rounded-full ${canClaim ? "border-[1.11px] border-solid border-white bg-[#f4f4f4]" : "bg-[#a2a2a2]"}`}
+          >
+            <img
+              alt=""
+              src={withBasePath(canClaim ? "/assets/day-rewards/icon-receive-dark.svg" : "/assets/day-rewards/icon-receive-white.svg")}
+              className="absolute left-[calc(50%-0.12px)] top-[calc(50%-0.12px)] size-[27.761px] -translate-x-1/2 -translate-y-1/2"
+            />
+          </span>
+          <span className={`whitespace-nowrap text-right text-[14px] font-bold leading-[20px] tracking-[0.15px] ${canClaim ? "text-white" : "text-[#a2a2a2]"}`}>立即領取</span>
+        </button>
       </div>
     </div>
   );

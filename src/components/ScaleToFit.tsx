@@ -45,10 +45,10 @@ export function useMinPanelHeight(bottomGap = 20) {
 
 // Design-space height (px, at scale 1) the site's foreground chrome needs
 // so nothing stacks into anything else. Set by the tallest fixed stack on
-// any page (Reward Center: detail panel + its 505px table + the Reward_Kit
+// any page (Reward Center: detail panel + its 541px box + the Reward_Kit
 // row + the real-px gaps around them), and shared by every page so the same
 // sidebar/top bar/chat panel are the same size wherever you navigate.
-export const PAGE_DESIGN_HEIGHT = 970;
+export const PAGE_DESIGN_HEIGHT = 1006;
 
 // UI scale that stays constant as the window widens: the smaller of the
 // width fit (never wider than the canvas) and a height fit against

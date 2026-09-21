@@ -187,8 +187,10 @@ const CARD_ROW_HEIGHT = 168 * CURRENT_KIT_SCALE + 20 + 24;
 
 // `PAGE_DESIGN_HEIGHT` (ScaleToFit.tsx) is derived from THIS page's foreground
 // stack: the detail panel's own top (`DETAIL_PANEL_TOP` + its
-// `DETAIL_PANEL_TOP_OFFSET`), its tallest natural content (measured live:
-// 505px, table included, so it never has to scroll), and the Reward_Kit row
+// `DETAIL_PANEL_TOP_OFFSET`), its box's natural height (Figma's 541px,
+// notch and 8-row table included, so the usual 13-level kit never has to
+// scroll; the one 14-level kit is 26px taller and scrolls when short), and
+// the Reward_Kit row
 // below it (`CARD_ROW_HEIGHT`), plus the two `BOTTOM_GAP`-sized clearances
 // between/under them (real px, ~50 design px at the scales this lands at).
 // Sharing it with every other page keeps the sidebar/chat/top bar the same
@@ -673,7 +675,12 @@ export default function RewardsCenterContent() {
                 click target of its own here; picking a different card
                 just swaps which kit's panel shows). */}
             {effectiveSelectedKit !== null ? (
-              <RewardKitDetailPanel kit={REWARD_KITS[effectiveSelectedKit]} maxHeight={detailPanelMaxHeight} />
+              <RewardKitDetailPanel
+                kit={REWARD_KITS[effectiveSelectedKit]}
+                maxHeight={detailPanelMaxHeight}
+                loggedIn={loggedIn}
+                canClaim={loggedIn && MEMBER_LEVEL >= REWARD_KITS[effectiveSelectedKit].levelStart}
+              />
             ) : (
               <>
               <div className="flex w-[464px] flex-col items-start gap-[20px]">
