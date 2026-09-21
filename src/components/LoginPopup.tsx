@@ -55,6 +55,12 @@ export default function LoginPopup({
   const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
   const canLogin = account.trim() !== "" && password.trim() !== "";
+  // Enter in either field logs in, exactly like clicking 登入 (which is a no-op
+  // until both fields are filled). `isComposing` skips the Enter that confirms
+  // an IME candidate (注音/拼音 input), which must not submit the form.
+  function handleFieldKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter" && !e.nativeEvent.isComposing && canLogin) onLoginSuccess?.();
+  }
   const [tilt, setTilt] = useState({ x: 0, y: 0 }); // each in [-0.5, 0.5]
   const registerArrow = useArrowPulse();
   const loginArrow = useArrowPulse();
@@ -124,6 +130,7 @@ export default function LoginPopup({
                 type="text"
                 value={account}
                 onChange={(e) => setAccount(e.target.value)}
+                onKeyDown={handleFieldKeyDown}
                 placeholder="請輸入您的帳號"
                 className="absolute inset-0 bg-transparent pl-[48px] pr-[15px] text-[12px] leading-[18px] tracking-[0.15px] text-[#3e4140] outline-none placeholder:text-[10px] placeholder:text-[#a2a2a2]"
               />
@@ -136,6 +143,7 @@ export default function LoginPopup({
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={handleFieldKeyDown}
                   placeholder="請輸入您的6-12位英文字母及數字"
                   className="absolute inset-0 bg-transparent pl-[48px] pr-[15px] text-[12px] leading-[18px] tracking-[0.15px] text-[#3e4140] outline-none placeholder:text-[10px] placeholder:text-[#a2a2a2]"
                 />
