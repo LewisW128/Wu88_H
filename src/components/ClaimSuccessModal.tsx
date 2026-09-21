@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { withBasePath } from "../lib/asset";
 import PopupScaleToFit from "./PopupScaleToFit";
+import TwinklingDots from "./TwinklingDots";
 
 const CARD_WIDTH = 560;
 const CARD_HEIGHT = 659;
@@ -78,7 +79,10 @@ function ClaimSuccessCard({ onClose }: { onClose: () => void }) {
           className="pointer-events-none absolute inset-0 size-full object-cover"
         />
       )}
-      <img alt="" src={withBasePath("/assets/day-rewards/claim-dots.svg")} className="pointer-events-none absolute right-[0.46px] top-0 h-[231px] w-[242.221px] max-w-none" />
+      {/* Figma's digital-dots cluster (the same artwork as the page heroes' one,
+          scaled to 242x231) as TwinklingDots, so each dot twinkles on its own
+          timer instead of sitting as a flat image. */}
+      <TwinklingDots className="pointer-events-none absolute right-[0.46px] top-0 h-[231px] w-[242.221px]" />
       <img alt="" src={withBasePath("/assets/registration/decor-small.svg")} className="pointer-events-none absolute left-[164px] top-[11px] h-[65px] w-[79px] max-w-none rotate-180" />
       <img alt="" src={withBasePath("/assets/day-rewards/claim-decor-large.svg")} className="pointer-events-none absolute left-[-105px] top-[-99px] h-[228px] w-[277px] max-w-none rotate-180" />
 
