@@ -74,14 +74,24 @@ function LevelPoint({ numeral, active }: { numeral: string; active: boolean }) {
 // own for that 100% to resolve against. The user's own screenshot caught
 // this as the connector lines between the level-rail numbers having
 // silently vanished.
-function LevelLine({ active, width }: { active: boolean; width: number }) {
+//
+// `progress` (0-1) is how much of this segment the member's own level has
+// covered -- it's an experience bar as much as a rail: the segment between
+// two milestones fills teal from its start in proportion to how far the
+// level has gone between them (Lv.8 sits 7/13 of the way from 1 to 14), so
+// the plain gray line shows through the unfilled remainder. 0 is fully gray
+// and 1 fully teal, exactly the two states this used to switch between.
+function LevelLine({ progress, width }: { progress: number; width: number }) {
+  const filled = width * Math.min(1, Math.max(0, progress));
   return (
-    <img
-      alt=""
-      src={withBasePath(active ? "/assets/rewards/level-line-active.svg" : "/assets/rewards/level-line.svg")}
-      className="h-[19px] shrink-0"
-      style={{ width, maxWidth: "none" }}
-    />
+    <div className="relative h-[19px] shrink-0" style={{ width }}>
+      <img alt="" src={withBasePath("/assets/rewards/level-line.svg")} className="absolute left-0 top-0 h-[19px]" style={{ width, maxWidth: "none" }} />
+      {filled > 0 && (
+        <div className="absolute left-0 top-0 h-[19px] overflow-hidden" style={{ width: filled }}>
+          <img alt="" src={withBasePath("/assets/rewards/level-line-active.svg")} className="h-[19px]" style={{ width, maxWidth: "none" }} />
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -1006,11 +1016,17 @@ export default function RewardsCenterContent() {
                 // that 8th card's center, same as every other segment.
                 const lineEnd = kitCardCenters[i + 1];
                 const lineWidth = lineEnd - center - 24;
+                // How far the member's level has gone through THIS segment:
+                // from this milestone's level to the next one's (the last
+                // segment reaches the 8th kit's own first level, 93).
+                const segmentStart = Number(numeral);
+                const segmentEnd = i + 1 < LEVEL_POINTS.length ? Number(LEVEL_POINTS[i + 1]) : REWARD_KITS[i + 1].levelStart;
+                const lineProgress = loggedIn ? (MEMBER_LEVEL - segmentStart) / (segmentEnd - segmentStart) : 0;
                 return (
                   <div key={i} className="absolute top-0" style={{ left: center - 12 }}>
                     <LevelPoint numeral={numeral} active={achieved} />
                     <div className="absolute left-[24px] top-[2.5px]">
-                      <LevelLine active={achieved} width={lineWidth} />
+                      <LevelLine progress={lineProgress} width={lineWidth} />
                     </div>
                   </div>
                 );
