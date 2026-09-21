@@ -166,7 +166,12 @@ function FriendCard({ friend, onClick }: { friend: Friend; onClick: () => void }
           </div>
 
           {friend.lastMessage && (
-            <div className="max-w-full rounded-bl-[10px] rounded-br-[10px] rounded-tr-[10px] bg-[#f4f4f4] px-[10px] py-[4px]">
+            /* `max-w-[calc(100%-24px)]`: the corner arrow sits in the bottom-right
+                of this same column (its own 12px + a gap), at the bubble's height,
+                so a long message must stop short of it and truncate there instead
+                of running underneath it -- Figma keeps that clear too (its longest
+                bubble ends ~30px before the arrow). */
+            <div className="max-w-[calc(100%-24px)] rounded-bl-[10px] rounded-br-[10px] rounded-tr-[10px] bg-[#f4f4f4] px-[10px] py-[4px]">
               <p className="truncate text-[12px] leading-[18px] tracking-[0.15px] text-[#3e4140]">{friend.lastMessage}</p>
             </div>
           )}
