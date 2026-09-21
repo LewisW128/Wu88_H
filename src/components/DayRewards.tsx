@@ -272,6 +272,17 @@ function RewardCardLarge({ day, reward, onClaim }: { day: string; reward: string
 // weeks run Monday to Sunday, so Monday is day 1 and Sunday is day 7, and
 // counting starts from the current week ("先從這禮拜開始算第一周").
 const CYCLE_DAYS = 7;
+// Master switch for the claim rules described below (weekly reset, days
+// unlocking one calendar day at a time, one claim per day, day-7 make-up).
+// Switched OFF for now: every day is claimable at any time and nothing is
+// persisted, so a claim only lasts until the page is reloaded ("每日領取先把
+// 規則關閉 讓他隨意領取 重啟就歸零"). Flip to true to bring the rules back --
+// all of that code is untouched behind this flag.
+const CLAIM_RULES_ENABLED = false;
+// The claims made while the rules are off. Module-level rather than component
+// state so it survives client-side navigation (/profile <-> /promotions each
+// mount their own DayRewards) but, being memory only, a reload wipes it.
+const freeClaimed = new Set<number>();
 // getDay() value the week starts on (0 = Sunday, 1 = Monday).
 const WEEK_STARTS_ON = 1;
 const MS_PER_DAY = 86400000;
@@ -334,11 +345,12 @@ function daysSinceAnchor(anchorMs: number, now: Date) {
 // -- so the very first visit starts a fresh week with nothing claimed and
 // today's weekday as the unlocked day (Monday = day 1).
 function useDayRewardsState() {
-  const [claimed, setClaimed] = useState<Set<number>>(() => new Set());
-  const [unlockedDay, setUnlockedDay] = useState(1);
+  const [claimed, setClaimed] = useState<Set<number>>(() => new Set(CLAIM_RULES_ENABLED ? [] : freeClaimed));
+  const [unlockedDay, setUnlockedDay] = useState(CLAIM_RULES_ENABLED ? 1 : CYCLE_DAYS);
   const [claimedToday, setClaimedToday] = useState(false);
 
   useEffect(() => {
+    if (!CLAIM_RULES_ENABLED) return;
     // Same reasoning as this file's earlier version of this effect: a
     // lazy useState initializer would dodge the set-state-in-effect rule
     // below, but this tree is server-rendered too and localStorage isn't
@@ -420,6 +432,11 @@ function useDayRewardsState() {
   // Returns whether the claim actually went through (it's refused once the
   // day's one claim is used), so the caller only celebrates real claims.
   const claim = (day: number) => {
+    if (!CLAIM_RULES_ENABLED) {
+      freeClaimed.add(day);
+      setClaimed(new Set(freeClaimed));
+      return true;
+    }
     if (claimedToday && !isFinalDay) return false;
     localStorage.setItem(LAST_CLAIM_STORAGE_KEY, String(startOfDay(new Date())));
     setClaimedToday(true);
