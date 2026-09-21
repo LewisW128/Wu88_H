@@ -361,15 +361,30 @@ function useDayRewardsState() {
 
       // Weekly reset: the stored claims belong to a different (earlier)
       // calendar week than this one -- however many days of it went
-      // unclaimed -- so they're dropped and this week starts from zero.
+      // unclaimed -- so they're dropped and this week starts from zero. That
+      // includes the "already claimed today" marker: it belongs to the same
+      // dropped record, and keeping it (a claim made today under an older
+      // anchor) left DAY 1 showing as unclaimed yet not claimable at all,
+      // with no large card to hover.
+      let lastClaim = Number(localStorage.getItem(LAST_CLAIM_STORAGE_KEY)) || 0;
       if (Number(localStorage.getItem(ANCHOR_STORAGE_KEY)) !== thisWeek) {
         claimedDays = [];
+        lastClaim = 0;
         localStorage.setItem(ANCHOR_STORAGE_KEY, String(thisWeek));
         localStorage.setItem(CLAIMED_STORAGE_KEY, JSON.stringify(claimedDays));
+        localStorage.removeItem(LAST_CLAIM_STORAGE_KEY);
+      }
+
+      // A real claim always records a day, so an "already claimed today"
+      // marker with nothing claimed is a leftover from a record that was
+      // reset underneath it (the case fixed above, already sitting in some
+      // browsers' storage) -- heal it instead of leaving DAY 1 unclaimable.
+      if (lastClaim && claimedDays.length === 0) {
+        lastClaim = 0;
+        localStorage.removeItem(LAST_CLAIM_STORAGE_KEY);
       }
 
       const today = Math.min(CYCLE_DAYS, Math.max(1, 1 + daysSinceAnchor(thisWeek, now)));
-      const lastClaim = Number(localStorage.getItem(LAST_CLAIM_STORAGE_KEY)) || 0;
       setUnlockedDay(today);
       setClaimed((prev) => (prev.size === claimedDays.length && claimedDays.every((d) => prev.has(d)) ? prev : new Set(claimedDays)));
       setClaimedToday(lastClaim === startOfDay(now));
