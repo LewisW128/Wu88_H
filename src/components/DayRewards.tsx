@@ -427,7 +427,10 @@ function useDayRewardsState() {
   // (the 七日壓軸好禮): it never claims any of the cards' days, and it isn't
   // even shown until day 7 itself has arrived. The large card is what
   // claims / makes up days 1-6.
-  const pillState: "hidden" | "ready" | "claimed" = !isFinalDay ? "hidden" : claimed.has(CYCLE_DAYS) ? "claimed" : "ready";
+  // With the rules off there's no calendar to wait for, so "day 7 has arrived"
+  // means the row has been worked through to its end: all six cards claimed.
+  const finalDayReached = CLAIM_RULES_ENABLED ? isFinalDay : Array.from({ length: CYCLE_DAYS - 1 }, (_, i) => i + 1).every((day) => claimed.has(day));
+  const pillState: "hidden" | "ready" | "claimed" = !finalDayReached ? "hidden" : claimed.has(CYCLE_DAYS) ? "claimed" : "ready";
 
   // Returns whether the claim actually went through (it's refused once the
   // day's one claim is used), so the caller only celebrates real claims.
@@ -449,7 +452,15 @@ function useDayRewardsState() {
     return true;
   };
 
-  return { claimed, currentDay, pillState, claim };
+  // Rules-off mode only: once every day (incl. day 7) has been claimed the row
+  // starts over from zero ("如果全部點完就歸零").
+  const resetIfComplete = () => {
+    if (CLAIM_RULES_ENABLED || claimed.size < CYCLE_DAYS) return;
+    freeClaimed.clear();
+    setClaimed(new Set());
+  };
+
+  return { claimed, currentDay, pillState, claim, resetIfComplete };
 }
 
 // Figma "Day Rewards" (05_WU88-H-PC-Profile-Page node 601:14802, seen live
@@ -481,7 +492,7 @@ const DAY_REWARDS_HASH = `#${DAY_REWARDS_ID}`;
 
 export default function DayRewards() {
   const { loggedIn } = useAuth();
-  const { claimed, currentDay, pillState, claim } = useDayRewardsState();
+  const { claimed, currentDay, pillState, claim, resetIfComplete } = useDayRewardsState();
   // The 領取成功 popup that follows every successful claim (Figma 192:21294).
   const [showSuccess, setShowSuccess] = useState(false);
   const handleClaim = (day: number) => {
@@ -603,7 +614,15 @@ export default function DayRewards() {
         ) : null}
       </div>
 
-      {showSuccess && <ClaimSuccessModal onClose={() => setShowSuccess(false)} />}
+      {showSuccess && (
+        <ClaimSuccessModal
+          onClose={() => {
+            setShowSuccess(false);
+            // Closing the popup after the last claim wipes the finished week.
+            resetIfComplete();
+          }}
+        />
+      )}
     </div>
   );
 }

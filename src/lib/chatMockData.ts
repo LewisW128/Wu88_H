@@ -1,4 +1,5 @@
 import { DEFAULT_RING_COLOR } from "../components/Avatar";
+import { MEMBER_BEST_WIN, formatMoney } from "./member";
 import type { Friend } from "../components/TalkingBar";
 import type { TalkSectionProps } from "../components/TalkSection";
 
@@ -8,11 +9,11 @@ import type { TalkSectionProps } from "../components/TalkSection";
 // page to need it) once a second page (Rewards center) needed the exact
 // same data rather than a near-duplicate.
 export const winListRows = [
-  { name: "@Jessica", win: "+ 10,000,000" },
+  { name: "@Jessica", win: `+ ${formatMoney(MEMBER_BEST_WIN)}` },
   { name: "@Jackson", win: "+ 9,000,000" },
   { name: "@Alex", win: "+ 800,000" },
   { name: "@Jannie", win: "+ 5,020,000" },
-  { name: "@Jessica", win: "+ 18,200,050" },
+  { name: "@Jasmine", win: "+ 18,200,050" },
   { name: "@Jannifer", win: "+ 15,600,000" },
   { name: "@Russell", win: "+ 20,100,000" },
 ];

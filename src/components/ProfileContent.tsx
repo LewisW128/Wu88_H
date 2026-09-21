@@ -25,6 +25,18 @@ import TopBar from "./TopBar";
 import TopUp from "./TopUp";
 import RewardVipCard, { VIP_CARD_CRYSTAL_IMAGE } from "./RewardVipCard";
 import { ALL_GAMES } from "../lib/games";
+import {
+  MEMBER_BALANCE_TEXT,
+  MEMBER_CONTINUOUS_DEPOSIT,
+  MEMBER_EXP,
+  MEMBER_LEVEL,
+  MEMBER_MAX_EXP,
+  MEMBER_RANK,
+  MEMBER_TOTAL_BET,
+  MEMBER_TOTAL_PROFIT,
+  MEMBER_WIN_RATE,
+  formatMoney,
+} from "../lib/member";
 import { topBarAnnouncements, talkingBarMessages, talkingBarSimulatedMessages, talkingBarFriends } from "../lib/chatMockData";
 
 // Figma "Promotions" (node 451:18295, seen live at 428:17332): same 優惠活動
@@ -146,7 +158,7 @@ export default function ProfileContent({ forceGuest }: { forceGuest: boolean }) 
                 ) : (
                   <>
                     <ProfileCard loggedIn avatar="/assets/profile/avatar-placeholder.png" name="JESSICA" email="JESSICA123@gmail.com" memberId="1234567890" />
-                    <RewardVipCard level={8} currentExp={700} maxExp={1500} continuousDeposit="10,000" crystalImage={VIP_CARD_CRYSTAL_IMAGE} className="h-[236px] flex-1" borderColor="#f4f4f4" />
+                    <RewardVipCard level={MEMBER_LEVEL} currentExp={MEMBER_EXP} maxExp={MEMBER_MAX_EXP} continuousDeposit={MEMBER_CONTINUOUS_DEPOSIT} crystalImage={VIP_CARD_CRYSTAL_IMAGE} className="h-[236px] flex-1" borderColor="#f4f4f4" />
                   </>
                 )}
               </div>
@@ -169,7 +181,7 @@ export default function ProfileContent({ forceGuest }: { forceGuest: boolean }) 
 
               <Statistics
                 guest={isGuest}
-                balance={isGuest ? "---" : "10,000,000"}
+                balance={isGuest ? "---" : MEMBER_BALANCE_TEXT}
                 stats={
                   isGuest
                     ? [
@@ -179,10 +191,10 @@ export default function ProfileContent({ forceGuest }: { forceGuest: boolean }) 
                         { icon: "/assets/statistics/icon-fraction.svg", value: "---", label: "平均勝率" },
                       ]
                     : [
-                        { icon: "/assets/statistics/icon-diamond.svg", value: "10,000", label: "總投注" },
-                        { icon: "/assets/statistics/icon-win.svg", value: "10,000,000", label: "總獲利" },
-                        { icon: "/assets/statistics/icon-trophy.svg", value: "6", label: "排名" },
-                        { icon: "/assets/statistics/icon-fraction.svg", value: "100,000%", label: "平均勝率" },
+                        { icon: "/assets/statistics/icon-diamond.svg", value: formatMoney(MEMBER_TOTAL_BET), label: "總投注" },
+                        { icon: "/assets/statistics/icon-win.svg", value: formatMoney(MEMBER_TOTAL_PROFIT), label: "總獲利" },
+                        { icon: "/assets/statistics/icon-trophy.svg", value: String(MEMBER_RANK), label: "排名" },
+                        { icon: "/assets/statistics/icon-fraction.svg", value: `${MEMBER_WIN_RATE}%`, label: "平均勝率" },
                       ]
                 }
               />

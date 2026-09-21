@@ -15,6 +15,7 @@ import type { TalkSectionProps } from "./TalkSection";
 import TopBar from "./TopBar";
 import TopUp from "./TopUp";
 import { withBasePath } from "../lib/asset";
+import { MEMBER_BEST_WIN, MEMBER_LEVEL_LABEL, formatMoney } from "../lib/member";
 
 // Same group chat / friend list data as every other page's TalkingBar --
 // not a trimmed-down version. There's only one chat, not a separate one
@@ -185,7 +186,7 @@ function AccountHeader() {
           <div className="flex items-center gap-[20px]">
             <p className="whitespace-nowrap text-[16px] font-medium leading-[24px] tracking-[0.15px] text-[#a2a2a2]">ID 20260612</p>
             <button type="button" className="flex items-center justify-center gap-[10px] rounded-[20px] bg-[#3e4140] px-[10px] py-[5px]">
-              <span className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-white">VIP Lv.13</span>
+              <span className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-white">VIP {MEMBER_LEVEL_LABEL}</span>
               <img alt="" src={withBasePath("/assets/account/icon-chevron-right.svg")} className="size-[25px]" />
             </button>
           </div>
@@ -234,7 +235,7 @@ export default function AccountSettings() {
             onlineCount="900"
             totalReward="10,000,000"
             announcements={[
-              { name: "Jessica", amount: "USDT10,000,000" },
+              { name: "Jessica", amount: `USDT${formatMoney(MEMBER_BEST_WIN)}` },
               { name: "Jackson", amount: "USDT9,000,000" },
               { name: "Alex", amount: "USDT800,000" },
             ]}

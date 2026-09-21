@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { withBasePath } from "../lib/asset";
+import { MEMBER_BALANCE_COMPACT, MEMBER_LEVEL_LABEL } from "../lib/member";
 import Avatar from "./Avatar";
 import AnimatedArrowSpecial, { useArrowPulse } from "./AnimatedArrowSpecial";
 import { useAuth } from "./AuthProvider";
@@ -53,7 +54,7 @@ import RechargeModal from "./RechargeModal";
 // for higher-tier members elsewhere, e.g. WinList's top rows) -- this
 // mock member's own level is low, so the avatar here uses a flat
 // #23f3d5 ring + badge instead, per request.
-const MOCK_MEMBER = { avatar: "/assets/profile/avatar-placeholder-thumb.png", name: "Jessica", level: "Lv.35", balance: "10M" };
+const MOCK_MEMBER = { avatar: "/assets/profile/avatar-placeholder-thumb.png", name: "Jessica", level: MEMBER_LEVEL_LABEL, balance: MEMBER_BALANCE_COMPACT };
 
 export default function TopUp() {
   const [showLogin, setShowLogin] = useState(false);

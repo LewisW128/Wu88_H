@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { withBasePath } from "../lib/asset";
+import { MEMBER_BALANCE } from "../lib/member";
 import PopupScaleToFit from "./PopupScaleToFit";
 
 const CARD_WIDTH = 556;
@@ -14,9 +15,6 @@ const CUSTOM = "custom";
 type Selection = (typeof PACKAGES)[number] | typeof CUSTOM;
 
 type PaymentMethod = "card" | "applepay";
-
-// Mock account -- same "no real backend" pattern as the rest of the site.
-const MOCK_BALANCE = 12480;
 
 const PURPLE_TO_TEAL = "linear-gradient(93.082deg, rgb(141, 84, 216) 0.27398%, rgb(20, 232, 184) 104.92%)";
 
@@ -64,7 +62,7 @@ function RechargeCard({ onClose }: { onClose: () => void }) {
           <div className={`flex w-full items-center rounded-[15px] bg-[#f4f4f4] p-[16px] ${OUTLINE}`}>
             <div className="flex items-center gap-[20px]">
               <img alt="" src={withBasePath("/assets/recharge/balance-diamond.svg")} className="size-[40px] shrink-0" />
-              <p className="whitespace-nowrap text-[20px] font-black leading-[32px] tracking-[0.35px] text-[#3e4140]">${formatAmount(MOCK_BALANCE)}</p>
+              <p className="whitespace-nowrap text-[20px] font-black leading-[32px] tracking-[0.35px] text-[#3e4140]">${formatAmount(MEMBER_BALANCE)}</p>
             </div>
           </div>
 

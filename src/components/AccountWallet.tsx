@@ -16,6 +16,7 @@ import type { TalkSectionProps } from "./TalkSection";
 import TopBar from "./TopBar";
 import TopUp from "./TopUp";
 import { withBasePath } from "../lib/asset";
+import { MEMBER_BEST_WIN, MEMBER_BALANCE_TEXT, MEMBER_TODAY_EXPENSE, MEMBER_TODAY_INCOME, MEMBER_TOTAL_REBATE, formatMoney } from "../lib/member";
 
 // Same group chat / friend list data as every other page's TalkingBar --
 // not a trimmed-down version. There's only one chat, not a separate one
@@ -133,6 +134,11 @@ const TRANSACTIONS: Transaction[] = [
   { name: "信用卡充值", date: "06/12 13:30", amount: "$10,000", color: "#38ddcd" },
 ];
 
+// 本月儲值 is what the list above actually shows being deposited, not a separate
+// number. The 返水 / 託售 rows sit inside the member's lifetime totals
+// (lib/member.ts), which is what 累計返水 reports.
+const MONTH_DEPOSIT = TRANSACTIONS.filter((t) => t.name === "信用卡充值").reduce((sum, t) => sum + Number(t.amount.replace(/\D/g, "")), 0);
+
 const TABS = ["交易明細", "轉點明細", "投注紀錄", "活動點數", "其他明細"] as const;
 
 function StatCard({ icon, label, value, valueColor = "#3e4140" }: { icon: string; label: string; value: string; valueColor?: string }) {
@@ -208,7 +214,7 @@ export default function AccountWallet() {
             onlineCount="900"
             totalReward="10,000,000"
             announcements={[
-              { name: "Jessica", amount: "USDT10,000,000" },
+              { name: "Jessica", amount: `USDT${formatMoney(MEMBER_BEST_WIN)}` },
               { name: "Jackson", amount: "USDT9,000,000" },
               { name: "Alex", amount: "USDT800,000" },
             ]}
@@ -246,7 +252,7 @@ export default function AccountWallet() {
                     <img alt="" src={withBasePath("/assets/statistics/icon-balance.svg")} className="size-[25px]" />
                     <div className="h-[20px] w-px bg-[#f4f4f4]" />
                     <p className={`whitespace-nowrap text-[40px] font-black leading-[36px] tracking-[0.36px] ${isGuest ? "text-[#a2a2a2]" : "text-[#3e4140]"}`}>
-                      {isGuest ? "---" : "10,000,000"}
+                      {isGuest ? "---" : MEMBER_BALANCE_TEXT}
                     </p>
                   </div>
                   <button
@@ -263,10 +269,10 @@ export default function AccountWallet() {
               </div>
 
               <div className="flex w-full items-start gap-[20px]">
-                <StatCard icon="/assets/wallet/icon-income.svg" label="今日收入" value={isGuest ? "---" : "+8,200"} valueColor={isGuest ? "#a2a2a2" : undefined} />
-                <StatCard icon="/assets/wallet/icon-expense.svg" label="今日支出" value={isGuest ? "---" : "-1,500"} valueColor={isGuest ? "#a2a2a2" : "#f02692"} />
-                <StatCard icon="/assets/wallet/icon-topup.svg" label="本月儲值" value={isGuest ? "---" : "120,000"} valueColor={isGuest ? "#a2a2a2" : undefined} />
-                <StatCard icon="/assets/wallet/icon-rebate.svg" label="累計返水" value={isGuest ? "---" : "3,480,000"} valueColor={isGuest ? "#a2a2a2" : undefined} />
+                <StatCard icon="/assets/wallet/icon-income.svg" label="今日收入" value={isGuest ? "---" : `+${formatMoney(MEMBER_TODAY_INCOME)}`} valueColor={isGuest ? "#a2a2a2" : undefined} />
+                <StatCard icon="/assets/wallet/icon-expense.svg" label="今日支出" value={isGuest ? "---" : `-${formatMoney(MEMBER_TODAY_EXPENSE)}`} valueColor={isGuest ? "#a2a2a2" : "#f02692"} />
+                <StatCard icon="/assets/wallet/icon-topup.svg" label="本月儲值" value={isGuest ? "---" : formatMoney(MONTH_DEPOSIT)} valueColor={isGuest ? "#a2a2a2" : undefined} />
+                <StatCard icon="/assets/wallet/icon-rebate.svg" label="累計返水" value={isGuest ? "---" : formatMoney(MEMBER_TOTAL_REBATE)} valueColor={isGuest ? "#a2a2a2" : undefined} />
               </div>
 
               <div className="flex w-full items-center gap-[36px] border-b border-[#f4f4f4]">

@@ -13,6 +13,7 @@ import TopBar from "./TopBar";
 import TopUp from "./TopUp";
 import { TimeUnit, useCountdown } from "./PromotionCard";
 import { withBasePath } from "../lib/asset";
+import { MEMBER_CONTINUOUS_DEPOSIT, MEMBER_EXP, MEMBER_LEVEL, MEMBER_MAX_EXP } from "../lib/member";
 import { topBarAnnouncements, talkingBarMessages, talkingBarSimulatedMessages, talkingBarFriends } from "../lib/chatMockData";
 
 // Figma "Level_line"/"Level_Point" (node 202:7697 / 203:7706): the season's
@@ -127,10 +128,7 @@ const DETAIL_PANEL_TOP = 58;
 // member -- same Lv.8 / 700 of 1,500 exp / 10,000 continuous deposit
 // ProfileContent's own VipCard already shows for its logged-in state, not
 // independently invented numbers for this page.
-const MEMBER_LEVEL = 8;
-const MEMBER_EXP = 700;
-const MEMBER_MAX_EXP = 1500;
-const MEMBER_CONTINUOUS_DEPOSIT = "10,000";
+// (Now shared from lib/member.ts so every page reads the same level.)
 // The crystal on this page's VIP card is the Lv.1-13 kit's own rotating gem
 // (RewardKit.tsx's `animatedImage` comment), reused per the user's own direct
 // call ("是同一組阿") rather than generated from the card's original still

@@ -27,13 +27,15 @@ import TopUp from "../components/TopUp";
 import WinList from "../components/WinList";
 import type { RankSectionProps } from "../components/RankSection";
 import { hotGames, generalGames } from "../lib/games";
+import { MEMBER_BEST_BET, MEMBER_BEST_WIN, MEMBER_LEVEL_LABEL, formatMoney } from "../lib/member";
 
 const winListRows: RankSectionProps[] = [
-  { avatar: "/assets/win-list/avatar-0.png", name: "@Jessica", levelLabel: "Lv.40", levelBackground: "#8d54d8", bet: "200", win: "+ 10,000,000", odds: "0.00x", thumb: "/assets/win-list/game-0.png" },
+  // The logged-in member's own row: Lv.8, her best round (lib/member.ts).
+  { avatar: "/assets/win-list/avatar-0.png", name: "@Jessica", levelLabel: MEMBER_LEVEL_LABEL, levelBackground: "#23f3d5", bet: formatMoney(MEMBER_BEST_BET), win: `+ ${formatMoney(MEMBER_BEST_WIN)}`, odds: `${(MEMBER_BEST_WIN / MEMBER_BEST_BET).toLocaleString("en-US", { minimumFractionDigits: 2 })}x`, thumb: "/assets/win-list/game-0.png" },
   { avatar: "/assets/win-list/avatar-1.png", name: "@Jackson", levelLabel: "Lv.100", levelBackground: DEFAULT_RING_COLOR, bet: "1,000", win: "+ 9,000,000", odds: "0.00x", thumb: "/assets/win-list/game-1.png" },
   { avatar: "/assets/win-list/avatar-2.png", name: "@Alex", levelLabel: "Lv.92", levelBackground: "#5fabe7", bet: "990", win: "+ 800,000", odds: "0.00x", thumb: "/assets/win-list/game-2.png" },
   { avatar: "/assets/win-list/avatar-3.png", name: "@Jannie", levelLabel: "Lv.66", levelBackground: "#e9cf88", levelOpacity: 0.66, bet: "20,000", win: "+ 5,020,000", odds: "0.00x", thumb: "/assets/win-list/game-3.png" },
-  { avatar: "/assets/win-list/avatar-4.png", name: "@Jessica", levelLabel: "Lv.27", levelBackground: "#2470d2", bet: "4,000", win: "+ 18,200,050", odds: "0.00x", thumb: "/assets/win-list/game-4.png" },
+  { avatar: "/assets/win-list/avatar-4.png", name: "@Jasmine", levelLabel: "Lv.27", levelBackground: "#2470d2", bet: "4,000", win: "+ 18,200,050", odds: "0.00x", thumb: "/assets/win-list/game-4.png" },
   { avatar: "/assets/win-list/avatar-5.png", name: "@Jannifer", levelLabel: "Lv.40", levelBackground: "#8d54d8", bet: "360", win: "+ 15,600,000", odds: "0.00x", thumb: "/assets/win-list/game-5.png" },
   { avatar: "/assets/win-list/avatar-6.png", name: "@Russell", levelLabel: "Lv.40", levelBackground: "#8d54d8", bet: "5,000", win: "+ 20,100,000", odds: "0.00x", thumb: "/assets/win-list/game-5.png" },
 ];

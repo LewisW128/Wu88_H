@@ -18,12 +18,14 @@ import type { TalkSectionProps } from "../../components/TalkSection";
 import TopBar from "../../components/TopBar";
 import TopUp from "../../components/TopUp";
 
+import { MEMBER_BEST_WIN, formatMoney } from "../../lib/member";
+
 const winListRows = [
-  { name: "@Jessica", win: "+ 10,000,000" },
+  { name: "@Jessica", win: `+ ${formatMoney(MEMBER_BEST_WIN)}` },
   { name: "@Jackson", win: "+ 9,000,000" },
   { name: "@Alex", win: "+ 800,000" },
   { name: "@Jannie", win: "+ 5,020,000" },
-  { name: "@Jessica", win: "+ 18,200,050" },
+  { name: "@Jasmine", win: "+ 18,200,050" },
   { name: "@Jannifer", win: "+ 15,600,000" },
   { name: "@Russell", win: "+ 20,100,000" },
 ];

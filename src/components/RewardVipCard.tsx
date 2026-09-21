@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { withBasePath } from "../lib/asset";
+import RechargeModal from "./RechargeModal";
 
 export type RewardVipCardProps = {
   level: number;
@@ -73,6 +74,8 @@ export default function RewardVipCard({ level, currentExp, maxExp, continuousDep
   const progress = Math.min(100, Math.max(0, (currentExp / maxExp) * 100));
   const { ref, height } = useElementHeight(ART_DESIGN_HEIGHT);
   const artScale = Math.min(1, height / ART_DESIGN_HEIGHT);
+  // The exp bar's "+" is a top-up shortcut: the level climbs with deposits.
+  const [showRecharge, setShowRecharge] = useState(false);
 
   return (
     <div
@@ -152,9 +155,15 @@ export default function RewardVipCard({ level, currentExp, maxExp, continuousDep
               style={{ width: `${progress}%`, background: "linear-gradient(90deg, #3cc2ca 0%, #b559fc 100%)" }}
             />
           </div>
-          <div className="flex size-[25px] shrink-0 items-center justify-center rounded-full bg-[#3e4140] p-[5px] backdrop-blur-[5.556px]">
+          <button
+            type="button"
+            aria-label="儲值"
+            onClick={() => setShowRecharge(true)}
+            className="flex size-[25px] shrink-0 items-center justify-center rounded-full bg-[#3e4140] p-[5px] backdrop-blur-[5.556px]"
+          >
             <img alt="" src={withBasePath("/assets/vip-card/add-icon.svg")} className="size-[13.889px]" />
-          </div>
+          </button>
+          {showRecharge && <RechargeModal onClose={() => setShowRecharge(false)} />}
         </div>
         <p className="whitespace-nowrap">
           <span className="text-[12px] leading-[18px] tracking-[0.15px] text-[#b2b2b2]">已經連續儲值 </span>
