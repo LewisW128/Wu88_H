@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { withBasePath } from "../lib/asset";
-import { MEMBER_BALANCE_COMPACT, MEMBER_LEVEL_LABEL } from "../lib/member";
+import { MEMBER_BALANCE_COMPACT, MEMBER_LEVEL_COLOR, MEMBER_LEVEL_LABEL } from "../lib/member";
 import Avatar from "./Avatar";
 import AnimatedArrowSpecial, { useArrowPulse } from "./AnimatedArrowSpecial";
 import { useAuth } from "./AuthProvider";
@@ -102,7 +102,7 @@ export default function TopUp() {
               <div className="flex shrink-0 flex-col items-start gap-[2px]">
                 <div className="flex items-center gap-[10px]">
                   <p className="whitespace-nowrap text-[10px] font-medium leading-[18px] tracking-[0.15px] text-[#a2a2a2]">{`@ ${MOCK_MEMBER.name}`}</p>
-                  <div className="flex h-[18px] items-center justify-center rounded-[50px] bg-[#8d54d8] px-[5px] py-[2px]">
+                  <div className="flex h-[18px] items-center justify-center rounded-[50px] px-[5px] py-[2px]" style={{ background: MEMBER_LEVEL_COLOR }}>
                     <p className="whitespace-nowrap text-[10px] font-medium leading-[18px] tracking-[0.15px] text-white">{MOCK_MEMBER.level}</p>
                   </div>
                 </div>
