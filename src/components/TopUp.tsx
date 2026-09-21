@@ -6,7 +6,7 @@ import { withBasePath } from "../lib/asset";
 import Avatar from "./Avatar";
 import AnimatedArrowSpecial, { useArrowPulse } from "./AnimatedArrowSpecial";
 import { useAuth } from "./AuthProvider";
-import LoginModal from "./LoginModal";
+import LoginModal, { type AuthModalView } from "./LoginModal";
 
 // Figma "TopUp" component (Components Library). Two independent instances,
 // each with its own Hover=off/on pair -- guest (node 750:8076 / 750:8115)
@@ -56,6 +56,7 @@ const MOCK_MEMBER = { avatar: "/assets/profile/avatar-placeholder-thumb.png", na
 
 export default function TopUp() {
   const [showLogin, setShowLogin] = useState(false);
+  const [modalView, setModalView] = useState<AuthModalView>("login");
   const { loggedIn, setLoggedIn } = useAuth();
   const topUpArrow = useArrowPulse();
 
@@ -120,6 +121,10 @@ export default function TopUp() {
             <div className="flex items-center gap-[10px]">
               <button
                 type="button"
+                onClick={() => {
+                  setModalView("register");
+                  setShowLogin(true);
+                }}
                 className="flex h-[40px] items-center justify-between gap-[10px] rounded-[15px] bg-[#8d54d8] p-[10px]"
               >
                 <span className="whitespace-nowrap text-[12px] font-bold leading-[18px] tracking-[0.15px] text-white">註冊</span>
@@ -128,7 +133,10 @@ export default function TopUp() {
 
               <button
                 type="button"
-                onClick={() => setShowLogin(true)}
+                onClick={() => {
+                  setModalView("login");
+                  setShowLogin(true);
+                }}
                 className="flex h-[40px] items-center justify-between gap-[10px] rounded-[15px] bg-[#23f3d5] p-[10px]"
               >
                 <span className="whitespace-nowrap text-[12px] font-bold leading-[18px] tracking-[0.15px] text-[#3e4140]">登入</span>
@@ -147,7 +155,7 @@ export default function TopUp() {
         className="ml-0 size-[25px] shrink-0 transition-[margin] duration-300 group-hover:ml-[20px]"
       />
 
-      {showLogin && <LoginModal onClose={() => setShowLogin(false)} onLoginSuccess={() => { setLoggedIn(true); setShowLogin(false); }} />}
+      {showLogin && <LoginModal initialView={modalView} onClose={() => setShowLogin(false)} onLoginSuccess={() => { setLoggedIn(true); setShowLogin(false); }} />}
     </div>
   );
 }

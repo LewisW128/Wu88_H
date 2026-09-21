@@ -44,10 +44,13 @@ export default function LoginPopup({
   className,
   onClose,
   onLoginSuccess,
+  onRegister,
 }: {
   className?: string;
   onClose?: () => void;
   onLoginSuccess?: () => void;
+  // 註冊: swaps the modal over to the sign-up form.
+  onRegister?: () => void;
 }) {
   const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
@@ -148,6 +151,7 @@ export default function LoginPopup({
           <div className="flex items-center gap-[20px]">
             <button
               type="button"
+              onClick={onRegister}
               onMouseEnter={registerArrow.pulse}
               className="flex w-[140px] items-center justify-between overflow-hidden rounded-bl-[20px] rounded-br-[20px] rounded-tr-[20px] bg-[#8d54d8] px-[15px] py-[10px]"
             >

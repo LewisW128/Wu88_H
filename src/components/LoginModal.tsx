@@ -1,9 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import LoginPopup from "./LoginPopup";
 import PopupScaleToFit from "./PopupScaleToFit";
+import RegistrationPopup, { REGISTRATION_POPUP_HEIGHT, REGISTRATION_POPUP_WIDTH } from "./RegistrationPopup";
+
+export type AuthModalView = "login" | "register";
 
 // The overlay that TopUp's "登入" button opens LoginPopup inside of --
 // LoginPopup itself only knows how to render the card; this owns the
@@ -20,7 +23,22 @@ import PopupScaleToFit from "./PopupScaleToFit";
 // overlay's "cover the screen" math and dimmed backdrop landed at the
 // wrong size/position instead of over the real window. Portaling out from
 // under that zoomed subtree gives it the real, unscaled viewport back.
-export default function LoginModal({ onClose, onLoginSuccess }: { onClose: () => void; onLoginSuccess?: () => void }) {
+//
+// The same overlay also hosts the sign-up form (RegistrationPopup): 註冊 in
+// the login popup swaps to it, "已有帳號？登入" swaps back, and the page's own
+// 註冊 buttons open it directly via `initialView`. A successful sign-up logs
+// the new member straight in, through the same `onLoginSuccess` a login uses.
+export default function LoginModal({
+  onClose,
+  onLoginSuccess,
+  initialView = "login",
+}: {
+  onClose: () => void;
+  onLoginSuccess?: () => void;
+  initialView?: AuthModalView;
+}) {
+  const [view, setView] = useState<AuthModalView>(initialView);
+
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -32,9 +50,15 @@ export default function LoginModal({ onClose, onLoginSuccess }: { onClose: () =>
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-[20px]" onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()}>
-        <PopupScaleToFit width={976} height={630.898} margin={60} maxScale={0.8}>
-          <LoginPopup onClose={onClose} onLoginSuccess={onLoginSuccess} />
-        </PopupScaleToFit>
+        {view === "login" ? (
+          <PopupScaleToFit width={976} height={630.898} margin={60} maxScale={0.8}>
+            <LoginPopup onClose={onClose} onLoginSuccess={onLoginSuccess} onRegister={() => setView("register")} />
+          </PopupScaleToFit>
+        ) : (
+          <PopupScaleToFit width={REGISTRATION_POPUP_WIDTH} height={REGISTRATION_POPUP_HEIGHT} margin={60} maxScale={0.8}>
+            <RegistrationPopup onClose={onClose} onLogin={() => setView("login")} onRegisterSuccess={onLoginSuccess} />
+          </PopupScaleToFit>
+        )}
       </div>
     </div>,
     document.body,

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { withBasePath } from "../lib/asset";
 import AnimatedArrowSpecial, { useArrowPulse } from "./AnimatedArrowSpecial";
 import { useAuth } from "./AuthProvider";
-import LoginModal from "./LoginModal";
+import LoginModal, { type AuthModalView } from "./LoginModal";
 import Switch from "./Switch";
 import TwinklingDots from "./TwinklingDots";
 
@@ -61,6 +61,7 @@ export default function ProfileCard(props: ProfileCardProps) {
   const [hideNickname, setHideNickname] = useState(false);
   const { setLoggedIn } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
+  const [modalView, setModalView] = useState<AuthModalView>("login");
   const registerArrow = useArrowPulse();
   const loginArrow = useArrowPulse();
 
@@ -86,6 +87,10 @@ export default function ProfileCard(props: ProfileCardProps) {
           <div className="absolute left-[319px] top-[19px] flex items-center gap-[20px]">
             <button
               type="button"
+              onClick={() => {
+                setModalView("register");
+                setShowLogin(true);
+              }}
               onMouseEnter={registerArrow.pulse}
               className="flex h-[40px] w-[127px] items-center justify-between overflow-hidden rounded-bl-[20px] rounded-br-[20px] rounded-tr-[20px] bg-[#8d54d8] px-[15px] py-[10px]"
             >
@@ -94,7 +99,10 @@ export default function ProfileCard(props: ProfileCardProps) {
             </button>
             <button
               type="button"
-              onClick={() => setShowLogin(true)}
+              onClick={() => {
+                setModalView("login");
+                setShowLogin(true);
+              }}
               onMouseEnter={loginArrow.pulse}
               className="flex h-[40px] w-[127px] items-center justify-between overflow-hidden rounded-bl-[20px] rounded-br-[20px] rounded-tr-[20px] bg-[#23f3d5] px-[15px] py-[10px]"
             >
@@ -152,7 +160,7 @@ export default function ProfileCard(props: ProfileCardProps) {
         className="absolute left-[8px] top-[220px] h-[223px] w-[299px]"
       />
 
-      {showLogin && <LoginModal onClose={() => setShowLogin(false)} onLoginSuccess={() => { setLoggedIn(true); setShowLogin(false); }} />}
+      {showLogin && <LoginModal initialView={modalView} onClose={() => setShowLogin(false)} onLoginSuccess={() => { setLoggedIn(true); setShowLogin(false); }} />}
     </div>
   );
 }
