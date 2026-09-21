@@ -20,7 +20,10 @@ const TITLE_REVEAL_S = 13;
 // "確定" button pinned to the bottom.
 //
 // The scene is now a 20s animation (Seedance 2.5, animated from Figma's still
-// per the user's own call): she drives a supercar through the neon city, drifts
+// per the user's own call), pre-cropped to exactly the card's visible window
+// (524x616, the card's 560:659) and re-encoded small (~1.7MB -- a frame
+// sequence of the same clip would be 6-7MB, since H.264 only stores what
+// changes between frames): she drives a supercar through the neon city, drifts
 // to a stop in tire smoke, steps out, and ends presenting the chest to the
 // camera -- the still's own composition. It plays once and holds its last
 // frame; "領取成功 !" fades in as that last shot begins, and 確定 is always
@@ -72,7 +75,7 @@ function ClaimSuccessCard({ onClose }: { onClose: () => void }) {
           onTimeUpdate={(event) => {
             if (event.currentTarget.currentTime >= TITLE_REVEAL_S) setShowTitle(true);
           }}
-          className="pointer-events-none absolute left-[calc(50%+0.5px)] top-[calc(50%+96.5px)] h-[1374px] w-[773px] max-w-none -translate-x-1/2 -translate-y-1/2 object-cover"
+          className="pointer-events-none absolute inset-0 size-full object-cover"
         />
       )}
       <img alt="" src={withBasePath("/assets/day-rewards/claim-dots.svg")} className="pointer-events-none absolute right-[0.46px] top-0 h-[231px] w-[242.221px] max-w-none" />
