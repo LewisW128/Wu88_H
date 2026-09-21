@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "./AuthProvider";
 import { withBasePath } from "../lib/asset";
+import ClaimSuccessModal from "./ClaimSuccessModal";
 
 // Same brand gradient QuickLinks/Avatar already use for their own gradient
 // borders/rings (just this project's usual stop palette). get_design_context's
@@ -401,8 +402,10 @@ function useDayRewardsState() {
   // claims / makes up days 1-6.
   const pillState: "hidden" | "ready" | "claimed" = !isFinalDay ? "hidden" : claimed.has(CYCLE_DAYS) ? "claimed" : "ready";
 
+  // Returns whether the claim actually went through (it's refused once the
+  // day's one claim is used), so the caller only celebrates real claims.
   const claim = (day: number) => {
-    if (claimedToday && !isFinalDay) return;
+    if (claimedToday && !isFinalDay) return false;
     localStorage.setItem(LAST_CLAIM_STORAGE_KEY, String(startOfDay(new Date())));
     setClaimedToday(true);
     setClaimed((prev) => {
@@ -411,6 +414,7 @@ function useDayRewardsState() {
       localStorage.setItem(CLAIMED_STORAGE_KEY, JSON.stringify([...next]));
       return next;
     });
+    return true;
   };
 
   return { claimed, currentDay, pillState, claim };
@@ -446,6 +450,11 @@ const DAY_REWARDS_HASH = `#${DAY_REWARDS_ID}`;
 export default function DayRewards() {
   const { loggedIn } = useAuth();
   const { claimed, currentDay, pillState, claim } = useDayRewardsState();
+  // The 領取成功 popup that follows every successful claim (Figma 192:21294).
+  const [showSuccess, setShowSuccess] = useState(false);
+  const handleClaim = (day: number) => {
+    if (claim(day)) setShowSuccess(true);
+  };
   // The home page's 每日能源補給 "立即領取" sends a logged-in member here with
   // `#day-rewards`. This section only exists once logged in (and after the
   // stored login has been read on mount), so the browser's own hash scroll
@@ -484,7 +493,7 @@ export default function DayRewards() {
         <div className="flex w-full items-center gap-[20px]">
           {REWARD_DAYS.map(({ day, reward, icon }) =>
             day === currentDay ? (
-              <RewardCardLarge key={day} day={`DAY ${day}`} reward={reward} onClaim={() => claim(day)} />
+              <RewardCardLarge key={day} day={`DAY ${day}`} reward={reward} onClaim={() => handleClaim(day)} />
             ) : (
               <RewardCard key={day} day={`DAY ${day}`} reward={reward} icon={icon} claimed={claimed.has(day)} />
             ),
@@ -532,7 +541,7 @@ export default function DayRewards() {
         {pillState === "ready" ? (
           <button
             type="button"
-            onClick={() => claim(CYCLE_DAYS)}
+            onClick={() => handleClaim(CYCLE_DAYS)}
             className="absolute left-[240px] top-[197px] flex items-center gap-[10px] rounded-[50px] bg-[#8d54d8] py-[10px] pl-[10px] pr-[20px]"
           >
             <span className="relative size-[50px] shrink-0 rounded-full border-[1.11px] border-solid border-white bg-[#f4f4f4]">
@@ -561,6 +570,8 @@ export default function DayRewards() {
           </button>
         ) : null}
       </div>
+
+      {showSuccess && <ClaimSuccessModal onClose={() => setShowSuccess(false)} />}
     </div>
   );
 }
