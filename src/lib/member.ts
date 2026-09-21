@@ -7,9 +7,8 @@ export const MEMBER_EXP = 700;
 export const MEMBER_MAX_EXP = 1500;
 export const MEMBER_CONTINUOUS_DEPOSIT = "10,000";
 export const MEMBER_LEVEL_LABEL = `Lv.${MEMBER_LEVEL}`;
-// Level badges are colored by bracket; Lv.8 is the site's brand green, the same
-// #23f3d5 as this member's avatar ring.
-export const MEMBER_LEVEL_COLOR = "#23f3d5";
+// Level badges are colored by bracket; Lv.8 is this teal green.
+export const MEMBER_LEVEL_COLOR = "#38ddcd";
 
 // Her wallet balance, shown on TopUp (compact), the profile's balance card, the
 // wallet page and the top-up modal, so they all agree.
