@@ -267,8 +267,12 @@ function RewardCardLarge({ day, reward, onClaim }: { day: string; reward: string
 // The week's own length. Days 1-6 are the row's cards; day 7 has no card of
 // its own -- Figma's row stops at DAY 6 and hands off to the "七日壓軸好禮"
 // character art, whose claim pill (立即領取 / 已經領取) is day 7's claim.
-// The whole cycle resets to zero every CYCLE_DAYS days ("每隔一周都會歸零").
+// The whole cycle resets to zero every calendar week ("每隔一周都會歸零"):
+// weeks run Monday to Sunday, so Monday is day 1 and Sunday is day 7, and
+// counting starts from the current week ("先從這禮拜開始算第一周").
 const CYCLE_DAYS = 7;
+// getDay() value the week starts on (0 = Sunday, 1 = Monday).
+const WEEK_STARTS_ON = 1;
 const MS_PER_DAY = 86400000;
 const ANCHOR_STORAGE_KEY = "wu88-day-rewards-anchor";
 const CLAIMED_STORAGE_KEY = "wu88-day-rewards-claimed";
@@ -281,6 +285,12 @@ const DATE_CHECK_INTERVAL_MS = 30000;
 
 function startOfDay(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+}
+
+// Start-of-day timestamp of the first day (Monday) of `date`'s calendar week.
+function startOfWeek(date: Date) {
+  const daysIntoWeek = (date.getDay() - WEEK_STARTS_ON + 7) % 7;
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() - daysIntoWeek).getTime();
 }
 
 // Real calendar days elapsed since `anchorMs` (itself already a
@@ -317,13 +327,14 @@ function daysSinceAnchor(anchorMs: number, now: Date) {
 //
 // Both pieces persist to localStorage (not the AuthProvider Context)
 // since they need to survive a real page reload/revisit, unlike the
-// rest of this project's mock login state. First-ever visit seeds the
-// anchor as yesterday and day 1 as already claimed, so day 2 is what's
-// unlocked today -- matching the row's own established default look
-// (day 1 claimed, day 2 current) instead of starting cold on day 1.
+// rest of this project's mock login state. The stored anchor is the Monday
+// of the week the claims belong to: the first visit of a new calendar week
+// finds it stale, clears the claims and re-anchors on that week's Monday
+// -- so the very first visit starts a fresh week with nothing claimed and
+// today's weekday as the unlocked day (Monday = day 1).
 function useDayRewardsState() {
-  const [claimed, setClaimed] = useState<Set<number>>(() => new Set([1]));
-  const [unlockedDay, setUnlockedDay] = useState(2);
+  const [claimed, setClaimed] = useState<Set<number>>(() => new Set());
+  const [unlockedDay, setUnlockedDay] = useState(1);
   const [claimedToday, setClaimedToday] = useState(false);
 
   useEffect(() => {
@@ -336,33 +347,27 @@ function useDayRewardsState() {
     // Re-run on an interval too, so the date rolling over while the page
     // stays open unlocks the next day / resets the week by itself.
     function sync() {
-      let anchor = Number(localStorage.getItem(ANCHOR_STORAGE_KEY));
-      if (!anchor) {
-        anchor = startOfDay(new Date()) - MS_PER_DAY;
-        localStorage.setItem(ANCHOR_STORAGE_KEY, String(anchor));
-      }
+      const now = new Date();
+      const thisWeek = startOfWeek(now);
 
-      let claimedDays: number[] = [1];
+      let claimedDays: number[] = [];
       try {
         const stored = localStorage.getItem(CLAIMED_STORAGE_KEY);
         if (stored) claimedDays = JSON.parse(stored);
       } catch {
-        claimedDays = [1];
+        claimedDays = [];
       }
 
-      // Weekly reset: once a full cycle has passed, slide the anchor forward
-      // by whole cycles (so a long absence lands on the right day of the
-      // CURRENT week) and start it with nothing claimed.
-      const now = new Date();
-      const elapsed = daysSinceAnchor(anchor, now);
-      if (elapsed >= CYCLE_DAYS) {
-        anchor += Math.floor(elapsed / CYCLE_DAYS) * CYCLE_DAYS * MS_PER_DAY;
+      // Weekly reset: the stored claims belong to a different (earlier)
+      // calendar week than this one -- however many days of it went
+      // unclaimed -- so they're dropped and this week starts from zero.
+      if (Number(localStorage.getItem(ANCHOR_STORAGE_KEY)) !== thisWeek) {
         claimedDays = [];
-        localStorage.setItem(ANCHOR_STORAGE_KEY, String(anchor));
+        localStorage.setItem(ANCHOR_STORAGE_KEY, String(thisWeek));
         localStorage.setItem(CLAIMED_STORAGE_KEY, JSON.stringify(claimedDays));
       }
 
-      const today = Math.min(CYCLE_DAYS, Math.max(1, 1 + daysSinceAnchor(anchor, now)));
+      const today = Math.min(CYCLE_DAYS, Math.max(1, 1 + daysSinceAnchor(thisWeek, now)));
       const lastClaim = Number(localStorage.getItem(LAST_CLAIM_STORAGE_KEY)) || 0;
       setUnlockedDay(today);
       setClaimed((prev) => (prev.size === claimedDays.length && claimedDays.every((d) => prev.has(d)) ? prev : new Set(claimedDays)));
