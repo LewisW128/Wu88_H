@@ -1,7 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
+import { useAuth } from "./AuthProvider";
 import ContainerBg from "./ContainerBg";
+import { DAY_REWARDS_ID } from "./DayRewards";
+import LoginModal from "./LoginModal";
 import Tag from "./Tag";
 
 const SLIDE_COUNT = 2; // Figma's own carousel dots show 4 segments, but only
@@ -103,7 +107,23 @@ const SUBTRACT_PATH =
 // `<svg>` stroke on top) rather than one bordered/clipped div, since
 // `clip-path` cuts a box's border along with its content -- it can't
 // produce a stroke that follows the clip path's own edge on its own.
+//
+// The "立即領取" CTA forks on login state: a guest gets the same login popup
+// every other guest-gated action here opens, and a logged-in member is taken
+// to the 每日領取 (Day Rewards) section of the promotions page.
 function EnergySlideCard() {
+  const { loggedIn, setLoggedIn } = useAuth();
+  const router = useRouter();
+  const [showLogin, setShowLogin] = useState(false);
+
+  function handleClaim() {
+    if (!loggedIn) {
+      setShowLogin(true);
+      return;
+    }
+    router.push(`/promotions#${DAY_REWARDS_ID}`);
+  }
+
   return (
     <div className="relative h-[303px] w-[634px]">
       <div className="absolute inset-0 bg-white/50 backdrop-blur-[10px]" style={{ clipPath: `path('${SUBTRACT_PATH}')` }} />
@@ -152,8 +172,17 @@ function EnergySlideCard() {
         </div>
       </div>
       <div className="absolute bottom-0 right-0">
-        <Tag label="立即領取" active width={172} />
+        <Tag label="立即領取" active width={172} onClick={handleClaim} />
       </div>
+      {showLogin && (
+        <LoginModal
+          onClose={() => setShowLogin(false)}
+          onLoginSuccess={() => {
+            setLoggedIn(true);
+            setShowLogin(false);
+          }}
+        />
+      )}
     </div>
   );
 }

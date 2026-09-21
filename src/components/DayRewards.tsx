@@ -439,9 +439,34 @@ function useDayRewardsState() {
 // this gates itself on the shared AuthProvider state rather than leaving
 // each page to remember to wrap it in its own `isGuest` check -- it's
 // used identically on both /profile and /promotions.
+// Anchor other pages link to (e.g. `/promotions#day-rewards`).
+export const DAY_REWARDS_ID = "day-rewards";
+const DAY_REWARDS_HASH = `#${DAY_REWARDS_ID}`;
+
 export default function DayRewards() {
   const { loggedIn } = useAuth();
   const { claimed, currentDay, pillState, claim } = useDayRewardsState();
+  // The home page's 每日能源補給 "立即領取" sends a logged-in member here with
+  // `#day-rewards`. This section only exists once logged in (and after the
+  // stored login has been read on mount), so the browser's own hash scroll
+  // has nothing to land on yet -- scroll to it as soon as it does render.
+  // Re-applied a few times over the first second: the page above it (hero,
+  // images) is still settling and shifting this section's position, so one
+  // early jump can land in the wrong place. Any wheel/touch by the user
+  // cancels the remaining attempts.
+  useEffect(() => {
+    if (!loggedIn || window.location.hash !== DAY_REWARDS_HASH) return;
+    const jump = () => document.getElementById(DAY_REWARDS_ID)?.scrollIntoView({ block: "center" });
+    const timers = [0, 300, 900].map((ms) => setTimeout(jump, ms));
+    const cancel = () => timers.forEach(clearTimeout);
+    window.addEventListener("wheel", cancel, { once: true, passive: true });
+    window.addEventListener("touchmove", cancel, { once: true, passive: true });
+    return () => {
+      cancel();
+      window.removeEventListener("wheel", cancel);
+      window.removeEventListener("touchmove", cancel);
+    };
+  }, [loggedIn]);
   if (!loggedIn) return null;
 
   return (
@@ -450,7 +475,7 @@ export default function DayRewards() {
     // pinned to the right edge and the extra width goes to the card row,
     // whose cards grow equally (`flex-1`) with the gap held at a flat 20px.
     // At the canvas width this is the same ~894px/20px-gap row as Figma.
-    <div className="relative flex w-full items-start">
+    <div id={DAY_REWARDS_ID} className="relative flex w-full items-start">
       <div className="z-10 -mr-[50px] flex min-w-[894px] flex-1 flex-col items-start gap-[15px]">
         <div className="flex items-center gap-[10px]">
           <img alt="" src={withBasePath("/assets/day-rewards/icon-title.svg")} className="size-[25px]" />
