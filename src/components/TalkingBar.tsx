@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useAuth } from "./AuthProvider";
 import LevelBadge from "./LevelBadge";
 import TalkSection, { type TalkSectionProps } from "./TalkSection";
@@ -245,10 +245,17 @@ export default function TalkingBar({ messages, friends, simulatedMessages = [] }
   const serviceFriend = friends.find((f) => f.id === SERVICE_FRIEND_ID);
   // Service is a fixed customer-service room: always listed in 私訊 whether
   // the visitor is logged in or not. Other friends stay login-gated.
-  const visibleFriends = [
-    ...(serviceFriend ? [serviceFriend] : []),
-    ...(loggedIn ? friends.filter((f) => f.id !== SERVICE_FRIEND_ID) : []),
-  ];
+  //
+  // Memoized -- a plain array literal here is a NEW array every render, and
+  // it's a dependency of the scrollbar-thumb effect below (`setThumb`/
+  // `setNeedsScroll`), so a fresh reference every render re-fires that
+  // effect every render, which re-renders, forever (the exact infinite
+  // "Maximum update depth exceeded" loop this file's own `NO_MESSAGES`/
+  // `NO_FRIENDS` constants above were already introduced to avoid).
+  const visibleFriends = useMemo(
+    () => [...(serviceFriend ? [serviceFriend] : []), ...(loggedIn ? friends.filter((f) => f.id !== SERVICE_FRIEND_ID) : [])],
+    [serviceFriend, loggedIn, friends],
+  );
   const [channel, setChannel] = useState<Channel>("all");
   const [liveMessages, setLiveMessages] = useState(messages);
   // Which friend's thread is open, if any -- null means "私人訊息" is

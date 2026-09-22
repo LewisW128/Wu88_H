@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { withBasePath } from "../lib/asset";
 import { openServiceChat } from "../lib/openServiceChat";
