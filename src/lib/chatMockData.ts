@@ -67,6 +67,22 @@ export const talkingBarSimulatedMessages: TalkSectionProps[] = [
 // messaged yet" rather than a missing value.
 export const talkingBarFriends: Friend[] = [
   {
+    id: "service",
+    name: "@ Service",
+    avatar: "",
+    icon: "/assets/talk-section/icon-service.svg",
+    status: "online",
+    messages: [
+      {
+        avatar: "/assets/talk-section/icon-service.svg",
+        name: "@ Service",
+        timestamp: "剛剛",
+        text: "您好，需要什麼協助呢？",
+        variant: "other",
+      },
+    ],
+  },
+  {
     id: "jackson",
     name: "@ Jackson",
     avatar: "/assets/talk-section/avatar-jackson.png",
@@ -74,11 +90,32 @@ export const talkingBarFriends: Friend[] = [
     levelBackground: DEFAULT_RING_COLOR,
     status: "online",
     timestamp: "3 分鐘前",
-    lastMessage: "剛剛那個遊戲的連結可以給我嗎？",
+    lastMessage: "我剛剛才中了將二十萬出來",
     messages: [
-      { avatar: "/assets/talk-section/avatar-jackson.png", name: "@ Jackson", levelLabel: "Lv.100", levelBackground: DEFAULT_RING_COLOR, timestamp: "5 分鐘前", text: "嗨，方便私訊聊嗎？", variant: "other" },
-      { avatar: "/assets/talk-section/avatar-jessica.png", name: "@ Jessica", timestamp: "4 分鐘前", text: "可以啊，怎麼了？", variant: "myself" },
-      { avatar: "/assets/talk-section/avatar-jackson.png", name: "@ Jackson", levelLabel: "Lv.100", levelBackground: DEFAULT_RING_COLOR, timestamp: "3 分鐘前", text: "剛剛那個遊戲的連結可以給我嗎？", variant: "other" },
+      {
+        avatar: "/assets/talk-section/avatar-jessica.png",
+        name: "@ Jessica",
+        timestamp: "3 分鐘前",
+        text: "嗨～！剛剛進來玩",
+        variant: "myself",
+      },
+      {
+        avatar: "/assets/talk-section/avatar-jessica.png",
+        name: "@ Jessica",
+        timestamp: "3 分鐘前",
+        text: "有什麼好玩的呢？有誰可以推薦嗎？",
+        variant: "myself",
+      },
+      {
+        avatar: "/assets/talk-section/avatar-jackson.png",
+        name: "@ Jackson",
+        levelLabel: "Lv.100",
+        levelBackground: DEFAULT_RING_COLOR,
+        timestamp: "剛剛",
+        text: "我剛剛才中了將二十萬出來",
+        variant: "other",
+        replyTo: { name: "Jessica", text: "有什麼好玩的呢？有誰可以推薦嗎？" },
+      },
     ],
   },
   {

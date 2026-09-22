@@ -10,17 +10,25 @@ import { withBasePath } from "../lib/asset";
 export type Friend = {
   id: string;
   name: string;
+  // Photo path for normal friends. Service (Figma 754:9317) uses `icon`
+  // instead and leaves this as an empty string.
   avatar: string;
-  levelLabel: string;
+  // Optional -- Service has no level badge (Figma hides it).
+  levelLabel?: string;
   // Also doubles as the avatar's own ring color, same as Talk_section's
-  // established convention (see TalkSection.tsx's own comment).
-  levelBackground: string;
+  // established convention (see TalkSection.tsx's own comment). Optional
+  // for Service, which uses a plain white fill behind the headset icon.
+  levelBackground?: string;
+  // When set, FriendAvatar renders this 25px icon on a white circle instead
+  // of a photo (Figma Actions / Service row).
+  icon?: string;
   // The online-status dot (Components Library node 754:9317's own
   // Ellipse 46/47/48) is a THIRD color, independent of the level badge --
   // Jackson's own dot is teal/online, Johnny's is orange/away, Arick's is
   // gray/offline, none of which match their own level-badge colors.
   status: "online" | "away" | "offline";
-  timestamp: string;
+  // Optional -- Service has no timestamp in the Figma reference.
+  timestamp?: string;
   // Omitted entirely (not just blank) for a friend with no conversation
   // yet -- Arick's own card in the Figma reference has no message preview
   // at all, which reads naturally as "you haven't messaged them yet"
@@ -117,11 +125,32 @@ function ChannelButton({ active, icon, onClick, label }: { active: boolean; icon
 // the 45px photo circle inside a 1.406px ring (`ring`, a solid color or CSS
 // gradient) and the 11px status dot on its bottom-right corner. Shared by the
 // friend-list rows and the panel's own header avatar.
-function FriendAvatar({ photo, ring, status }: { photo: string; ring: string; status: Friend["status"] }) {
+function FriendAvatar({
+  photo,
+  ring,
+  status,
+  icon,
+}: {
+  photo?: string;
+  ring?: string;
+  status: Friend["status"];
+  icon?: string;
+}) {
   return (
     <div className="relative h-[45px] w-[46px] shrink-0">
-      <div className="absolute left-px top-0 size-[45px] overflow-hidden rounded-full" style={{ background: ring }}>
-        <img alt="" src={photo} className="pointer-events-none absolute inset-[1.406px] size-[calc(100%-2.812px)] rounded-full object-cover" />
+      <div
+        className="absolute left-px top-0 flex size-[45px] items-center justify-center overflow-hidden rounded-full"
+        style={{ background: ring ?? "#ffffff" }}
+      >
+        {icon ? (
+          <img alt="" src={icon} className="pointer-events-none size-[25px]" />
+        ) : (
+          <img
+            alt=""
+            src={photo}
+            className="pointer-events-none absolute inset-[1.406px] size-[calc(100%-2.812px)] rounded-full object-cover"
+          />
+        )}
       </div>
       <svg className="absolute left-[35px] top-[34px]" width={11} height={11} viewBox="0 0 11 11" fill="none">
         <circle cx={5.5} cy={5.5} r={4.5} fill={STATUS_DOT_COLOR[status]} stroke="white" strokeWidth={2} />
@@ -154,15 +183,24 @@ function FriendCard({ friend, onClick }: { friend: Friend; onClick: () => void }
       className="relative h-[71px] w-full shrink-0 rounded-[10px] border border-[#f4f4f4] bg-white/50 text-left"
     >
       <div className="absolute inset-x-[10px] top-[10px] flex items-center gap-[10px]">
-        <FriendAvatar photo={withBasePath(friend.avatar)} ring={friend.levelBackground} status={friend.status} />
+        <FriendAvatar
+          photo={friend.avatar ? withBasePath(friend.avatar) : undefined}
+          ring={friend.levelBackground}
+          status={friend.status}
+          icon={friend.icon ? withBasePath(friend.icon) : undefined}
+        />
 
         <div className="flex min-w-0 flex-1 flex-col items-start justify-center gap-[5px]">
           <div className="flex w-full items-center justify-between">
             <div className="flex min-w-0 items-center gap-[5px]">
               <p className="whitespace-nowrap text-[12px] font-bold leading-[18px] tracking-[0.15px] text-[#3e4140]">{friend.name}</p>
-              <LevelBadge label={friend.levelLabel} background={friend.levelBackground} weight="regular" />
+              {friend.levelLabel && friend.levelBackground && (
+                <LevelBadge label={friend.levelLabel} background={friend.levelBackground} weight="regular" />
+              )}
             </div>
-            <p className="whitespace-nowrap px-[2px] text-right text-[8px] leading-[18px] tracking-[0.15px] text-[#a2a2a2]">{friend.timestamp}</p>
+            {friend.timestamp && (
+              <p className="whitespace-nowrap px-[2px] text-right text-[8px] leading-[18px] tracking-[0.15px] text-[#a2a2a2]">{friend.timestamp}</p>
+            )}
           </div>
 
           {friend.lastMessage && (
@@ -371,14 +409,26 @@ export default function TalkingBar({ messages, friends, simulatedMessages = [] }
           smallest way to make the flow actually navigable both ways. */}
       {channel === "private" &&
         (selectedFriend ? (
-          <button
-            type="button"
-            aria-label="返回好友列表"
-            onClick={() => setSelectedFriendId(null)}
-            className="absolute left-[30px] top-[20px] flex size-[45px] items-center justify-center rounded-full bg-[#3e4140]"
-          >
-            <img alt="" src={withBasePath("/assets/sidebar/back-arrow.svg")} className="size-[20px]" />
-          </button>
+          <>
+            {/* Figma 998:10020 Eachother talk: Arrow_Special (25) at 20,20
+                plus the peer Avatar_massage at 52,20 -- both, not a swap. */}
+            <button
+              type="button"
+              aria-label="返回好友列表"
+              onClick={() => setSelectedFriendId(null)}
+              className="absolute left-[20px] top-[20px] size-[25px]"
+            >
+              <img alt="" src={withBasePath("/assets/talk-section/arrow-special-back.svg")} className="size-[25px]" />
+            </button>
+            <div className="absolute left-[52px] top-[20px]">
+              <FriendAvatar
+                photo={selectedFriend.avatar ? withBasePath(selectedFriend.avatar) : undefined}
+                ring={selectedFriend.levelBackground}
+                status={selectedFriend.status}
+                icon={selectedFriend.icon ? withBasePath(selectedFriend.icon) : undefined}
+              />
+            </div>
+          </>
         ) : loggedIn ? (
           <div className="absolute left-[30px] top-[20px]">
             <FriendAvatar photo={withBasePath("/assets/talk-section/avatar-jessica.png")} ring="#23f3d5" status="online" />
