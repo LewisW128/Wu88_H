@@ -1,5 +1,6 @@
 import Avatar from "./Avatar";
 import LevelBadge from "./LevelBadge";
+import { LEVEL_LEBALS_BACKGROUND } from "../lib/levelBadge";
 import { withBasePath } from "../lib/asset";
 
 const DEFAULT_RING_COLOR = "#f4f4f4";
@@ -51,7 +52,7 @@ export default function TalkSection({ avatar, name, levelLabel, levelBackground,
         <div className="flex w-full items-center justify-between gap-[10px]">
           <div className="flex min-w-0 items-center gap-[10px]">
             <p className="whitespace-nowrap text-[12px] font-bold leading-[18px] tracking-[0.15px] text-[#3e4140]">{name}</p>
-            {levelLabel && levelBackground && <LevelBadge label={levelLabel} background={levelBackground} />}
+            {levelLabel && levelBackground && <LevelBadge label={levelLabel} background={LEVEL_LEBALS_BACKGROUND} />}
           </div>
 
           <div className="flex shrink-0 items-center gap-[2px]">

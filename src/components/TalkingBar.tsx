@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useAuth } from "./AuthProvider";
 import LevelBadge from "./LevelBadge";
+import { LEVEL_LEBALS_BACKGROUND } from "../lib/levelBadge";
 import TalkSection, { type TalkSectionProps } from "./TalkSection";
 import { useScale } from "./ScaleToFit";
 import { withBasePath } from "../lib/asset";
@@ -196,7 +197,7 @@ function FriendCard({ friend, onClick }: { friend: Friend; onClick: () => void }
             <div className="flex min-w-0 items-center gap-[5px]">
               <p className="whitespace-nowrap text-[12px] font-bold leading-[18px] tracking-[0.15px] text-[#3e4140]">{friend.name}</p>
               {friend.levelLabel && friend.levelBackground && (
-                <LevelBadge label={friend.levelLabel} background={friend.levelBackground} weight="regular" />
+                <LevelBadge label={friend.levelLabel} background={LEVEL_LEBALS_BACKGROUND} weight="regular" />
               )}
             </div>
             {friend.timestamp && (
