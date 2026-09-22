@@ -3,6 +3,13 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Reserves the vertical scrollbar's own gutter unconditionally, instead of
+     only once the page actually grows past the viewport -- without this,
+     anything that changes page height at runtime (an accordion row
+     expanding, a modal opening) shifts every fixed-width `w-full` element
+     narrower by the scrollbar's own width the instant a scrollbar appears,
+     since it eats into the viewport's own available width. */
+  scrollbar-gutter: stable;
 }
 
 @theme inline {
