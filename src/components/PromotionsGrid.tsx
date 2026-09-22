@@ -19,11 +19,11 @@ export type PromotionsGridProps = {
 // Figma "Promotions" grid section (04_WU88-H-PC-Promotions node 106:10866):
 // icon+"所有優惠" title, a 全部/新會員/VIP/體育/賭場 filter row (Game_selections,
 // same component as Casino's category tabs), then a grid of PromotionCards
-// in Figma's own mixed sizes (one Large + a run of Smalls). Figma only
-// specifies content for the 全部 tab (the other four aren't shown selected
-// anywhere in the file) -- 新會員/VIP/體育/賭場 below are this project's own
-// reasonable-fit grouping of that same 全部 pool by each card's own copy
-// (e.g. "新會員首儲" -> 新會員, "看世足賽" -> 體育), not a second Figma state.
+// in Figma's own mixed sizes (one Large + a run of Smalls). Each tab's card
+// set is passed in by the caller (see promotions/page.tsx) matching Figma's
+// own per-tab states -- 5 separate frames in the file, one per highlighted
+// tab (全部 106-10795, 新會員 109-12586, VIP 109-18635/109-16812, 體育
+// 109-20768, 賭場 109-23711).
 //
 // The mixed-width row (Large 594 + Smalls 297, gap-20, in a 1249px-wide
 // flex-wrap) reproduces Figma's exact row breaks (3 cards / 4 cards / 3
