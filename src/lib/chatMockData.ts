@@ -74,12 +74,17 @@ export const talkingBarFriends: Friend[] = [
     avatar: "",
     icon: "/assets/talk-section/icon-service.svg",
     status: "online",
+    // Figma 1355:117819 (the Service chat state): the message row's own
+    // avatar is a bordered icon circle (`avatarIcon`), not a photo -- and
+    // its `avatar` field is only there so `TalkSection` never renders a
+    // broken empty <img>.
     messages: [
       {
-        avatar: "/assets/talk-section/icon-service.svg",
+        avatar: "",
+        avatarIcon: "/assets/talk-section/icon-service.svg",
         name: "@ Service",
-        timestamp: "剛剛",
-        text: "您好，需要什麼協助呢？",
+        timestamp: "3 分鐘前",
+        text: "嗨～！需要什麼幫忙嗎?",
         variant: "other",
       },
     ],

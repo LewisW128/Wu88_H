@@ -10,7 +10,8 @@ import ProfileSidebar from "./ProfileSidebar";
 import ScaleToFit from "./ScaleToFit";
 import Search from "./Search";
 import StickyUtilityBar from "./StickyUtilityBar";
-import TalkingBar, { type Friend } from "./TalkingBar";
+import TalkingBar from "./TalkingBar";
+import { talkingBarFriends } from "../lib/chatMockData";
 import type { TalkSectionProps } from "./TalkSection";
 import TopBar from "./TopBar";
 import TopUp from "./TopUp";
@@ -67,65 +68,6 @@ const talkingBarMessages: TalkSectionProps[] = [
   },
 ];
 
-const talkingBarFriends: Friend[] = [
-  {
-    id: "service",
-    name: "@ Service",
-    avatar: "",
-    icon: "/assets/talk-section/icon-service.svg",
-    status: "online",
-    messages: [
-      {
-        avatar: "/assets/talk-section/icon-service.svg",
-        name: "@ Service",
-        timestamp: "剛剛",
-        text: "您好，需要什麼協助呢？",
-        variant: "other",
-      },
-    ],
-  },
-
-  {
-    id: "jackson",
-    name: "@ Jackson",
-    avatar: "/assets/talk-section/avatar-jackson.png",
-    levelLabel: "Lv.100",
-    levelBackground: "linear-gradient(-48deg, #01fab0 0%, #14e8b8 0%, #48bace 11%, #9a71f1 34%, #b65afd 49%, #8d54d8 74%)",
-    status: "online",
-    timestamp: "3 分鐘前",
-    lastMessage: "剛剛那個遊戲的連結可以給我嗎？",
-    messages: [
-      { avatar: "/assets/talk-section/avatar-jackson.png", name: "@ Jackson", levelLabel: "Lv.100", levelBackground: "linear-gradient(-48deg, #01fab0 0%, #14e8b8 0%, #48bace 11%, #9a71f1 34%, #b65afd 49%, #8d54d8 74%)", timestamp: "5 分鐘前", text: "嗨，方便私訊聊嗎？", variant: "other" },
-      { avatar: "/assets/talk-section/avatar-jessica.png", name: "@ Jessica", timestamp: "4 分鐘前", text: "可以啊，怎麼了？", variant: "myself" },
-      { avatar: "/assets/talk-section/avatar-jackson.png", name: "@ Jackson", levelLabel: "Lv.100", levelBackground: "linear-gradient(-48deg, #01fab0 0%, #14e8b8 0%, #48bace 11%, #9a71f1 34%, #b65afd 49%, #8d54d8 74%)", timestamp: "3 分鐘前", text: "剛剛那個遊戲的連結可以給我嗎？", variant: "other" },
-    ],
-  },
-  {
-    id: "johnny",
-    name: "@ Johnny",
-    avatar: "/assets/talk-section/avatar-johnny.png",
-    levelLabel: "Lv.79",
-    levelBackground: "#79d4a2",
-    status: "away",
-    timestamp: "10 分鐘前",
-    lastMessage: "XXX電子 射龍門，一起來",
-    messages: [
-      { avatar: "/assets/talk-section/avatar-johnny.png", name: "@ Johnny", levelLabel: "Lv.79", levelBackground: "#79d4a2", timestamp: "12 分鐘前", text: "在嗎？想約你打幾把", variant: "other" },
-      { avatar: "/assets/talk-section/avatar-jessica.png", name: "@ Jessica", timestamp: "11 分鐘前", text: "在啊，玩什麼？", variant: "myself" },
-      { avatar: "/assets/talk-section/avatar-johnny.png", name: "@ Johnny", levelLabel: "Lv.79", levelBackground: "#79d4a2", timestamp: "10 分鐘前", text: "XXX電子 射龍門，一起來", variant: "other" },
-    ],
-  },
-  {
-    id: "arick",
-    name: "@ Arick",
-    avatar: "/assets/talk-section/avatar-arick.png",
-    levelLabel: "Lv.53",
-    levelBackground: "#ffcf00",
-    status: "offline",
-    timestamp: "1 小時前",
-    messages: [],
-  },
-];
 
 // The dot-grid decoration behind the header card's diagonal ribbons
 // (Figma "Ellipse 2" repeated 36 times in a plain 6x6 grid).

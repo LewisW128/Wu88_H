@@ -12,7 +12,13 @@ export type TalkSectionReply = {
 };
 
 export type TalkSectionProps = {
+  // Ignored when `avatarIcon` is set.
   avatar: string;
+  // Renders this glyph centered in a plain white circle with a 1px solid
+  // #3e4140 border instead of the usual photo-in-a-colored-ring `Avatar`
+  // (客服/Service's own message row, node 1355:203666/1355:203761) -- a
+  // support glyph isn't a photo to ring the same way a real member's is.
+  avatarIcon?: string;
   name: string;
   levelLabel?: string;
   levelBackground?: string;
@@ -36,14 +42,20 @@ export type TalkSectionProps = {
 // TalkingBar Level_Lebals: Jackson VIP gradient, Johnny #79d4a2, Arick
 // #ffcf00 (Figma 754:9317 / 998:10020). Avatar ring usually matches the
 // badge fill; Jackson is the exception (ring #01fab0, badge gradient).
-export default function TalkSection({ avatar, name, levelLabel, levelBackground, ringColor, timestamp, text, variant, replyTo }: TalkSectionProps) {
+export default function TalkSection({ avatar, avatarIcon, name, levelLabel, levelBackground, ringColor, timestamp, text, variant, replyTo }: TalkSectionProps) {
   const isMine = variant === "myself";
   const bubbleBg = isMine ? "rgba(35,243,213,0.5)" : "#f4f4f4";
   const quoteBg = isMine ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.8)";
 
   return (
     <div className="flex w-[237px] max-w-full items-start gap-[5px]">
-      <Avatar photo={avatar} size={32} badge={false} ringColor={ringColor ?? levelBackground ?? DEFAULT_RING_COLOR} />
+      {avatarIcon ? (
+        <div className="flex size-[32px] shrink-0 items-center justify-center rounded-full border border-solid border-[#3e4140] bg-white">
+          <img alt="" src={avatarIcon} className="size-[20px]" />
+        </div>
+      ) : (
+        <Avatar photo={avatar} size={32} badge={false} ringColor={ringColor ?? levelBackground ?? DEFAULT_RING_COLOR} />
+      )}
 
       <div className="flex min-w-0 flex-1 flex-col items-start gap-[5px]">
         <div className="flex w-full items-center justify-between gap-[10px]">

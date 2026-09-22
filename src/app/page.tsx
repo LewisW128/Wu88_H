@@ -20,7 +20,8 @@ import Search from "../components/Search";
 import Sidebar from "../components/Sidebar";
 import SocialLinks from "../components/SocialLinks";
 import StickyUtilityBar from "../components/StickyUtilityBar";
-import TalkingBar, { type Friend } from "../components/TalkingBar";
+import TalkingBar from "../components/TalkingBar";
+import { talkingBarFriends } from "../lib/chatMockData";
 import type { TalkSectionProps } from "../components/TalkSection";
 import TopBar from "../components/TopBar";
 import TopUp from "../components/TopUp";
@@ -82,65 +83,6 @@ const talkingBarSimulatedMessages: TalkSectionProps[] = [
 // empty thread) on purpose, matching Figma's own reference card, which
 // omits the message preview entirely -- reads as "a friend you haven't
 // messaged yet" rather than a missing value.
-const talkingBarFriends: Friend[] = [
-  {
-    id: "service",
-    name: "@ Service",
-    avatar: "",
-    icon: "/assets/talk-section/icon-service.svg",
-    status: "online",
-    messages: [
-      {
-        avatar: "/assets/talk-section/icon-service.svg",
-        name: "@ Service",
-        timestamp: "剛剛",
-        text: "您好，需要什麼協助呢？",
-        variant: "other",
-      },
-    ],
-  },
-
-  {
-    id: "jackson",
-    name: "@ Jackson",
-    avatar: "/assets/talk-section/avatar-jackson.png",
-    levelLabel: "Lv.100",
-    levelBackground: DEFAULT_RING_COLOR,
-    status: "online",
-    timestamp: "3 分鐘前",
-    lastMessage: "剛剛那個遊戲的連結可以給我嗎？",
-    messages: [
-      { avatar: "/assets/talk-section/avatar-jackson.png", name: "@ Jackson", levelLabel: "Lv.100", levelBackground: DEFAULT_RING_COLOR, timestamp: "5 分鐘前", text: "嗨，方便私訊聊嗎？", variant: "other" },
-      { avatar: "/assets/talk-section/avatar-jessica.png", name: "@ Jessica", timestamp: "4 分鐘前", text: "可以啊，怎麼了？", variant: "myself" },
-      { avatar: "/assets/talk-section/avatar-jackson.png", name: "@ Jackson", levelLabel: "Lv.100", levelBackground: DEFAULT_RING_COLOR, timestamp: "3 分鐘前", text: "剛剛那個遊戲的連結可以給我嗎？", variant: "other" },
-    ],
-  },
-  {
-    id: "johnny",
-    name: "@ Johnny",
-    avatar: "/assets/talk-section/avatar-johnny.png",
-    levelLabel: "Lv.79",
-    levelBackground: "#79d4a2",
-    status: "away",
-    timestamp: "10 分鐘前",
-    lastMessage: "XXX電子 射龍門，一起來",
-    messages: [
-      { avatar: "/assets/talk-section/avatar-johnny.png", name: "@ Johnny", levelLabel: "Lv.79", levelBackground: "#79d4a2", timestamp: "12 分鐘前", text: "在嗎？想約你打幾把", variant: "other" },
-      { avatar: "/assets/talk-section/avatar-jessica.png", name: "@ Jessica", timestamp: "11 分鐘前", text: "在啊，玩什麼？", variant: "myself" },
-      { avatar: "/assets/talk-section/avatar-johnny.png", name: "@ Johnny", levelLabel: "Lv.79", levelBackground: "#79d4a2", timestamp: "10 分鐘前", text: "XXX電子 射龍門，一起來", variant: "other" },
-    ],
-  },
-  {
-    id: "arick",
-    name: "@ Arick",
-    avatar: "/assets/talk-section/avatar-arick.png",
-    levelLabel: "Lv.53",
-    levelBackground: "#ffcf00",
-    status: "offline",
-    timestamp: "1 小時前",
-    messages: [],
-  },
-];
 
 const businessCards = [
   { logo: "/assets/business/logo-cq9.png", name: "CQ9 GAMING" },

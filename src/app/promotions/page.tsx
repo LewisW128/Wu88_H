@@ -13,7 +13,8 @@ import Search from "../../components/Search";
 import Sidebar from "../../components/Sidebar";
 import SocialLinks from "../../components/SocialLinks";
 import StickyUtilityBar from "../../components/StickyUtilityBar";
-import TalkingBar, { type Friend } from "../../components/TalkingBar";
+import TalkingBar from "../../components/TalkingBar";
+import { talkingBarFriends } from "../../lib/chatMockData";
 import type { TalkSectionProps } from "../../components/TalkSection";
 import TopBar from "../../components/TopBar";
 import TopUp from "../../components/TopUp";
@@ -78,65 +79,6 @@ const talkingBarSimulatedMessages: TalkSectionProps[] = [
 // empty thread) on purpose, matching Figma's own reference card, which
 // omits the message preview entirely -- reads as "a friend you haven't
 // messaged yet" rather than a missing value.
-const talkingBarFriends: Friend[] = [
-  {
-    id: "service",
-    name: "@ Service",
-    avatar: "",
-    icon: "/assets/talk-section/icon-service.svg",
-    status: "online",
-    messages: [
-      {
-        avatar: "/assets/talk-section/icon-service.svg",
-        name: "@ Service",
-        timestamp: "剛剛",
-        text: "您好，需要什麼協助呢？",
-        variant: "other",
-      },
-    ],
-  },
-
-  {
-    id: "jackson",
-    name: "@ Jackson",
-    avatar: "/assets/talk-section/avatar-jackson.png",
-    levelLabel: "Lv.100",
-    levelBackground: DEFAULT_RING_COLOR,
-    status: "online",
-    timestamp: "3 分鐘前",
-    lastMessage: "剛剛那個遊戲的連結可以給我嗎？",
-    messages: [
-      { avatar: "/assets/talk-section/avatar-jackson.png", name: "@ Jackson", levelLabel: "Lv.100", levelBackground: DEFAULT_RING_COLOR, timestamp: "5 分鐘前", text: "嗨，方便私訊聊嗎？", variant: "other" },
-      { avatar: "/assets/talk-section/avatar-jessica.png", name: "@ Jessica", timestamp: "4 分鐘前", text: "可以啊，怎麼了？", variant: "myself" },
-      { avatar: "/assets/talk-section/avatar-jackson.png", name: "@ Jackson", levelLabel: "Lv.100", levelBackground: DEFAULT_RING_COLOR, timestamp: "3 分鐘前", text: "剛剛那個遊戲的連結可以給我嗎？", variant: "other" },
-    ],
-  },
-  {
-    id: "johnny",
-    name: "@ Johnny",
-    avatar: "/assets/talk-section/avatar-johnny.png",
-    levelLabel: "Lv.79",
-    levelBackground: "#79d4a2",
-    status: "away",
-    timestamp: "10 分鐘前",
-    lastMessage: "XXX電子 射龍門，一起來",
-    messages: [
-      { avatar: "/assets/talk-section/avatar-johnny.png", name: "@ Johnny", levelLabel: "Lv.79", levelBackground: "#79d4a2", timestamp: "12 分鐘前", text: "在嗎？想約你打幾把", variant: "other" },
-      { avatar: "/assets/talk-section/avatar-jessica.png", name: "@ Jessica", timestamp: "11 分鐘前", text: "在啊，玩什麼？", variant: "myself" },
-      { avatar: "/assets/talk-section/avatar-johnny.png", name: "@ Johnny", levelLabel: "Lv.79", levelBackground: "#79d4a2", timestamp: "10 分鐘前", text: "XXX電子 射龍門，一起來", variant: "other" },
-    ],
-  },
-  {
-    id: "arick",
-    name: "@ Arick",
-    avatar: "/assets/talk-section/avatar-arick.png",
-    levelLabel: "Lv.53",
-    levelBackground: "#ffcf00",
-    status: "offline",
-    timestamp: "1 小時前",
-    messages: [],
-  },
-];
 
 // Same "Promotions" row Figma reuses on the homepage (04_WU88-H-PC-Promotions
 // node 106:10865 is the same component instance, not new art/copy).
@@ -153,10 +95,9 @@ const topPromotions: (PromotionCardProps & { key: string })[] = [
   { key: "wheel", size: "General", image: "/assets/promotions/wheel.png", lines: ["天天轉 8,888", "武財神風輪盤"] },
 ];
 
-// The page's own "所有優惠" grid (node 106:10866): 10 distinct promo cards
-// in Figma's own mixed Large/Small sizes. See PromotionsGrid's comment for
-// why 新會員/VIP/體育/賭場 below are this project's own grouping of these
-// same 10 by each card's copy, not a second Figma tab state.
+// The page's own "所有優惠" grid: this is Figma's own 全部 tab state (node
+// 106:10866 / frame 106-10795), in Figma's exact reading order and mixed
+// Large/Small sizes.
 const allPromotions: (PromotionCardProps & { key: string })[] = [
   {
     key: "new-member",
@@ -165,25 +106,56 @@ const allPromotions: (PromotionCardProps & { key: string })[] = [
     lines: ["新會員首儲『贈』", "200,000"],
     countdown: { days: "08", hours: "08", minutes: "12", seconds: "32" },
   },
-  { key: "roulette", size: "Small", image: "/assets/promotions/roulette.jpg", lines: ["輪盤抽獎活動", ""] },
-  { key: "fortune", size: "Small", image: "/assets/promotions/fortune-gems.jpg", lines: ["首儲就送", "8,888 發財金"] },
   { key: "neo-live", size: "Small", image: "/assets/promotions/neo-live.png", lines: ["來 NEO 真人", "精彩不凡人生"] },
   { key: "usdt-rebate", size: "Small", image: "/assets/promotions/usdt-rebate-2pct.jpg", lines: ["USTD 返利無上限", "每筆加贈 2%"] },
+  { key: "roulette", size: "Small", image: "/assets/promotions/roulette.jpg", lines: ["輪盤抽獎活動", ""] },
   { key: "gclass", size: "Small", image: "/assets/promotions/gclass.jpg", lines: ["贏取一輛", "G-CLASS"] },
   { key: "mall-gifts", size: "Small", image: "/assets/promotions/mall-gifts.jpg", lines: ["商城好禮購", "好禮 5 選 1"] },
   { key: "gift-card", size: "Small", image: "/assets/promotions/gift-card.jpg", lines: ["禮品卡兌換", ""] },
+  { key: "fortune", size: "Small", image: "/assets/promotions/fortune-gems.jpg", lines: ["首儲就送", "8,888 發財金"] },
   { key: "world-cup", size: "Small", image: "/assets/promotions/world-cup.jpg", lines: ["看世足賽領獎金", "6,666"] },
   { key: "vip-jet", size: "Small", image: "/assets/promotions/vip-jet.png", lines: ["VIP 用戶", "獨享"] },
 ];
 
+// Filters allPromotions down to `keys`, preserving allPromotions' own order
+// (i.e. the 全部 tab's reading order) -- matches Figma's 新會員/體育/賭場 tab
+// states, which are each just the 全部 pool with some cards dropped, same
+// relative order.
 const byKey = (keys: string[]) => allPromotions.filter((p) => keys.includes(p.key));
+
+// Matches Figma's 新會員 tab state (node 109:12657 / frame 109-12586): 全部
+// minus the new-member hero card and the fortune card (both already shown
+// elsewhere -- the hero at the top of the page, fortune nowhere on this tab).
+const memberPromotions = byKey(["neo-live", "usdt-rebate", "roulette", "gclass", "mall-gifts", "gift-card", "world-cup", "vip-jet"]);
+
+// VIP has two conflicting Figma states with the VIP tab highlighted -- kept
+// both per the user's request, pending a decision on which is correct:
+//  - vipPromotions (5 cards, node 109:16883 / frame 109-16812): vip-jet,
+//    roulette, gclass, mall-gifts, gift-card. Thematically fits "VIP" (has
+//    the VIP用戶獨享 card) -- wired up below as the live tab content.
+//  - vipPromotionsAlt (2 cards, node 109:18706 / frame 109-18635): the
+//    new-member hero + fortune card, i.e. identical to the 新會員 hero
+//    content, just shown under a green-highlighted VIP tab. Looks like a
+//    stale/duplicate frame, but not discarded -- swap this in for
+//    vipPromotions below once confirmed.
+const vipPromotions = ["vip-jet", "roulette", "gclass", "mall-gifts", "gift-card"].map(
+  (key) => allPromotions.find((p) => p.key === key)!,
+);
+const vipPromotionsAlt = byKey(["new-member", "fortune"]);
+void vipPromotionsAlt;
+
+// Matches Figma's 體育 tab state (node 109:20839 / frame 109-20768): world-cup only.
+const sportPromotions = byKey(["world-cup"]);
+
+// Matches Figma's 賭場 tab state (node 109:23782 / frame 109-23711): neo-live, usdt-rebate, gclass.
+const casinoPromotions = byKey(["neo-live", "usdt-rebate", "gclass"]);
 
 const PROMOTIONS_CATEGORIES: PromotionsCategory[] = [
   { key: "all", icon: "/icon/action-overview.svg", label: "全部", promotions: allPromotions },
-  { key: "member", icon: "/icon/action-gift.svg", label: "新會員", promotions: byKey(["new-member", "fortune"]) },
-  { key: "vip", icon: "/icon/action-vip.svg", label: "VIP", promotions: byKey(["vip-jet", "gift-card"]) },
-  { key: "sport", icon: "/icon/action-sport.svg", label: "體育", promotions: byKey(["world-cup"]) },
-  { key: "casino", icon: "/icon/action-casino.svg", label: "賭場", promotions: byKey(["neo-live", "roulette"]) },
+  { key: "member", icon: "/icon/action-gift.svg", label: "新會員", promotions: memberPromotions },
+  { key: "vip", icon: "/icon/action-vip.svg", label: "VIP", promotions: vipPromotions },
+  { key: "sport", icon: "/icon/action-sport.svg", label: "體育", promotions: sportPromotions },
+  { key: "casino", icon: "/icon/action-casino.svg", label: "賭場", promotions: casinoPromotions },
 ];
 
 export default function PromotionsPage() {

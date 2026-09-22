@@ -127,6 +127,15 @@ function ChannelButton({ active, icon, onClick, label }: { active: boolean; icon
 // the 45px photo circle inside a 1.406px ring (`ring`, a solid color or CSS
 // gradient) and the 11px status dot on its bottom-right corner. Shared by the
 // friend-list rows and the panel's own header avatar.
+//
+// `icon` mode (客服/Service, node 1355:136066 / 754:9317's own Service row) is
+// a DIFFERENT treatment, not the same ring reused: a plain white circle with
+// a real 1.406px solid border (`#3e4140` by default -- Service has no
+// levelBackground/ringColor of its own) and the glyph centered on top,
+// rather than the photo ring's "colored circle, photo inset 1.406px so the
+// color peeks through as a border" trick. That trick only works because the
+// photo is inset to reveal it; an un-inset centered icon would leave nothing
+// peeking through, so a real `border` is drawn instead.
 function FriendAvatar({
   photo,
   ring,
@@ -140,20 +149,22 @@ function FriendAvatar({
 }) {
   return (
     <div className="relative h-[45px] w-[46px] shrink-0">
-      <div
-        className="absolute left-px top-0 flex size-[45px] items-center justify-center overflow-hidden rounded-full"
-        style={{ background: ring ?? "#ffffff" }}
-      >
-        {icon ? (
+      {icon ? (
+        <div
+          className="absolute left-px top-0 flex size-[45px] items-center justify-center rounded-full border-[1.406px] border-solid bg-white"
+          style={{ borderColor: ring ?? "#3e4140" }}
+        >
           <img alt="" src={icon} className="pointer-events-none size-[25px]" />
-        ) : (
+        </div>
+      ) : (
+        <div className="absolute left-px top-0 size-[45px] overflow-hidden rounded-full" style={{ background: ring ?? "#ffffff" }}>
           <img
             alt=""
             src={photo}
             className="pointer-events-none absolute inset-[1.406px] size-[calc(100%-2.812px)] rounded-full object-cover"
           />
-        )}
-      </div>
+        </div>
+      )}
       <svg className="absolute left-[35px] top-[34px]" width={11} height={11} viewBox="0 0 11 11" fill="none">
         <circle cx={5.5} cy={5.5} r={4.5} fill={STATUS_DOT_COLOR[status]} stroke="white" strokeWidth={2} />
       </svg>
@@ -436,7 +447,11 @@ export default function TalkingBar({ messages, friends, simulatedMessages = [] }
         (selectedFriend ? (
           <>
             {/* Figma 998:10020 Eachother talk: Arrow_Special (25) at 20,20
-                plus the peer Avatar_massage at 52,20 -- both, not a swap. */}
+                plus the peer Avatar_massage at 52,20 -- both, not a swap.
+                The Service thread (node 1355:203666) is the one exception:
+                its own Avatar_massage instance is set `hidden`, so only the
+                back arrow shows there -- there's no "who you're talking to"
+                photo/icon to add next to a support room. */}
             <button
               type="button"
               aria-label="返回好友列表"
@@ -445,14 +460,16 @@ export default function TalkingBar({ messages, friends, simulatedMessages = [] }
             >
               <img alt="" src={withBasePath("/assets/talk-section/arrow-special-back.svg")} className="size-[25px]" />
             </button>
-            <div className="absolute left-[52px] top-[20px]">
-              <FriendAvatar
-                photo={selectedFriend.avatar ? withBasePath(selectedFriend.avatar) : undefined}
-                ring={selectedFriend.ringColor ?? selectedFriend.levelBackground}
-                status={selectedFriend.status}
-                icon={selectedFriend.icon ? withBasePath(selectedFriend.icon) : undefined}
-              />
-            </div>
+            {selectedFriend.id !== SERVICE_FRIEND_ID && (
+              <div className="absolute left-[52px] top-[20px]">
+                <FriendAvatar
+                  photo={selectedFriend.avatar ? withBasePath(selectedFriend.avatar) : undefined}
+                  ring={selectedFriend.ringColor ?? selectedFriend.levelBackground}
+                  status={selectedFriend.status}
+                  icon={selectedFriend.icon ? withBasePath(selectedFriend.icon) : undefined}
+                />
+              </div>
+            )}
           </>
         ) : loggedIn ? (
           <div className="absolute left-[30px] top-[20px]">
