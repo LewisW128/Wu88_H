@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "./AuthProvider";
 import Footer from "./Footer";
@@ -14,7 +15,7 @@ import type { TalkSectionProps } from "./TalkSection";
 import TopBar from "./TopBar";
 import TopUp from "./TopUp";
 import { withBasePath } from "../lib/asset";
-import { MEMBER_BEST_WIN, formatMoney } from "../lib/member";
+import { MEMBER_BEST_WIN, MEMBER_LEVEL_LABEL, formatMoney } from "../lib/member";
 
 // Same group chat / friend list data as every other page's TalkingBar --
 // not a trimmed-down version. There's only one chat, not a separate one
@@ -144,7 +145,9 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 // bottom-right). Distinct from ProfileCard/VipCard's own header treatment
 // elsewhere on /profile -- this page's own single combined card, not a
 // two-card pairing.
-// Figma node 272:7824 hardcodes VIP Lv.13 on this badge.
+// Figma node 272:7824 hardcodes VIP Lv.13 on this badge -- overridden with
+// the member's own real MEMBER_LEVEL_LABEL (Lv.8) per request, same as
+// every other page's level badge (DayRewards, ProfileCard, etc.).
 function AccountHeader() {
   return (
     <div className="relative h-[142px] w-full overflow-hidden rounded-[20px] border-2 border-[#f4f4f4] bg-white">
@@ -163,10 +166,13 @@ function AccountHeader() {
           <p className="min-w-full truncate text-[20px] font-black leading-[32px] tracking-[0.35px] text-[#3e4140]">@ JESSICA</p>
           <div className="flex items-center gap-[20px]">
             <p className="whitespace-nowrap text-[16px] font-medium leading-[24px] tracking-[0.15px] text-[#a2a2a2]">ID 20260612</p>
-            <button type="button" className="flex items-center justify-center gap-[10px] rounded-[20px] bg-[#3e4140] px-[10px] py-[5px]">
-              <span className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-white">VIP Lv.13</span>
+            {/* Per request: this badge is a real link to the rewards
+                center (VIP tier progress lives there), not decorative
+                like the edit pencils elsewhere on this page. */}
+            <Link href="/profile/rewards" className="flex items-center justify-center gap-[10px] rounded-[20px] bg-[#3e4140] px-[10px] py-[5px]">
+              <span className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-white">VIP {MEMBER_LEVEL_LABEL}</span>
               <img alt="" src={withBasePath("/assets/account/icon-chevron-right.svg")} className="size-[25px]" />
-            </button>
+            </Link>
           </div>
         </div>
       </div>
