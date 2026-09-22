@@ -686,11 +686,11 @@ function TransactionList({
           <TransactionRow key={index} t={t} index={index} expanded={expandedRow === index} onToggle={() => onToggle(index)} />
         ))}
       </div>
+      {/* Just the moving thumb, no separate track rect behind it -- matches
+          TalkingBar's own minimal scrollbar (its track is the panel's own
+          edge, not a drawn shape). */}
       {needsScroll && (
-        <>
-          <div className="pointer-events-none absolute right-0 top-0 w-[4px] rounded-full bg-[#f4f4f4]" style={{ height: thumb.track }} />
-          <div className="pointer-events-none absolute right-[1px] w-[2px] rounded-full bg-[#23f3d5]" style={{ top: thumb.top, height: thumb.height }} />
-        </>
+        <div className="pointer-events-none absolute right-0 w-[2px] rounded-full bg-[#23f3d5]" style={{ top: thumb.top, height: thumb.height }} />
       )}
     </>
   );
