@@ -57,7 +57,7 @@ function WithdrawCard({ onClose }: { onClose: () => void }) {
       style={{ width: CARD_WIDTH, height: CARD_HEIGHT }}
     >
       <img alt="" src={withBasePath("/assets/registration/decor-small.svg")} className="pointer-events-none absolute left-[164px] top-[11px] h-[65px] w-[79px] max-w-none rotate-180" />
-      <img alt="" src={withBasePath("/assets/day-rewards/claim-decor-large.svg")} className="pointer-events-none absolute left-[-105px] top-[-99px] h-[228px] w-[277px] max-w-none rotate-180" />
+      <img alt="" src={withBasePath("/assets/registration/decor-large.svg")} className="pointer-events-none absolute left-[-105px] top-[-99px] h-[228px] w-[277px] max-w-none rotate-180" />
 
       {/* Explicit z-10, not just relying on DOM order -- this title is long
           enough to actually reach into the corner ribbon's own drawn area
