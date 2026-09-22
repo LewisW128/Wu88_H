@@ -594,6 +594,108 @@ function TransactionRow({ t, index, expanded, onToggle }: { t: Transaction; inde
   );
 }
 
+// A collapsed row's own height (py-[10px]*2 + the 24px name line + 5px gap +
+// 18px date line = 67) and the list's own row gap -- both real Tailwind
+// values already used above, not independently guessed numbers -- fix
+// exactly how tall 8 rows' worth of list is.
+const LIST_ROW_HEIGHT = 67;
+const LIST_GAP = 10;
+const LIST_VISIBLE_ROWS = 8;
+const LIST_PADDING = 20;
+// 8 rows' worth of content, PLUS the top/bottom padding around them -- the
+// padding doesn't eat into how many full rows fit.
+const LIST_MAX_HEIGHT = LIST_ROW_HEIGHT * LIST_VISIBLE_ROWS + LIST_GAP * (LIST_VISIBLE_ROWS - 1) + LIST_PADDING * 2;
+
+// Caps the transaction list at 8 rows' worth of height (per request) --
+// anything past that scrolls, with a fade at whichever edge(s) still have
+// more content past them and a thumb tracking real scroll position, same
+// convention as WinList's own row list. Expanding a row (much taller than
+// 67px) just means less of the OTHER rows fit before the fade kicks in --
+// a ResizeObserver on the scrolling element itself (not just its own
+// `scroll`/window `resize` events) is what catches that height change the
+// instant a row expands/collapses, not only on the next actual scroll.
+//
+// The scrollable area owns its own padding (rather than sitting inside the
+// caller's own padded box) so the thumb/track below can sit flush at
+// `right-0` of the CALLER's card -- overlapping its own border, per request
+// -- instead of stranded 20px inside it. The caller is expected to be
+// `relative overflow-hidden` with this component as its only child, so
+// scrolled rows clip to its own rounded corners instead of poking past them.
+function TransactionList({
+  transactions,
+  expandedRow,
+  onToggle,
+}: {
+  transactions: { t: Transaction; index: number }[];
+  expandedRow: number | null;
+  onToggle: (index: number) => void;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [thumb, setThumb] = useState({ top: 0, height: 0, track: 0 });
+  const [fade, setFade] = useState({ up: false, down: false });
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    function update() {
+      if (!el) return;
+      const track = el.clientHeight;
+      const { scrollTop, scrollHeight, clientHeight } = el;
+      const canScrollUp = scrollTop > 0;
+      const canScrollDown = scrollHeight - scrollTop - clientHeight > 1;
+      setFade({ up: canScrollUp, down: canScrollDown });
+      if (scrollHeight <= clientHeight) {
+        setThumb({ top: 0, height: track, track });
+        return;
+      }
+      const height = Math.max(24, (clientHeight / scrollHeight) * track);
+      const maxTop = track - height;
+      const top = (scrollTop / (scrollHeight - clientHeight)) * maxTop;
+      setThumb({ top, height, track });
+    }
+
+    update();
+    const resizeObserver = new ResizeObserver(update);
+    resizeObserver.observe(el);
+    el.addEventListener("scroll", update);
+    window.addEventListener("resize", update);
+    return () => {
+      resizeObserver.disconnect();
+      el.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+
+  const needsScroll = fade.up || fade.down;
+
+  return (
+    <>
+      <div
+        ref={scrollRef}
+        className="no-scrollbar flex w-full flex-col items-start gap-[10px] overflow-y-auto p-[20px]"
+        style={{
+          maxHeight: LIST_MAX_HEIGHT,
+          paddingRight: needsScroll ? LIST_PADDING + 14 : LIST_PADDING,
+          ...(needsScroll && {
+            maskImage: `linear-gradient(to bottom, ${fade.up ? "transparent" : "black"} 0px, black 24px, black calc(100% - 24px), ${fade.down ? "transparent" : "black"} 100%)`,
+          }),
+        }}
+      >
+        {transactions.map(({ t, index }) => (
+          <TransactionRow key={index} t={t} index={index} expanded={expandedRow === index} onToggle={() => onToggle(index)} />
+        ))}
+      </div>
+      {needsScroll && (
+        <>
+          <div className="pointer-events-none absolute right-0 top-0 w-[4px] rounded-full bg-[#f4f4f4]" style={{ height: thumb.track }} />
+          <div className="pointer-events-none absolute right-[1px] w-[2px] rounded-full bg-[#23f3d5]" style={{ top: thumb.top, height: thumb.height }} />
+        </>
+      )}
+    </>
+  );
+}
+
 // Figma "MacBook Pro 16" - Account Details" (05_WU88-H-PC-Profile-Page
 // node 547:15722, "錢包" in ProfileSidebar): the wallet/transaction-detail
 // sub-page, previously decorative -- same page shell as /profile and
@@ -783,13 +885,11 @@ export default function AccountWallet() {
                 </div>
               </div>
 
-              <div className="flex w-full flex-col items-start gap-[10px] rounded-bl-[50px] rounded-tr-[50px] border border-[#f4f4f4] bg-white/80 p-[20px] backdrop-blur-[10px]">
+              <div className="relative w-full overflow-hidden rounded-bl-[50px] rounded-tr-[50px] border border-[#f4f4f4] bg-white/80 backdrop-blur-[10px]">
                 {!isGuest && activeTab === "交易明細" && visibleTransactions.length > 0 ? (
-                  visibleTransactions.map(({ t, index }) => (
-                    <TransactionRow key={index} t={t} index={index} expanded={expandedRow === index} onToggle={() => toggleRow(index)} />
-                  ))
+                  <TransactionList transactions={visibleTransactions} expandedRow={expandedRow} onToggle={toggleRow} />
                 ) : (
-                  <p className="w-full py-[40px] text-center text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#a2a2a2]">沒有任何資料</p>
+                  <p className="w-full px-[20px] py-[40px] text-center text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#a2a2a2]">沒有任何資料</p>
                 )}
               </div>
 
