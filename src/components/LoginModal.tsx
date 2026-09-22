@@ -48,8 +48,20 @@ export default function LoginModal({
   }, [onClose]);
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-[20px]" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()}>
+    // Only close when the backdrop itself is the click target. PopupScaleToFit
+    // uses CSS `zoom`, and Chromium can mis-hit-test clicks on zoomed children
+    // onto this overlay — which previously dismissed the modal on "建立帳號"
+    // before the registration form could show a validation error.
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-[20px]"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+      >
         {view === "login" ? (
           <PopupScaleToFit width={976} height={630.898} margin={60} maxScale={0.8}>
             <LoginPopup onClose={onClose} onLoginSuccess={onLoginSuccess} onRegister={() => setView("register")} />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { withBasePath } from "../lib/asset";
 
 export const REGISTRATION_POPUP_WIDTH = 560;
@@ -9,7 +9,9 @@ export const REGISTRATION_POPUP_HEIGHT = 659;
 // Same 6-12 letters-and-digits rule the login popup's own password
 // placeholder states ("請輸入您的6-12位英文字母及數字").
 const PASSWORD_PATTERN = /^[A-Za-z0-9]{6,12}$/;
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Require a real dot-TLD of at least 2 chars so values like "a@b.c" still
+// fail client-side checks instead of "succeeding" and dismissing the modal.
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 // Figma "Registration Card" (01_WU88-H-PC-Home-Page node 1304:117728, the
 // popup shown over the dimmed home page at 1303:114061): the sign-up form
@@ -47,11 +49,19 @@ export default function RegistrationPopup({
     return "";
   }
 
-  function handleSubmit(event: React.FormEvent) {
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const message = validate();
-    setError(message);
-    if (!message) onRegisterSuccess?.();
+    event.stopPropagation();
+    try {
+      const message = validate();
+      setError(message);
+      // Only dismiss / log in when validation actually passed. Invalid input
+      // must keep the modal open and show the message above.
+      if (message) return;
+      onRegisterSuccess?.();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "註冊時發生錯誤，請檢查輸入後再試。");
+    }
   }
 
   return (
@@ -75,19 +85,24 @@ export default function RegistrationPopup({
             <Field label="名字" placeholder="請輸入名字" value={firstName} onChange={setFirstName} className="w-[232px] shrink-0" autoComplete="given-name" />
             <Field label="姓氏" placeholder="請輸入姓氏" value={lastName} onChange={setLastName} className="w-[232px] shrink-0" autoComplete="family-name" />
           </div>
-          <Field label="電子郵件" placeholder="請輸入電子郵件" value={email} onChange={setEmail} type="email" autoComplete="email" />
-          <Field label="密碼" placeholder="請建立密碼" value={password} onChange={setPassword} type="password" autoComplete="new-password" />
-          <Field label="確認密碼" placeholder="請再次輸入密碼" value={confirmPassword} onChange={setConfirmPassword} type="password" autoComplete="new-password" />
+          <Field label="電子郵件" placeholder="請輸入電子郵件" value={email} onChange={setEmail} type="email" autoComplete="email" invalid={Boolean(error && error.includes("電子郵件"))} />
+          <Field label="密碼" placeholder="請建立密碼" value={password} onChange={setPassword} type="password" autoComplete="new-password" invalid={Boolean(error && error.includes("密碼") && !error.includes("不一致"))} />
+          <Field label="確認密碼" placeholder="請再次輸入密碼" value={confirmPassword} onChange={setConfirmPassword} type="password" autoComplete="new-password" invalid={Boolean(error && error.includes("不一致"))} />
         </div>
       </div>
 
       {/* Validation message: sits in the 40px gap between the fields and the
-          footer (absolutely placed) so showing it never shifts the layout. */}
-      {error && (
-        <p role="alert" className="absolute left-[40px] top-[470px] text-[12px] font-medium leading-[18px] tracking-[0.15px] text-[#e80800]">
+          footer (absolutely placed) so showing it never shifts the layout.
+          z-10 keeps it above the footer so a failed submit is always readable. */}
+      {error ? (
+        <p
+          role="alert"
+          aria-live="assertive"
+          className="absolute left-[40px] top-[470px] z-10 max-w-[480px] rounded-[8px] bg-[#fff1f0] px-[10px] py-[4px] text-[12px] font-medium leading-[18px] tracking-[0.15px] text-[#e80800]"
+        >
           {error}
         </p>
-      )}
+      ) : null}
 
       <div className="relative flex w-full shrink-0 flex-col items-start gap-[10px]">
         <label className="flex w-full cursor-pointer items-center gap-[12px]">
@@ -133,6 +148,7 @@ function Field({
   type = "text",
   className = "w-full",
   autoComplete,
+  invalid = false,
 }: {
   label: string;
   placeholder: string;
@@ -141,6 +157,7 @@ function Field({
   type?: string;
   className?: string;
   autoComplete?: string;
+  invalid?: boolean;
 }) {
   return (
     <label className={`flex flex-col items-start gap-[5px] ${className}`}>
@@ -151,7 +168,10 @@ function Field({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         autoComplete={autoComplete}
-        className="h-[45px] w-full rounded-[15px] border border-solid border-[#3e4140] bg-[#f4f4f4] px-[16px] text-[12px] leading-[18px] tracking-[0.15px] text-[#3e4140] outline-none placeholder:text-[#a2a2a2] focus:border-[#8d54d8]"
+        aria-invalid={invalid || undefined}
+        className={`h-[45px] w-full rounded-[15px] border border-solid bg-[#f4f4f4] px-[16px] text-[12px] leading-[18px] tracking-[0.15px] text-[#3e4140] outline-none placeholder:text-[#a2a2a2] focus:border-[#8d54d8] ${
+          invalid ? "border-[#e80800]" : "border-[#3e4140]"
+        }`}
       />
     </label>
   );
