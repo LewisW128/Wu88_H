@@ -1,0 +1,11 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="25" height="25" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Actions">
+<path id="Ellipse 29" d="M17.1861 7.5C17.1861 9.98528 15.1713 12 12.6861 12C10.2008 12 8.18607 9.98528 8.18607 7.5C8.18607 5.01472 10.2008 3 12.6861 3C15.1713 3 17.1861 5.01472 17.1861 7.5Z" stroke="#3E4140" stroke-width="2"/>
+<path id="Ellipse 30" d="M13 8.5C14.7753 8.5 16.305 7.6803 17 6.5" stroke="#3E4140" stroke-width="2" stroke-linecap="round"/>
+<circle id="Ellipse 27" cx="18" cy="18" r="5" fill="#23F3D5"/>
+<path id="Ellipse 2" d="M22 23C22 18.5817 17.9706 15 13 15C8.02944 15 4 18.5817 4 23" stroke="#3E4140" stroke-width="2" stroke-linecap="round"/>
+<path id="Line 19" d="M7 6V8" stroke="#3E4140" stroke-width="3" stroke-linecap="round"/>
+<path id="Line 21" d="M13 19L13 22" stroke="#3E4140" stroke-width="3" stroke-linecap="round"/>
+<path id="Line 20" d="M18 6V8" stroke="#3E4140" stroke-width="3" stroke-linecap="round"/>
+</g>
+</svg>
