@@ -635,7 +635,11 @@ export default function AccountWallet() {
                   )}
                 </div>
                 <div className="relative">
-                  <FilterPill label="類型" active={openFilter === "type"} onClick={() => setOpenFilter(openFilter === "type" ? null : "type")} />
+                  {/* Figma 59:26807/59:27491: once a type is picked, the pill's own
+                      label swaps from the "類型" placeholder to show the picked
+                      value itself (e.g. "信用卡充值"), growing to fit it -- not a
+                      separate summary shown elsewhere. */}
+                  <FilterPill label={typeFilter ?? "類型"} active={openFilter === "type"} onClick={() => setOpenFilter(openFilter === "type" ? null : "type")} />
                   {openFilter === "type" && (
                     <TypeDropdown
                       initialValue={typeFilter}
