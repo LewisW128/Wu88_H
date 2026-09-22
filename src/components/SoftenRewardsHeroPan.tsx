@@ -41,7 +41,9 @@ export default function SoftenRewardsHeroPan() {
       }
 
       const mag = Math.abs(px);
-      const minLegacy = CLOSE_UP_PAN_SHIFT_LEGACY * 0.2;
+      // Only treat values near the legacy 257 design-px pan as sources.
+      // (If RewardsCenterContent is later updated to 110, skip so we don't double-scale.)
+      const minLegacy = CLOSE_UP_PAN_SHIFT_LEGACY * 0.7;
       const maxLegacy = CLOSE_UP_PAN_SHIFT_LEGACY * 1.2;
       if (!el.dataset.rewardsPanLegacy && mag >= minLegacy && mag <= maxLegacy) {
         el.dataset.rewardsPanLegacy = String(px);
