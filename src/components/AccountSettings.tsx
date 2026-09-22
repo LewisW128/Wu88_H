@@ -15,7 +15,7 @@ import type { TalkSectionProps } from "./TalkSection";
 import TopBar from "./TopBar";
 import TopUp from "./TopUp";
 import { withBasePath } from "../lib/asset";
-import { MEMBER_BEST_WIN, MEMBER_LEVEL_LABEL, formatMoney } from "../lib/member";
+import { MEMBER_BEST_WIN, formatMoney } from "../lib/member";
 
 // Same group chat / friend list data as every other page's TalkingBar --
 // not a trimmed-down version. There's only one chat, not a separate one
@@ -116,7 +116,7 @@ const talkingBarFriends: Friend[] = [
 // 4px circle SVG.
 function DotGrid() {
   return (
-    <div className="flex flex-col items-end gap-[7.75px]">
+    <div className="flex flex-col items-start gap-[7.75px]">
       {Array.from({ length: 6 }).map((_, row) => (
         <div key={row} className="flex items-center gap-[7.75px]">
           {Array.from({ length: 6 }).map((_, col) => (
@@ -167,6 +167,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 // bottom-right). Distinct from ProfileCard/VipCard's own header treatment
 // elsewhere on /profile -- this page's own single combined card, not a
 // two-card pairing.
+// Figma node 272:7824 hardcodes VIP Lv.13 on this badge.
 function AccountHeader() {
   return (
     <div className="relative h-[142px] w-full overflow-hidden rounded-[20px] border-2 border-[#f4f4f4] bg-white">
@@ -186,7 +187,7 @@ function AccountHeader() {
           <div className="flex items-center gap-[20px]">
             <p className="whitespace-nowrap text-[16px] font-medium leading-[24px] tracking-[0.15px] text-[#a2a2a2]">ID 20260612</p>
             <button type="button" className="flex items-center justify-center gap-[10px] rounded-[20px] bg-[#3e4140] px-[10px] py-[5px]">
-              <span className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-white">VIP {MEMBER_LEVEL_LABEL}</span>
+              <span className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-white">VIP Lv.13</span>
               <img alt="" src={withBasePath("/assets/account/icon-chevron-right.svg")} className="size-[25px]" />
             </button>
           </div>
