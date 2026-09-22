@@ -3,7 +3,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useAuth } from "./AuthProvider";
 import LevelBadge from "./LevelBadge";
-import { LEVEL_LEBALS_BACKGROUND } from "../lib/levelBadge";
 import TalkSection, { type TalkSectionProps } from "./TalkSection";
 import { useScale } from "./ScaleToFit";
 import { withBasePath } from "../lib/asset";
@@ -17,10 +16,11 @@ export type Friend = {
   avatar: string;
   // Optional -- Service has no level badge (Figma hides it).
   levelLabel?: string;
-  // Also doubles as the avatar's own ring color, same as Talk_section's
-  // established convention (see TalkSection.tsx's own comment). Optional
-  // for Service, which uses a plain white fill behind the headset icon.
+  // Level_Lebals capsule fill (VIP gradient for Jackson; solid for others).
   levelBackground?: string;
+  // Avatar ring. When omitted, falls back to levelBackground. Jackson needs
+  // this because Figma uses #01fab0 for the ring while the badge is gradient.
+  ringColor?: string;
   // When set, FriendAvatar renders this 25px icon on a white circle instead
   // of a photo (Figma Actions / Service row).
   icon?: string;
@@ -187,7 +187,7 @@ function FriendCard({ friend, onClick }: { friend: Friend; onClick: () => void }
       <div className="absolute inset-x-[10px] top-[10px] flex items-center gap-[10px]">
         <FriendAvatar
           photo={friend.avatar ? withBasePath(friend.avatar) : undefined}
-          ring={friend.levelBackground}
+          ring={friend.ringColor ?? friend.levelBackground}
           status={friend.status}
           icon={friend.icon ? withBasePath(friend.icon) : undefined}
         />
@@ -197,7 +197,7 @@ function FriendCard({ friend, onClick }: { friend: Friend; onClick: () => void }
             <div className="flex min-w-0 items-center gap-[5px]">
               <p className="whitespace-nowrap text-[12px] font-bold leading-[18px] tracking-[0.15px] text-[#3e4140]">{friend.name}</p>
               {friend.levelLabel && friend.levelBackground && (
-                <LevelBadge label={friend.levelLabel} background={LEVEL_LEBALS_BACKGROUND} weight="regular" />
+                <LevelBadge label={friend.levelLabel} background={friend.levelBackground} weight="regular" />
               )}
             </div>
             {friend.timestamp && (
@@ -441,7 +441,7 @@ export default function TalkingBar({ messages, friends, simulatedMessages = [] }
             <div className="absolute left-[52px] top-[20px]">
               <FriendAvatar
                 photo={selectedFriend.avatar ? withBasePath(selectedFriend.avatar) : undefined}
-                ring={selectedFriend.levelBackground}
+                ring={selectedFriend.ringColor ?? selectedFriend.levelBackground}
                 status={selectedFriend.status}
                 icon={selectedFriend.icon ? withBasePath(selectedFriend.icon) : undefined}
               />
