@@ -118,6 +118,32 @@ function buildTransactionDetail(t: Transaction, index: number) {
   };
 }
 
+// Figma node 60:26096's own single example ("Withdrawal detail expanded") --
+// there's only ever one 託售 row in TRANSACTIONS (-$100,000), matching this
+// exactly, so it's reused verbatim rather than invented per row the way
+// buildTransactionDetail varies the top-up rows above (which actually repeat
+// many times).
+const WITHDRAWAL_DETAIL = {
+  method: "銀行轉帳",
+  etaRange: "2024/06/13 ~ 2024/06/15",
+  status: "處理中",
+  account: "中國信託銀行 · 帳號尾號 1188",
+  holder: "王大明",
+  amountLabel: "NT$100,000",
+  feeLabel: "NT$250",
+};
+
+// Figma node 62:26637's own single example ("Payment Informations Expanded",
+// the 返水 breakdown) -- same reasoning as WITHDRAWAL_DETAIL above: the one
+// 返水 row in TRANSACTIONS has no reason to invent a different breakdown.
+const REBATE_LINES = [
+  { game: "百家樂 VIP 廳", win: "贏 $128,500", rebate: "+$12,850" },
+  { game: "輪盤經典場", win: "贏 $64,200", rebate: "+$6,420" },
+  { game: "德州撲克現金桌", win: "贏 $32,800", rebate: "+$3,280" },
+  { game: "老虎機 Jackpot", win: "贏 $18,600", rebate: "+$1,860" },
+] as const;
+const REBATE_TOTAL = "+$24,410";
+
 type DateValue = { year: number; month: number; day: number };
 
 const WEEKDAY_LABELS = ["一", "二", "三", "四", "五", "六", "日"];
@@ -400,11 +426,125 @@ function DetailCard({ label, value, valueColor }: { label: string; value: string
   );
 }
 
+// A label/value pair inside WithdrawalRow's own detail-rows list (60:26119):
+// label left, bold value right, a border-b divider row-to-row except the
+// last (that one's border comes from the section's own bottom padding
+// instead, so it doesn't double up with the header/summary spacing above).
+function WithdrawalDetailRow({ label, value, divider = true }: { label: string; value: string; divider?: boolean }) {
+  return (
+    <div className={`flex w-full items-center justify-between py-[5px] ${divider ? "border-b border-[#f4f4f4]" : ""}`}>
+      <p className="whitespace-nowrap text-[12px] leading-[18px] text-[#a2a2a2]">{label}</p>
+      <p className="w-[520px] text-right text-[16px] font-bold leading-[24px] tracking-[0.15px] text-[#3e4140]">{value}</p>
+    </div>
+  );
+}
+
+// Figma "Withdrawal detail expanded" (node 60:26096) -- 託售's own expanded
+// shape, distinct from the top-up one below: a bordered header (提現明細 +
+// 申請編號, -amount in pink), 3 summary columns (提現方式/預計到帳/目前狀態,
+// separated by right borders), then the 4 label/value detail rows.
+function WithdrawalRow({ t, onToggle }: { t: Transaction; onToggle: () => void }) {
+  const d = WITHDRAWAL_DETAIL;
+  return (
+    <div className="flex w-full flex-col items-start rounded-[25px] border border-[#f4f4f4] bg-[#fafafa]">
+      <div className="flex w-full items-center justify-between border-b border-[#f4f4f4] px-[20px] py-[10px]">
+        <div className="flex flex-col items-start gap-[6px]">
+          <p className="whitespace-nowrap text-[16px] font-bold leading-[24px] tracking-[0.15px] text-[#3e4140]">提現明細</p>
+          <p className="whitespace-nowrap text-[12px] leading-[18px] text-[#a2a2a2]">{t.date} · 申請編號 WD-240612-013</p>
+        </div>
+        <button type="button" onClick={onToggle} className="flex items-center gap-[12px]">
+          <span className="whitespace-nowrap text-[16px] font-bold leading-[24px] tracking-[0.15px]" style={{ color: t.color }}>
+            {t.amount}
+          </span>
+          <img alt="" src={withBasePath("/assets/wallet/icon-expand-active.svg")} className="size-[16px]" />
+        </button>
+      </div>
+
+      <div className="flex w-full items-start pt-[10px]">
+        <div className="flex min-w-px flex-1 flex-col items-start gap-[6px] border-r border-[#f4f4f4] px-[20px] py-[10px]">
+          <p className="whitespace-nowrap text-[12px] leading-[18px] text-[#a2a2a2]">提現方式</p>
+          <p className="whitespace-nowrap text-[16px] font-bold leading-[24px] text-[#3e4140]">{d.method}</p>
+        </div>
+        <div className="flex min-w-px flex-1 flex-col items-start gap-[6px] border-r border-[#f4f4f4] px-[20px] py-[10px]">
+          <p className="whitespace-nowrap text-[12px] leading-[18px] text-[#a2a2a2]">預計到帳</p>
+          <p className="whitespace-nowrap text-[16px] font-bold leading-[24px] text-[#3e4140]">{d.etaRange}</p>
+        </div>
+        <div className="flex min-w-px flex-1 flex-col items-start gap-[6px] px-[20px] py-[10px]">
+          <p className="whitespace-nowrap text-[12px] leading-[18px] text-[#a2a2a2]">目前狀態</p>
+          <span className="flex items-center gap-[8px]">
+            <span className="size-[8px] shrink-0 rounded-full bg-[#23f3d5]" />
+            <span className="whitespace-nowrap text-[16px] font-bold leading-[24px] text-[#3e4140]">{d.status}</span>
+          </span>
+        </div>
+      </div>
+
+      <div className="flex w-full flex-col items-start px-[20px] pb-[20px]">
+        <WithdrawalDetailRow label="受款帳戶" value={d.account} />
+        <WithdrawalDetailRow label="戶名" value={d.holder} />
+        <WithdrawalDetailRow label="申請金額" value={d.amountLabel} />
+        <WithdrawalDetailRow label="手續費" value={d.feeLabel} divider={false} />
+      </div>
+    </div>
+  );
+}
+
+// Figma "Payment Informations Expanded" (node 62:26637) -- 返水's own
+// expanded shape: header + divider, then a per-game breakdown list (each
+// row: game name/遊戲返水 left, 贏 $X / +$Y right), ending in a filled
+// 總返水 summary row. No outer border (unlike WithdrawalRow's own card).
+function RebateRow({ t, onToggle }: { t: Transaction; onToggle: () => void }) {
+  return (
+    <div className="flex w-full flex-col items-start rounded-[25px] bg-[#fafafa] px-[20px] py-[10px]">
+      <div className="flex w-full items-center justify-between pb-[10px] pt-[4px]">
+        <div className="flex flex-col items-start gap-[5px]">
+          <p className="whitespace-nowrap text-[16px] font-bold leading-[24px] text-[#3e4140]">{t.name}</p>
+          <p className="whitespace-nowrap text-[12px] leading-[18px] text-[#a2a2a2]">{t.date}</p>
+        </div>
+        <button type="button" onClick={onToggle} className="flex items-center gap-[40px]">
+          <span className="whitespace-nowrap text-[16px] font-bold leading-[24px] tracking-[0.15px]" style={{ color: t.color }}>
+            {t.amount}
+          </span>
+          <img alt="" src={withBasePath("/assets/wallet/icon-expand-active.svg")} className="size-[16px]" />
+        </button>
+      </div>
+      <div className="h-px w-full bg-[#f4f4f4]" />
+
+      <div className="flex w-full flex-col items-start gap-[10px] pt-[10px]">
+        <p className="whitespace-nowrap text-[12px] leading-[18px] text-[#a2a2a2]">返水細項</p>
+        <div className="flex w-full flex-col items-start">
+          {REBATE_LINES.map((line, i) => (
+            <div key={line.game} className="flex w-full flex-col items-start">
+              {i > 0 && <div className="h-px w-full bg-[#f4f4f4]" />}
+              <div className="flex w-full items-center justify-between px-[16px] py-[5px]">
+                <div className="flex flex-col items-start gap-[2px]">
+                  <p className="whitespace-nowrap text-[16px] font-bold leading-[24px] text-[#3e4140]">{line.game}</p>
+                  <p className="whitespace-nowrap text-[12px] leading-[18px] text-[#a2a2a2]">遊戲返水</p>
+                </div>
+                <div className="flex items-center gap-[24px]">
+                  <p className="whitespace-nowrap text-[12px] leading-[18px] text-[#3e4140]">{line.win}</p>
+                  <p className="whitespace-nowrap text-[16px] font-bold leading-[24px] text-[#38ddcd]">{line.rebate}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+          <div className="h-px w-full bg-[#f4f4f4]" />
+          <div className="flex w-full items-center justify-between rounded-[20px] bg-[#f4f4f4] px-[16px] py-[14px]">
+            <p className="whitespace-nowrap text-[16px] font-bold leading-[24px] tracking-[0.15px] text-[#3e4140]">總返水</p>
+            <p className="whitespace-nowrap text-[16px] font-bold leading-[24px] tracking-[0.15px] text-[#38ddcd]">{REBATE_TOTAL}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Collapsed state matches the original row exactly; expanded state matches
-// Figma node 37:32188's "Payment informations expanded" -- same row grows in
-// place rather than pushing a separate panel below it. icon-expand.svg
-// (purple, pointing down) flips to icon-expand-active.svg (dark, pointing
-// up) on expand, per Figma's own two chevron assets for this state.
+// Figma node 37:32188's "Payment informations expanded" (信用卡充值), or
+// node 60:26096 (託售, WithdrawalRow) / 62:26637 (返水, RebateRow) for the
+// other two transaction types -- each type has its own genuinely different
+// detail shape in Figma, not a shared 4-field card reused for all three.
+// icon-expand.svg (purple, pointing down) flips to icon-expand-active.svg
+// (dark, pointing up) on expand, per Figma's own two chevron assets.
 function TransactionRow({ t, index, expanded, onToggle }: { t: Transaction; index: number; expanded: boolean; onToggle: () => void }) {
   const { name, date, amount, color } = t;
 
@@ -424,6 +564,9 @@ function TransactionRow({ t, index, expanded, onToggle }: { t: Transaction; inde
       </div>
     );
   }
+
+  if (name === "託售") return <WithdrawalRow t={t} onToggle={onToggle} />;
+  if (name === "返水") return <RebateRow t={t} onToggle={onToggle} />;
 
   const detail = buildTransactionDetail(t, index);
   return (
