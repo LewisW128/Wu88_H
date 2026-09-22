@@ -193,7 +193,7 @@ function FriendCard({ friend, onClick }: { friend: Friend; onClick: () => void }
     <button
       type="button"
       onClick={onClick}
-      className="relative h-[71px] w-full shrink-0 rounded-[10px] border border-[#f4f4f4] bg-white/50 text-left"
+      className="relative h-[71px] w-full shrink-0 rounded-[20px] border border-[#f4f4f4] bg-white/50 text-left"
     >
       <div className="absolute inset-x-[10px] top-[10px] flex items-center gap-[10px]">
         <FriendAvatar
