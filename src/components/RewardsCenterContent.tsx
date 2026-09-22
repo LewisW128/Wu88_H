@@ -1045,18 +1045,22 @@ export default function RewardsCenterContent() {
                 // still shows after the last point (this file's own
                 // established comment on `LEVEL_POINTS`) reaches toward
                 // that 8th card's center, same as every other segment.
+                // Final "100" sits on the last kit center and has no trailing
+                // connector -- do not index past REWARD_KITS / kitCardCenters.
                 const lineEnd = kitCardCenters[i + 1];
-                const lineWidth = lineEnd - center - 24;
-                // How far the member's level has gone through THIS segment:
-                // from this milestone's level to the next one's (the last
-                // segment reaches the 8th kit's own first level, 93).
+                const hasTrailingLine = lineEnd != null;
                 const segmentStart = Number(numeral);
-                const segmentEnd = i + 1 < LEVEL_POINTS.length ? Number(LEVEL_POINTS[i + 1]) : REWARD_KITS[i + 1].levelStart;
-                const lineProgress = loggedIn ? (MEMBER_LEVEL - segmentStart) / (segmentEnd - segmentStart) : 0;
+                const segmentEnd = i + 1 < LEVEL_POINTS.length
+                  ? Number(LEVEL_POINTS[i + 1])
+                  : segmentStart;
+                const lineWidth = hasTrailingLine ? lineEnd - center - 24 : 0;
+                const lineProgress = hasTrailingLine && loggedIn
+                  ? (MEMBER_LEVEL - segmentStart) / Math.max(1, segmentEnd - segmentStart)
+                  : 0;
                 return (
                   <div key={i} className="absolute top-0" style={{ left: center - 12 }}>
                     <LevelPoint numeral={numeral} active={achieved} />
-                    {i + 1 < kitCardCenters.length ? (
+                    {hasTrailingLine ? (
                       <div className="absolute left-[24px] top-[2.5px]">
                         <LevelLine progress={lineProgress} width={lineWidth} />
                       </div>
