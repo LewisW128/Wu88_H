@@ -84,6 +84,23 @@ const talkingBarSimulatedMessages: TalkSectionProps[] = [
 // messaged yet" rather than a missing value.
 const talkingBarFriends: Friend[] = [
   {
+    id: "service",
+    name: "@ Service",
+    avatar: "",
+    icon: "/assets/talk-section/icon-service.svg",
+    status: "online",
+    messages: [
+      {
+        avatar: "/assets/talk-section/icon-service.svg",
+        name: "@ Service",
+        timestamp: "剛剛",
+        text: "您好，需要什麼協助呢？",
+        variant: "other",
+      },
+    ],
+  },
+
+  {
     id: "jackson",
     name: "@ Jackson",
     avatar: "/assets/talk-section/avatar-jackson.png",

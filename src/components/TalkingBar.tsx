@@ -6,6 +6,7 @@ import LevelBadge from "./LevelBadge";
 import TalkSection, { type TalkSectionProps } from "./TalkSection";
 import { useScale } from "./ScaleToFit";
 import { withBasePath } from "../lib/asset";
+import { OPEN_SERVICE_CHAT_EVENT, SERVICE_FRIEND_ID } from "../lib/openServiceChat";
 
 export type Friend = {
   id: string;
@@ -240,7 +241,13 @@ export default function TalkingBar({ messages, friends, simulatedMessages = [] }
   // account -- the 私人訊息 channel itself still opens for a guest (the
   // group chat above it is public either way), it just has nothing in it,
   // same as DayRewards gating itself on this same state elsewhere.
-  const visibleFriends = loggedIn ? friends : NO_FRIENDS;
+  const serviceFriend = friends.find((f) => f.id === SERVICE_FRIEND_ID);
+  // Service is a fixed customer-service room: always listed in 私訊 whether
+  // the visitor is logged in or not. Other friends stay login-gated.
+  const visibleFriends = [
+    ...(serviceFriend ? [serviceFriend] : []),
+    ...(loggedIn ? friends.filter((f) => f.id !== SERVICE_FRIEND_ID) : []),
+  ];
   const [channel, setChannel] = useState<Channel>("all");
   const [liveMessages, setLiveMessages] = useState(messages);
   // Which friend's thread is open, if any -- null means "私人訊息" is
@@ -248,6 +255,16 @@ export default function TalkingBar({ messages, friends, simulatedMessages = [] }
   // Persists across switching to "all" and back rather than resetting, so
   // tabbing away from a conversation and back doesn't lose your place.
   const [selectedFriendId, setSelectedFriendId] = useState<string | null>(null);
+
+  useEffect(() => {
+    function onOpenService() {
+      setChannel("private");
+      setSelectedFriendId(SERVICE_FRIEND_ID);
+    }
+    window.addEventListener(OPEN_SERVICE_CHAT_EVENT, onOpenService);
+    return () => window.removeEventListener(OPEN_SERVICE_CHAT_EVENT, onOpenService);
+  }, []);
+
   const selectedFriend = channel === "private" ? (visibleFriends.find((f) => f.id === selectedFriendId) ?? null) : null;
   const showFriendList = channel === "private" && !selectedFriend;
   const activeMessages = channel === "all" ? liveMessages : (selectedFriend?.messages ?? NO_MESSAGES);

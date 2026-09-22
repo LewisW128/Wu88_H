@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { withBasePath } from "../lib/asset";
+import { openServiceChat } from "../lib/openServiceChat";
 import MainSelections from "./MainSelections";
 
 // 賭場/體育/優惠活動 all have real routes now (/casino, /sports,
@@ -24,7 +25,7 @@ function Divider() {
 // (clicking 賭場 previously did nothing, including from the Casino page
 // back to itself/elsewhere -- Sidebar's icons were never actually wired
 // to navigate); omitted for icons whose page doesn't exist yet.
-function NavIcon({ icon, label, href }: { icon: string; label: string; href?: string }) {
+function NavIcon({ icon, label, href, onClick }: { icon: string; label: string; href?: string; onClick?: () => void }) {
   const content = (
     <>
       <img alt="" src={withBasePath(icon)} className="h-[89px] w-[93px]" />
@@ -40,7 +41,7 @@ function NavIcon({ icon, label, href }: { icon: string; label: string; href?: st
       {content}
     </Link>
   ) : (
-    <button type="button" aria-label={label} className={className}>
+    <button type="button" aria-label={label} onClick={onClick} className={className}>
       {content}
     </button>
   );
@@ -85,7 +86,7 @@ export default function Sidebar({ page = "home" }: SidebarProps) {
           ))}
         </div>
         <Divider />
-        <NavIcon icon="/assets/sidebar/nav-member.svg" label="聯繫客服" />
+        <NavIcon icon="/assets/sidebar/nav-member.svg" label="聯繫客服" onClick={openServiceChat} />
         <NavIcon icon="/assets/sidebar/nav-download.svg" label="下載APP" />
       </div>
     </div>
