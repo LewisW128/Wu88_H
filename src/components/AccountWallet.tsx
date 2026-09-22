@@ -415,9 +415,12 @@ function TypeDropdown({ value, onSelect }: { value: string | null; onSelect: (va
   );
 }
 
+// Figma's own "detail-card" (node 49:22850 etc.) is plain text in a column --
+// no fill/padding box around it at all, unlike what an earlier version here
+// guessed (a gray #f4f4f4 card per field, per request that's now corrected).
 function DetailCard({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
   return (
-    <div className="flex min-w-px flex-1 flex-col items-start gap-[6px] rounded-[18px] bg-[#f4f4f4] p-[16px]">
+    <div className="flex min-w-px flex-1 flex-col items-start gap-[6px]">
       <p className="whitespace-nowrap text-[12px] leading-[18px] text-[#a2a2a2]">{label}</p>
       <p className="w-full truncate text-[16px] font-bold leading-[24px] text-[#3e4140]" style={valueColor ? { color: valueColor } : undefined}>
         {value}
@@ -576,10 +579,11 @@ function TransactionRow({ t, index, expanded, onToggle }: { t: Transaction; inde
           <p className="whitespace-nowrap text-[16px] font-bold leading-[24px] tracking-[0.15px] text-[#3e4140]">{name}</p>
           <p className="whitespace-nowrap text-[12px] leading-[18px] text-[#a2a2a2]">{date}</p>
         </div>
+        {/* Figma node 49:22838's own amount-block: #23f3d5 here specifically,
+            not this row's own #38ddcd `color` the collapsed state (and the
+            other two expanded types' own headers) correctly use. */}
         <button type="button" onClick={onToggle} className="flex items-center gap-[16px]">
-          <span className="whitespace-nowrap text-[16px] font-bold leading-[24px] tracking-[0.15px]" style={{ color }}>
-            {amount}
-          </span>
+          <span className="whitespace-nowrap text-[16px] font-bold leading-[24px] tracking-[0.15px] text-[#23f3d5]">{amount}</span>
           <img alt="" src={withBasePath("/assets/wallet/icon-expand-active.svg")} className="size-[16px]" />
         </button>
       </div>
