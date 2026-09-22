@@ -1,1 +1,1 @@
-@file:/tmp/AccountSettings_push.tsx
+LOAD_FROM_FILE
