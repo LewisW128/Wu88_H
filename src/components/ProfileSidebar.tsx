@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { withBasePath } from "../lib/asset";
+import { openServiceChat } from "../lib/openServiceChat";
 import { useAuth } from "./AuthProvider";
 import { useScale } from "./ScaleToFit";
 
@@ -346,7 +347,7 @@ export default function ProfileSidebar() {
 
         <Divider />
 
-        <NavIcon icon="/assets/sidebar/profile-nav/account.svg" label="帳戶設定" />
+        <NavIcon icon="/assets/sidebar/profile-nav/account.svg" label="聯繫客服" onClick={openServiceChat} />
         <NavIcon icon="/assets/sidebar/profile-nav/download.svg" label="下載APP" />
 
         <Divider />
