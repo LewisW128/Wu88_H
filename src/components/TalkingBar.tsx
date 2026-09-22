@@ -6,7 +6,6 @@ import LevelBadge from "./LevelBadge";
 import TalkSection, { type TalkSectionProps } from "./TalkSection";
 import { useScale } from "./ScaleToFit";
 import { withBasePath } from "../lib/asset";
-import { VIP_LEVEL_BADGE_BACKGROUND } from "../lib/levelBadge";
 import { OPEN_SERVICE_CHAT_EVENT, SERVICE_FRIEND_ID } from "../lib/openServiceChat";
 
 export type Friend = {
@@ -197,7 +196,7 @@ function FriendCard({ friend, onClick }: { friend: Friend; onClick: () => void }
             <div className="flex min-w-0 items-center gap-[5px]">
               <p className="whitespace-nowrap text-[12px] font-bold leading-[18px] tracking-[0.15px] text-[#3e4140]">{friend.name}</p>
               {friend.levelLabel && friend.levelBackground && (
-                <LevelBadge label={friend.levelLabel} background={VIP_LEVEL_BADGE_BACKGROUND} weight="regular" />
+                <LevelBadge label={friend.levelLabel} background={friend.levelBackground} weight="regular" />
               )}
             </div>
             {friend.timestamp && (
