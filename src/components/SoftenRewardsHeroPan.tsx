@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import {
   CLOSE_UP_PAN_DURATION_MS,
+  CLOSE_UP_PAN_EASING,
   CLOSE_UP_PAN_SHIFT,
   CLOSE_UP_PAN_SHIFT_LEGACY,
 } from "../lib/rewardsHeroPan";
@@ -27,6 +28,7 @@ export default function SoftenRewardsHeroPan() {
 
     function soften(el: HTMLElement) {
       el.style.transitionDuration = `${CLOSE_UP_PAN_DURATION_MS}ms`;
+      el.style.transitionTimingFunction = CLOSE_UP_PAN_EASING;
       const top = el.style.top;
       if (!top || top === "0px" || top === "0") {
         delete el.dataset.rewardsPanLegacy;
