@@ -16,6 +16,8 @@ export type TalkSectionProps = {
   name: string;
   levelLabel?: string;
   levelBackground?: string;
+  /** Avatar ring; defaults to levelBackground. Jackson uses #01fab0. */
+  ringColor?: string;
   timestamp: string;
   text: string;
   variant: TalkSectionVariant;
@@ -31,21 +33,17 @@ export type TalkSectionProps = {
 // (a quoted block prepended to either bubble color), so it's modeled here
 // as an optional `replyTo` prop instead of a 4-way enum.
 //
-// The multi-person chat panel (TalkingBar) shows the level badge in
-// different colors per user (VIP gradient, plain green, plain yellow) --
-// same levelLabel/levelBackground shape as Rank_section, not a fixed
-// gradient -- and non-members simply don't have one. The avatar ring
-// follows the same levelBackground (matching Rank_section's own
-// ring=badge-color pattern), falling back to a plain gray border when
-// there's no level at all.
-export default function TalkSection({ avatar, name, levelLabel, levelBackground, timestamp, text, variant, replyTo }: TalkSectionProps) {
+// TalkingBar Level_Lebals: Jackson VIP gradient, Johnny #79d4a2, Arick
+// #ffcf00 (Figma 754:9317 / 998:10020). Avatar ring usually matches the
+// badge fill; Jackson is the exception (ring #01fab0, badge gradient).
+export default function TalkSection({ avatar, name, levelLabel, levelBackground, ringColor, timestamp, text, variant, replyTo }: TalkSectionProps) {
   const isMine = variant === "myself";
   const bubbleBg = isMine ? "rgba(35,243,213,0.5)" : "#f4f4f4";
   const quoteBg = isMine ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.8)";
 
   return (
     <div className="flex w-[237px] max-w-full items-start gap-[5px]">
-      <Avatar photo={avatar} size={32} badge={false} ringColor={levelBackground ?? DEFAULT_RING_COLOR} />
+      <Avatar photo={avatar} size={32} badge={false} ringColor={ringColor ?? levelBackground ?? DEFAULT_RING_COLOR} />
 
       <div className="flex min-w-0 flex-1 flex-col items-start gap-[5px]">
         <div className="flex w-full items-center justify-between gap-[10px]">

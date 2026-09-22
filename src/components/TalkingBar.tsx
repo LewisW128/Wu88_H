@@ -6,30 +6,31 @@ import LevelBadge from "./LevelBadge";
 import TalkSection, { type TalkSectionProps } from "./TalkSection";
 import { useScale } from "./ScaleToFit";
 import { withBasePath } from "../lib/asset";
+import { OPEN_SERVICE_CHAT_EVENT, SERVICE_FRIEND_ID } from "../lib/openServiceChat";
 
 export type Friend = {
   id: string;
   name: string;
-  // Ignored when `icon` is set (the 客服/Service entry has no photo -- see
-  // `icon` below).
+  // Photo path for normal friends. Service (Figma 754:9317) uses `icon`
+  // instead and leaves this as an empty string.
   avatar: string;
-  // Renders this friend's avatar as a bordered icon circle instead of a
-  // photo (Components Library node 754:9317's own "@ Service" row, style=
-  // Service): a plain white circle with a dark outline and a glyph
-  // centered in it, rather than AvatarMassage's usual photo-in-a-colored-
-  // ring treatment. Support isn't a real "friend" so there's no photo to
-  // show for it.
+  // Optional -- Service has no level badge (Figma hides it).
+  levelLabel?: string;
+  // Level_Lebals capsule fill (VIP gradient for Jackson; solid for others).
+  levelBackground?: string;
+  // Avatar ring. When omitted, falls back to levelBackground. Jackson needs
+  // this because Figma uses #01fab0 for the ring while the badge is gradient.
+  ringColor?: string;
+  // When set, FriendAvatar renders this 25px icon on a white circle instead
+  // of a photo (Figma Actions / Service row).
   icon?: string;
-  levelLabel: string;
-  // Also doubles as the avatar's own ring color, same as Talk_section's
-  // established convention (see TalkSection.tsx's own comment).
-  levelBackground: string;
   // The online-status dot (Components Library node 754:9317's own
   // Ellipse 46/47/48) is a THIRD color, independent of the level badge --
   // Jackson's own dot is teal/online, Johnny's is orange/away, Arick's is
   // gray/offline, none of which match their own level-badge colors.
   status: "online" | "away" | "offline";
-  timestamp: string;
+  // Optional -- Service has no timestamp in the Figma reference.
+  timestamp?: string;
   // Omitted entirely (not just blank) for a friend with no conversation
   // yet -- Arick's own card in the Figma reference has no message preview
   // at all, which reads naturally as "you haven't messaged them yet"
@@ -126,51 +127,39 @@ function ChannelButton({ active, icon, onClick, label }: { active: boolean; icon
 // the 45px photo circle inside a 1.406px ring (`ring`, a solid color or CSS
 // gradient) and the 11px status dot on its bottom-right corner. Shared by the
 // friend-list rows and the panel's own header avatar.
-//
-// `icon` swaps the photo-in-a-ring for a plain white circle with a solid
-// `ring`-colored outline and a centered glyph (the 客服/Service row's own
-// treatment, node 1118:9686/9716) -- there's no photo to ring for it.
-function FriendAvatar({ photo, icon, ring, status }: { photo?: string; icon?: string; ring: string; status: Friend["status"] }) {
+function FriendAvatar({
+  photo,
+  ring,
+  status,
+  icon,
+}: {
+  photo?: string;
+  ring?: string;
+  status: Friend["status"];
+  icon?: string;
+}) {
   return (
     <div className="relative h-[45px] w-[46px] shrink-0">
-      {icon ? (
-        <div className="absolute left-px top-0 flex size-[45px] items-center justify-center rounded-full border-[1.406px] border-solid bg-white" style={{ borderColor: ring }}>
-          <img alt="" src={icon} className="size-[25px]" />
-        </div>
-      ) : (
-        <div className="absolute left-px top-0 size-[45px] overflow-hidden rounded-full" style={{ background: ring }}>
-          <img alt="" src={photo} className="pointer-events-none absolute inset-[1.406px] size-[calc(100%-2.812px)] rounded-full object-cover" />
-        </div>
-      )}
+      <div
+        className="absolute left-px top-0 flex size-[45px] items-center justify-center overflow-hidden rounded-full"
+        style={{ background: ring ?? "#ffffff" }}
+      >
+        {icon ? (
+          <img alt="" src={icon} className="pointer-events-none size-[25px]" />
+        ) : (
+          <img
+            alt=""
+            src={photo}
+            className="pointer-events-none absolute inset-[1.406px] size-[calc(100%-2.812px)] rounded-full object-cover"
+          />
+        )}
+      </div>
       <svg className="absolute left-[35px] top-[34px]" width={11} height={11} viewBox="0 0 11 11" fill="none">
         <circle cx={5.5} cy={5.5} r={4.5} fill={STATUS_DOT_COLOR[status]} stroke="white" strokeWidth={2} />
       </svg>
     </div>
   );
 }
-
-// The 客服/Service entry (Components Library node 754:9317's own first
-// friend-list row, style=Service): a support channel, not a real friend --
-// no timestamp/last-message like Arick's own no-conversation-yet card, but
-// unlike Arick it's not gated on being logged in (support is reachable
-// either way) and clicking it opens a short canned greeting rather than an
-// empty thread. Kept out of `chatMockData.ts` since it isn't one of the
-// mock friends any particular page supplies -- every page's TalkingBar gets
-// the exact same one.
-const SERVICE_ICON = "/assets/talk-section/icon-service.svg";
-const SERVICE_FRIEND: Friend = {
-  id: "service",
-  name: "@ Service",
-  avatar: "",
-  icon: SERVICE_ICON,
-  levelLabel: "",
-  levelBackground: "#3e4140",
-  status: "online",
-  timestamp: "",
-  messages: [
-    { avatar: SERVICE_ICON, name: "@ Service", timestamp: "剛剛", text: "您好，我是您的專屬客服，有任何問題歡迎隨時詢問！", variant: "other" },
-  ],
-};
 
 // Figma "Talk section" (Components Library node 988:9537, style="friend box" --
 // the friend-list row inside node 754:9317's "All Friends" TalkingBar
@@ -196,19 +185,24 @@ function FriendCard({ friend, onClick }: { friend: Friend; onClick: () => void }
       className="relative h-[71px] w-full shrink-0 rounded-[10px] border border-[#f4f4f4] bg-white/50 text-left"
     >
       <div className="absolute inset-x-[10px] top-[10px] flex items-center gap-[10px]">
-        {friend.icon ? (
-          <FriendAvatar icon={withBasePath(friend.icon)} ring={friend.levelBackground} status={friend.status} />
-        ) : (
-          <FriendAvatar photo={withBasePath(friend.avatar)} ring={friend.levelBackground} status={friend.status} />
-        )}
+        <FriendAvatar
+          photo={friend.avatar ? withBasePath(friend.avatar) : undefined}
+          ring={friend.ringColor ?? friend.levelBackground}
+          status={friend.status}
+          icon={friend.icon ? withBasePath(friend.icon) : undefined}
+        />
 
         <div className="flex min-w-0 flex-1 flex-col items-start justify-center gap-[5px]">
           <div className="flex w-full items-center justify-between">
             <div className="flex min-w-0 items-center gap-[5px]">
               <p className="whitespace-nowrap text-[12px] font-bold leading-[18px] tracking-[0.15px] text-[#3e4140]">{friend.name}</p>
-              {friend.levelLabel && <LevelBadge label={friend.levelLabel} background={friend.levelBackground} weight="regular" />}
+              {friend.levelLabel && friend.levelBackground && (
+                <LevelBadge label={friend.levelLabel} background={friend.levelBackground} weight="regular" />
+              )}
             </div>
-            <p className="whitespace-nowrap px-[2px] text-right text-[8px] leading-[18px] tracking-[0.15px] text-[#a2a2a2]">{friend.timestamp}</p>
+            {friend.timestamp && (
+              <p className="whitespace-nowrap px-[2px] text-right text-[8px] leading-[18px] tracking-[0.15px] text-[#a2a2a2]">{friend.timestamp}</p>
+            )}
           </div>
 
           {friend.lastMessage && (
@@ -248,10 +242,13 @@ export default function TalkingBar({ messages, friends, simulatedMessages = [] }
   // account -- the 私人訊息 channel itself still opens for a guest (the
   // group chat above it is public either way), it just has nothing in it,
   // same as DayRewards gating itself on this same state elsewhere.
-  const visibleFriends = loggedIn ? friends : NO_FRIENDS;
-  // Support is reachable either way (not gated on `loggedIn` like the real
-  // friends above it), and it's always the first row.
-  const friendListEntries = [SERVICE_FRIEND, ...visibleFriends];
+  const serviceFriend = friends.find((f) => f.id === SERVICE_FRIEND_ID);
+  // Service is a fixed customer-service room: always listed in 私訊 whether
+  // the visitor is logged in or not. Other friends stay login-gated.
+  const visibleFriends = [
+    ...(serviceFriend ? [serviceFriend] : []),
+    ...(loggedIn ? friends.filter((f) => f.id !== SERVICE_FRIEND_ID) : []),
+  ];
   const [channel, setChannel] = useState<Channel>("all");
   const [liveMessages, setLiveMessages] = useState(messages);
   // Which friend's thread is open, if any -- null means "私人訊息" is
@@ -259,7 +256,17 @@ export default function TalkingBar({ messages, friends, simulatedMessages = [] }
   // Persists across switching to "all" and back rather than resetting, so
   // tabbing away from a conversation and back doesn't lose your place.
   const [selectedFriendId, setSelectedFriendId] = useState<string | null>(null);
-  const selectedFriend = channel === "private" ? (friendListEntries.find((f) => f.id === selectedFriendId) ?? null) : null;
+
+  useEffect(() => {
+    function onOpenService() {
+      setChannel("private");
+      setSelectedFriendId(SERVICE_FRIEND_ID);
+    }
+    window.addEventListener(OPEN_SERVICE_CHAT_EVENT, onOpenService);
+    return () => window.removeEventListener(OPEN_SERVICE_CHAT_EVENT, onOpenService);
+  }, []);
+
+  const selectedFriend = channel === "private" ? (visibleFriends.find((f) => f.id === selectedFriendId) ?? null) : null;
   const showFriendList = channel === "private" && !selectedFriend;
   const activeMessages = channel === "all" ? liveMessages : (selectedFriend?.messages ?? NO_MESSAGES);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -399,7 +406,7 @@ export default function TalkingBar({ messages, friends, simulatedMessages = [] }
         }}
       >
         {showFriendList
-          ? friendListEntries.map((friend) => <FriendCard key={friend.id} friend={friend} onClick={() => setSelectedFriendId(friend.id)} />)
+          ? visibleFriends.map((friend) => <FriendCard key={friend.id} friend={friend} onClick={() => setSelectedFriendId(friend.id)} />)
           : activeMessages.map((message, i) => <TalkSection key={i} {...message} />)}
       </div>
 
@@ -408,32 +415,36 @@ export default function TalkingBar({ messages, friends, simulatedMessages = [] }
         style={{ top: 125 + thumb.top, height: thumb.height }}
       />
 
-      {/* Own avatar (Components Library node 754:9317's own "AvatarMassage",
-          always online -- it's you) sits here while browsing the friend
-          list. Opening a thread (node 998:10020) swaps it for the OTHER
-          person's own avatar instead -- who you're actually talking to --
-          plus a small back-arrow chip (Figma's own self-contained
-          "Arrow_Special" export, its dark rounded-square fill baked into
-          the asset) at its exact left-20/top-20 spot beside it, not the
-          bigger generic circular button an earlier version here used
-          before this thread's own design context was available. */}
+      {/* Own avatar (Components Library node 754:9317/998:10020's own
+          "AvatarMassage", always online -- it's you) sits here while
+          browsing the friend list; picking a friend swaps it for a back
+          button in the exact same spot so entering/leaving a thread never
+          shifts the message list's own carefully-tuned top/height math
+          below. Neither design shows a back affordance at all (Figma's
+          own mockup has no route to return once a friend's opened), so
+          reusing this fixed slot -- rather than adding a new header row
+          that would need its own space carved out of the panel -- was the
+          smallest way to make the flow actually navigable both ways. */}
       {channel === "private" &&
         (selectedFriend ? (
           <>
+            {/* Figma 998:10020 Eachother talk: Arrow_Special (25) at 20,20
+                plus the peer Avatar_massage at 52,20 -- both, not a swap. */}
             <button
               type="button"
               aria-label="返回好友列表"
               onClick={() => setSelectedFriendId(null)}
               className="absolute left-[20px] top-[20px] size-[25px]"
             >
-              <img alt="" src={withBasePath("/assets/talk-section/back-arrow-chip.svg")} className="size-full" />
+              <img alt="" src={withBasePath("/assets/talk-section/arrow-special-back.svg")} className="size-[25px]" />
             </button>
             <div className="absolute left-[52px] top-[20px]">
-              {selectedFriend.icon ? (
-                <FriendAvatar icon={withBasePath(selectedFriend.icon)} ring={selectedFriend.levelBackground} status={selectedFriend.status} />
-              ) : (
-                <FriendAvatar photo={withBasePath(selectedFriend.avatar)} ring={selectedFriend.levelBackground} status={selectedFriend.status} />
-              )}
+              <FriendAvatar
+                photo={selectedFriend.avatar ? withBasePath(selectedFriend.avatar) : undefined}
+                ring={selectedFriend.ringColor ?? selectedFriend.levelBackground}
+                status={selectedFriend.status}
+                icon={selectedFriend.icon ? withBasePath(selectedFriend.icon) : undefined}
+              />
             </div>
           </>
         ) : loggedIn ? (

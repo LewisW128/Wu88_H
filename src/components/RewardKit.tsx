@@ -65,7 +65,7 @@ const KIT0_TABLE: RewardKitLevelRow[] = [500, 1000, 2000, 3500, 5000, 8000, 1200
 // unique name, since that's what the design itself contains.
 export const REWARD_KITS: RewardKitData[] = [
   {
-    name: "綠寶石寶箱",
+    name: "青銅寶箱",
     levelRange: "Lv.1-13",
     levelStart: 1,
     levelEnd: 13,

@@ -7,9 +7,10 @@ export type LevelBadgeProps = {
   weight?: "medium" | "regular";
 };
 
-// Figma "Level_Lebals" component. Shared by Rank_section and Talk_section --
-// both attach it to a name, and both tie the avatar's ring color to this
-// same `background` value so the badge and the ring always match.
+// Figma "Level_Lebals" component. Shared by Rank_section and Talk_section.
+// Callers pass the fill via `background`. For Johnny/Arick that matches the
+// avatar ring; for Jackson VIP the badge is LEVEL_LEBALS_BACKGROUND while the
+// ring is JACKSON_AVATAR_RING (#01fab0).
 export default function LevelBadge({ label, background, opacity, weight = "medium" }: LevelBadgeProps) {
   return (
     <div className="flex h-[18px] shrink-0 items-center justify-center rounded-full px-[5px] py-[2px]" style={{ background, opacity }}>

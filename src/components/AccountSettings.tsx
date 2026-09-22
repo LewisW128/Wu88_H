@@ -15,7 +15,7 @@ import type { TalkSectionProps } from "./TalkSection";
 import TopBar from "./TopBar";
 import TopUp from "./TopUp";
 import { withBasePath } from "../lib/asset";
-import { MEMBER_BEST_WIN, MEMBER_LEVEL_LABEL, formatMoney } from "../lib/member";
+import { MEMBER_BEST_WIN, formatMoney } from "../lib/member";
 
 // Same group chat / friend list data as every other page's TalkingBar --
 // not a trimmed-down version. There's only one chat, not a separate one
@@ -69,6 +69,23 @@ const talkingBarMessages: TalkSectionProps[] = [
 
 const talkingBarFriends: Friend[] = [
   {
+    id: "service",
+    name: "@ Service",
+    avatar: "",
+    icon: "/assets/talk-section/icon-service.svg",
+    status: "online",
+    messages: [
+      {
+        avatar: "/assets/talk-section/icon-service.svg",
+        name: "@ Service",
+        timestamp: "剛剛",
+        text: "您好，需要什麼協助呢？",
+        variant: "other",
+      },
+    ],
+  },
+
+  {
     id: "jackson",
     name: "@ Jackson",
     avatar: "/assets/talk-section/avatar-jackson.png",
@@ -111,20 +128,40 @@ const talkingBarFriends: Friend[] = [
 ];
 
 // The dot-grid decoration behind the header card's diagonal ribbons
-// (Figma "Ellipse 2" repeated 36 times in a plain 6x6 grid) -- built as
-// CSS dots rather than downloading and re-laying-out 36 copies of a
-// 4px circle SVG.
+// (Figma "Ellipse 2" repeated 36 times in a plain 6x6 grid).
+// Figma Frame 95 (node I272:7824;1025:10866): 62×62, 6×6 ellipses.
+// Each Ellipse 2 is 3.875×3.875 with fill #3E4140 (solid, no alpha);
+// row/col pitch is 11.625 (= 3.875 + 7.75 gap). Rendered as one SVG so
+// CSS `zoom` from ScaleToFit cannot turn sub-pixel `rounded-full` divs
+// into ovals.
 function DotGrid() {
+  const size = 62;
+  const pitch = 11.625;
+  const radius = 1.9375; // 3.875 / 2
   return (
-    <div className="flex flex-col items-end gap-[7.75px]">
-      {Array.from({ length: 6 }).map((_, row) => (
-        <div key={row} className="flex items-center gap-[7.75px]">
-          {Array.from({ length: 6 }).map((_, col) => (
-            <div key={col} className="size-[3.875px] shrink-0 rounded-full bg-[#3e4140]" />
-          ))}
-        </div>
-      ))}
-    </div>
+    <svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+      className="block shrink-0 overflow-visible"
+    >
+      {Array.from({ length: 36 }, (_, i) => {
+        const col = i % 6;
+        const row = Math.floor(i / 6);
+        return (
+          <circle
+            key={i}
+            cx={col * pitch + radius}
+            cy={row * pitch + radius}
+            r={radius}
+            fill="#3E4140"
+          />
+        );
+      })}
+    </svg>
   );
 }
 
@@ -167,6 +204,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 // bottom-right). Distinct from ProfileCard/VipCard's own header treatment
 // elsewhere on /profile -- this page's own single combined card, not a
 // two-card pairing.
+// Figma node 272:7824 hardcodes VIP Lv.13 on this badge.
 function AccountHeader() {
   return (
     <div className="relative h-[142px] w-full overflow-hidden rounded-[20px] border-2 border-[#f4f4f4] bg-white">
@@ -186,7 +224,7 @@ function AccountHeader() {
           <div className="flex items-center gap-[20px]">
             <p className="whitespace-nowrap text-[16px] font-medium leading-[24px] tracking-[0.15px] text-[#a2a2a2]">ID 20260612</p>
             <button type="button" className="flex items-center justify-center gap-[10px] rounded-[20px] bg-[#3e4140] px-[10px] py-[5px]">
-              <span className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-white">VIP {MEMBER_LEVEL_LABEL}</span>
+              <span className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-white">VIP Lv.13</span>
               <img alt="" src={withBasePath("/assets/account/icon-chevron-right.svg")} className="size-[25px]" />
             </button>
           </div>

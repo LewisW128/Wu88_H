@@ -17,11 +17,10 @@ import { MEMBER_CONTINUOUS_DEPOSIT, MEMBER_EXP, MEMBER_LEVEL, MEMBER_MAX_EXP } f
 import { topBarAnnouncements, talkingBarMessages, talkingBarSimulatedMessages, talkingBarFriends } from "../lib/chatMockData";
 
 // Figma "Level_line"/"Level_Point" (node 202:7697 / 203:7706): the season's
-// XP-milestone rail under the Reward_Kit row -- 7 points (numerals are this
+// XP-milestone rail under the Reward_Kit row -- 8 points (numerals are this
 // season's own literal thresholds, not counters), each followed by a
-// connector line, matching Figma's own repeated pairing exactly (including
-// the last point still getting a trailing line).
-const LEVEL_POINTS = ["1", "14", "28", "41", "54", "67", "82"];
+// connector line except the final "100" (under the last kit).
+const LEVEL_POINTS = ["1", "14", "28", "41", "54", "67", "82", "100"];
 
 // Figma node 689:16248 (a standalone example of the FIRST point+line pair,
 // "1", on the logged-in-and-recharged reward center page) shows a
@@ -542,7 +541,10 @@ export default function RewardsCenterContent() {
   // everywhere. Pinned at a flat 0, the corner sits reliably right next to
   // the back button on every viewport height.
   const HERO_BOX_TOP = 0;
-  const CLOSE_UP_PAN_SHIFT = 257;
+  // Was 257 — that pan read as the character “jumping” up while she
+  // walks in from the wide shot. Halved-ish to 110 so the close-up reframe
+  // still lifts her face out of the chin crop without a big vertical hop.
+  const CLOSE_UP_PAN_SHIFT = 110;
   const videoPanShift = CLOSE_UP_PAN_SHIFT * bgScale;
   const titlePanelScreenLeft = TITLE_PANEL_LEFT * uiScale;
   // `DETAIL_PANEL_TOP` (its own comment) only once the detail panel is
@@ -635,12 +637,10 @@ export default function RewardsCenterContent() {
               parent by the pan amount" relationship has to be expressed
               relative to that same 100%, not a flat Figma-derived number
               that no longer matches the mask's own (now dynamic) height.
-              `duration-1000`, not `duration-700` -- per the user's own
-              direct call, an earlier version's bigger pan distance read as
-              an abrupt jump at the shorter duration (which front-loads
-              nearly all of a transition's motion into its first moment
-              with `ease-out`). The longer duration gives the motion more
-              time to cover, reading as a smooth pan instead of a jump.
+              `duration-[1400ms]`, not `duration-700`/`1000` -- a bigger pan used to
+              read as an abrupt jump; with CLOSE_UP_PAN_SHIFT lowered to
+              110 we still keep a slightly longer ease so the remaining
+              lift feels like a soft reframe, not a hop.
               `ease-[cubic-bezier(0.65,0,0.35,1)]`, not Tailwind's own flat
               `ease-in-out` (`cubic-bezier(0.4,0,0.2,1)`) -- per a later
               direct call ("擬設的動態的線性比較不向曲線 像一直線"), that built-in
@@ -650,7 +650,7 @@ export default function RewardsCenterContent() {
               (the near-zero start/end velocity) much further, so the
               easing itself is visibly a curve, not just technically one. */}
           <div
-            className="absolute inset-x-0 transition-[top] duration-1000 ease-[cubic-bezier(0.65,0,0.35,1)]"
+            className="absolute inset-x-0 transition-[top] duration-[1400ms] ease-[cubic-bezier(0.65,0,0.35,1)]"
             style={{
               top: videoIsCloseUp ? -videoPanShift : 0,
               height: `calc(100% + ${videoPanShift}px)`,
@@ -1045,20 +1045,26 @@ export default function RewardsCenterContent() {
                 // still shows after the last point (this file's own
                 // established comment on `LEVEL_POINTS`) reaches toward
                 // that 8th card's center, same as every other segment.
+                // Final "100" sits on the last kit center and has no trailing
+                // connector -- do not index past REWARD_KITS / kitCardCenters.
                 const lineEnd = kitCardCenters[i + 1];
-                const lineWidth = lineEnd - center - 24;
-                // How far the member's level has gone through THIS segment:
-                // from this milestone's level to the next one's (the last
-                // segment reaches the 8th kit's own first level, 93).
+                const hasTrailingLine = lineEnd != null;
                 const segmentStart = Number(numeral);
-                const segmentEnd = i + 1 < LEVEL_POINTS.length ? Number(LEVEL_POINTS[i + 1]) : REWARD_KITS[i + 1].levelStart;
-                const lineProgress = loggedIn ? (MEMBER_LEVEL - segmentStart) / (segmentEnd - segmentStart) : 0;
+                const segmentEnd = i + 1 < LEVEL_POINTS.length
+                  ? Number(LEVEL_POINTS[i + 1])
+                  : segmentStart;
+                const lineWidth = hasTrailingLine ? lineEnd - center - 24 : 0;
+                const lineProgress = hasTrailingLine && loggedIn
+                  ? (MEMBER_LEVEL - segmentStart) / Math.max(1, segmentEnd - segmentStart)
+                  : 0;
                 return (
                   <div key={i} className="absolute top-0" style={{ left: center - 12 }}>
                     <LevelPoint numeral={numeral} active={achieved} />
-                    <div className="absolute left-[24px] top-[2.5px]">
-                      <LevelLine progress={lineProgress} width={lineWidth} />
-                    </div>
+                    {hasTrailingLine ? (
+                      <div className="absolute left-[24px] top-[2.5px]">
+                        <LevelLine progress={lineProgress} width={lineWidth} />
+                      </div>
+                    ) : null}
                   </div>
                 );
               })}
