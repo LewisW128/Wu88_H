@@ -188,10 +188,11 @@ function FilterPill({ label, active, onClick }: { label: string; active: boolean
 }
 
 // Figma "Calendar Menu" (node 44:22025, seen open in 37:29157) plus its own
-// nested "Year Dropdown" (node 55:23458, seen in 51:23614/51:25200/51:26000 --
-// those three only differ in how they colored the "2026" row, which per
-// request maps to: default #3e4140 medium untouched, teal on hover, bold on
-// the currently-picked year). Owns its own draft state -- 確定/取消 only
+// nested "Year Dropdown" (node 55:23458, seen in 51:23614/51:25200/51:26000):
+// unselected years are medium #a2a2a2, teal on hover, and the currently-
+// picked year is bold #3e4140 -- same convention as the Type dropdown below
+// (its own unselected rows were wrongly the *selected* color, per direct
+// request, and this one had the identical bug). Owns its own draft state -- 確定/取消 only
 // push a value up via onConfirm/onCancel, so re-opening after 取消 or
 // re-opening on a previously-confirmed month/year always starts from
 // `initialValue` again (the component remounts each time its parent renders
@@ -226,7 +227,9 @@ function CalendarDropdown({
       setThumb({ top: 0, height: track, track, visible: false });
       return;
     }
-    const height = Math.max(24, (track / el.scrollHeight) * track);
+    // Shortened by 1/3 (x2/3) per request -- the proportional height read as
+    // too long against how little of the year list it actually represents.
+    const height = Math.max(16, ((track / el.scrollHeight) * track) * (2 / 3));
     const maxTop = track - height;
     const top = (el.scrollTop / (el.scrollHeight - track)) * maxTop;
     setThumb({ top, height, track, visible: true });
@@ -287,7 +290,9 @@ function CalendarDropdown({
                       ref={y === viewYear ? selectedYearRef : undefined}
                       type="button"
                       onClick={() => { setViewYear(y); setShowYears(false); }}
-                      className={`flex h-[36px] w-full shrink-0 items-center justify-center rounded-[14px] text-[14px] tracking-[0.15px] text-[#3e4140] hover:text-[#23f3d5] ${y === viewYear ? "font-bold" : "font-medium"}`}
+                      className={`flex h-[36px] w-full shrink-0 items-center justify-center rounded-[14px] text-[14px] tracking-[0.15px] hover:text-[#23f3d5] ${
+                        y === viewYear ? "font-bold text-[#3e4140]" : "font-medium text-[#a2a2a2]"
+                      }`}
                     >
                       {y}
                     </button>
@@ -356,20 +361,13 @@ function CalendarDropdown({
   );
 }
 
-// Figma "Type Menu" (node 47:22620, seen open in 37:29859). Same draft-state
-// shape as CalendarDropdown: clicking a row toggles it (so picking the same
-// type twice clears the filter), 確定 pushes the pick up, 取消 discards it.
-function TypeDropdown({
-  initialValue,
-  onConfirm,
-  onCancel,
-}: {
-  initialValue: string | null;
-  onConfirm: (value: string | null) => void;
-  onCancel: () => void;
-}) {
-  const [selected, setSelected] = useState<string | null>(initialValue);
-
+// Figma "Type Menu": unselected rows (node 47:22620, nothing picked yet) are
+// medium #a2a2a2; the picked one (node 59:28148) is bold #3e4140 -- NOT the
+// same #3e4140 for every row at two font-weights, which read as though every
+// row were already "selected". No draft/確定/取消 step either -- picking a
+// row commits it immediately and closes the menu right there (per request);
+// picking the same row again clears the filter instead of leaving it stuck.
+function TypeDropdown({ value, onSelect }: { value: string | null; onSelect: (value: string | null) => void }) {
   return (
     <div className="absolute left-0 top-[calc(100%+10px)] z-40 flex w-[341px] flex-col items-start gap-[18px] rounded-bl-[25px] rounded-br-[25px] rounded-tr-[25px] border-2 border-[#f4f4f4] bg-white/80 p-[20px] shadow-[0px_8px_40px_0px_rgba(0,0,0,0.1)] backdrop-blur-[10px]">
       <p className="whitespace-nowrap text-[16px] font-bold leading-[32px] tracking-[0.35px] text-[#3e4140]">類型</p>
@@ -378,22 +376,14 @@ function TypeDropdown({
           <button
             key={type}
             type="button"
-            onClick={() => setSelected((cur) => (cur === type ? null : type))}
-            className={`flex h-[40px] w-full items-center justify-center rounded-[15px] text-[14px] tracking-[0.15px] text-[#3e4140] hover:text-[#23f3d5] ${
-              selected === type ? "font-bold" : "font-medium"
+            onClick={() => onSelect(value === type ? null : type)}
+            className={`flex h-[40px] w-full items-center justify-center rounded-[15px] text-[14px] tracking-[0.15px] hover:text-[#23f3d5] ${
+              value === type ? "font-bold text-[#3e4140]" : "font-medium text-[#a2a2a2]"
             }`}
           >
             {type}
           </button>
         ))}
-      </div>
-      <div className="flex w-full items-start gap-[10px]">
-        <button type="button" onClick={onCancel} className="flex h-[40px] flex-1 items-center justify-center rounded-[15px] bg-[#f4f4f4] text-[14px] font-medium tracking-[0.15px] text-[#3e4140]">
-          取消
-        </button>
-        <button type="button" onClick={() => onConfirm(selected)} className="flex h-[40px] flex-1 items-center justify-center rounded-[15px] bg-[#23f3d5] text-[14px] font-bold tracking-[0.15px] text-[#3e4140]">
-          確定
-        </button>
       </div>
     </div>
   );
@@ -641,11 +631,7 @@ export default function AccountWallet() {
                       separate summary shown elsewhere. */}
                   <FilterPill label={typeFilter ?? "類型"} active={openFilter === "type"} onClick={() => setOpenFilter(openFilter === "type" ? null : "type")} />
                   {openFilter === "type" && (
-                    <TypeDropdown
-                      initialValue={typeFilter}
-                      onCancel={() => setOpenFilter(null)}
-                      onConfirm={(value) => { setTypeFilter(value); setOpenFilter(null); }}
-                    />
+                    <TypeDropdown value={typeFilter} onSelect={(value) => { setTypeFilter(value); setOpenFilter(null); }} />
                   )}
                 </div>
                 <div className="flex h-[45px] w-[256px] items-center gap-[10px] rounded-[50px] border-2 border-[#3e4140] bg-white/50 px-[13px] backdrop-blur-[10px]">
