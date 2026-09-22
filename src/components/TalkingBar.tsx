@@ -193,8 +193,32 @@ function FriendCard({ friend, onClick }: { friend: Friend; onClick: () => void }
     <button
       type="button"
       onClick={onClick}
-      className="relative h-[71px] w-full shrink-0 rounded-[20px] border border-[#f4f4f4] bg-white/50 text-left"
+      className="group relative h-[71px] w-full shrink-0 rounded-[20px] border border-[#f4f4f4] bg-white/50 text-left"
     >
+      {/* Hover (Components Library node 1000:9679's own "SportBtnHover" reuse):
+          a teal glow ring 1px outside the card's own border (covering that
+          border's seam rather than sitting flush inside it), same 20px
+          radius, plus a soft teal wash. Figma's own background is an SVG
+          radial gradient whose transform places its 100%-opaque edge FAR
+          outside its own 346x119 box (SportBtn's own instance) -- so only
+          the gradient's early, mostly-transparent stops are ever actually
+          visible there, reading as a soft glow rather than a solid teal
+          fill. A plain CSS `radial-gradient(ellipse at center, ...)` with
+          no explicit size defaults to reaching the box's own corners
+          instead, which -- especially on this much smaller 237x71 card --
+          would hit that same gradient's fully-opaque last stop right at the
+          edges, a solid teal card instead of a soft glow. A radius many
+          times the card's own diagonal keeps the same "only the soft early
+          stops are visible" read, using Figma's own exact color stops. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -inset-px rounded-[20px] border border-[#23f3d5] opacity-0 backdrop-blur-[10px] transition-opacity duration-300 group-hover:opacity-100"
+        style={{
+          background:
+            "radial-gradient(circle 600px at center, rgba(255,255,255,0) 0%, rgba(145,249,234,0.5) 50%, rgba(90,246,223,0.75) 75%, rgba(62,244,218,0.875) 87.5%, rgba(35,243,213,1) 100%)",
+        }}
+      />
+
       <div className="absolute inset-x-[10px] top-[10px] flex items-center gap-[10px]">
         <FriendAvatar
           photo={friend.avatar ? withBasePath(friend.avatar) : undefined}
