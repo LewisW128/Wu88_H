@@ -90,7 +90,7 @@ export const talkingBarFriends: Friend[] = [
     levelBackground: DEFAULT_RING_COLOR,
     status: "online",
     timestamp: "3 分鐘前",
-    lastMessage: "我剛剛才中了時二十萬出來",
+    lastMessage: "我剛剛才中了時...",
     messages: [
       {
         avatar: "/assets/talk-section/avatar-jessica.png",
@@ -125,8 +125,8 @@ export const talkingBarFriends: Friend[] = [
     levelLabel: "Lv.79",
     levelBackground: "#79d4a2",
     status: "away",
-    timestamp: "10 分鐘前",
-    lastMessage: "XXX電子 射龍門，一起來",
+    timestamp: "3 分鐘前",
+    lastMessage: "XXX電子 射龍門",
     messages: [
       { avatar: "/assets/talk-section/avatar-johnny.png", name: "@ Johnny", levelLabel: "Lv.79", levelBackground: "#79d4a2", timestamp: "12 分鐘前", text: "在嗎？想約你打幾把", variant: "other" },
       { avatar: "/assets/talk-section/avatar-jessica.png", name: "@ Jessica", timestamp: "11 分鐘前", text: "在啊，玩什麼？", variant: "myself" },
@@ -140,7 +140,7 @@ export const talkingBarFriends: Friend[] = [
     levelLabel: "Lv.53",
     levelBackground: "#ffcf00",
     status: "offline",
-    timestamp: "1 小時前",
+
     messages: [],
   },
 ];
