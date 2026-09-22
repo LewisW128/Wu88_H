@@ -683,7 +683,7 @@ function TransactionList({
           maxHeight: LIST_MAX_HEIGHT,
           paddingRight: needsScroll ? LIST_PADDING + 14 : LIST_PADDING,
           ...(needsScroll && {
-            maskImage: `linear-gradient(to bottom, ${fade.up ? "transparent" : "black"} 0px, black 24px, black calc(100% - 24px), ${fade.down ? "transparent" : "black"} 100%)`,
+            maskImage: `linear-gradient(to bottom, ${fade.up ? "transparent" : "black"} 0px, black 44px, black calc(100% - 44px), ${fade.down ? "transparent" : "black"} 100%)`,
           }),
         }}
       >
@@ -797,9 +797,19 @@ export default function AccountWallet() {
 
             <div className="flex flex-col gap-[25px] pb-[40px]">
               <StickyUtilityBar>
-                <div className="flex items-center gap-[20px]">
-                  <Search />
-                  <Language />
+                <div className="flex items-center gap-[30px]">
+                  {/* Figma "Frame1347" (1J_WU88-H-PC_Recharge node 37:26997)
+                      own "Title" -- this page's own name, missing until now
+                      even though every other profile page's utility bar
+                      already reserves this same left slot for Search/Language. */}
+                  <div className="flex shrink-0 items-center gap-[10px]">
+                    <img alt="" src={withBasePath("/assets/wallet/icon-page-title.svg")} className="size-[25px]" />
+                    <p className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#3e4140]">帳戶明細</p>
+                  </div>
+                  <div className="flex items-center gap-[20px]">
+                    <Search />
+                    <Language />
+                  </div>
                 </div>
                 <TopUp />
               </StickyUtilityBar>

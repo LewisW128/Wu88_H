@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { withBasePath } from "../lib/asset";
-import { topBarAnnouncements } from "../lib/chatMockData";
+import { topBarAnnouncements, talkingBarMessages, talkingBarSimulatedMessages, talkingBarFriends } from "../lib/chatMockData";
 import MinPanelHeight from "./MinPanelHeight";
 import ProfileSidebar from "./ProfileSidebar";
 import ScaleToFit from "./ScaleToFit";
+import TalkingBar from "./TalkingBar";
 import TopBar from "./TopBar";
 
 const ASSET = "/assets/help";
@@ -165,9 +166,10 @@ export default function HelpCenter() {
           <TopBar onlineCount="900" totalReward="10,000,000" announcements={topBarAnnouncements} />
         </div>
 
-        {/* No right-hand chat column here (Figma's help center has none): the
-            main column runs to the page's 40px right margin instead. */}
-        <MinPanelHeight className="relative z-10 grid" style={{ gridTemplateColumns: "166px minmax(0, 1fr) 40px" }}>
+        {/* Same 3-column rail/content/chat grid as every other profile page
+            (per request) -- Figma's own help center frame has no chat
+            column, but this page isn't meant to be the odd one out. */}
+        <MinPanelHeight className="relative z-10 grid" style={{ gridTemplateColumns: "164px minmax(0, 1fr) 295px" }}>
           <div className="sticky top-[58px] z-10 self-start justify-self-start pl-[30px]">
             <ProfileSidebar />
           </div>
@@ -274,7 +276,9 @@ export default function HelpCenter() {
             </Card>
           </main>
 
-          <div />
+          <div className="sticky top-[58px] z-10 ml-[20px] self-start">
+            <TalkingBar messages={talkingBarMessages} friends={talkingBarFriends} simulatedMessages={talkingBarSimulatedMessages} />
+          </div>
         </MinPanelHeight>
       </ScaleToFit>
     </div>

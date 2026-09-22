@@ -52,12 +52,11 @@ export const MEMBER_TODAY_EXPENSE = 1_500;
 export const formatMoney = (n: number) => n.toLocaleString("en-US");
 
 // WithdrawModal's own "鑽石兌換現金提領" (diamonds-to-cash withdrawal) flow --
-// a genuinely different currency from MEMBER_BALANCE above (that one's
-// already cash), so it isn't derived from it. Figma's own example balance
-// (12,480 鑽石) is reused verbatim rather than invented, same reasoning as
-// every other mock figure already pulled straight from a design file
-// elsewhere in this project.
-export const MEMBER_DIAMOND_BALANCE = 12_480;
-// "10 鑽石 = $1" per Figma's own conversion-ratio pill.
-export const DIAMOND_TO_CASH_RATE = 10;
+// NOT a separate currency with its own balance. RechargeModal's own "1
+// diamond = NT$1" (src/components/RechargeModal.tsx:12) makes 鑽石 just
+// this same cash balance under a different label wherever it's spent, so
+// the amount available to cash back out has to be the real balance too,
+// not an invented number of its own.
+export const MEMBER_DIAMOND_BALANCE = MEMBER_BALANCE;
+export const DIAMOND_TO_CASH_RATE = 1;
 export const MIN_WITHDRAW_DIAMONDS = 5_000;

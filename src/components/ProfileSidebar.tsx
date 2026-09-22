@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { withBasePath } from "../lib/asset";
 import { useAuth } from "./AuthProvider";
 import { useScale } from "./ScaleToFit";
@@ -39,27 +40,94 @@ function NavIcon({
   const pathname = usePathname();
   const isActive = !!href && !!activeIcon && pathname === href;
 
-  const content = (
-    <>
-      <img alt="" src={withBasePath(isActive ? activeIcon! : icon)} className="h-[89px] w-[93px]" />
-      <span className="pointer-events-none absolute left-full top-1/2 ml-[13.5px] -translate-y-1/2 whitespace-nowrap rounded-[15px] bg-[#3e4140] px-[11px] py-[9px] text-[14px] font-medium leading-[20px] tracking-[0.15px] text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+  // The label used to be a plain `absolute left-full` + `group-hover`
+  // span, like Sidebar.tsx's own (unaffected) tooltip -- but this rail's
+  // own icon list sits inside an `overflow-y-auto` scroll container
+  // (added later for short viewports, below), and CSS has no way to let
+  // one axis overflow visibly while the other clips: setting overflow-y
+  // to anything but visible forces the browser to treat overflow-x as
+  // auto too, so the tooltip started getting clipped at the list's own
+  // right edge instead of floating past it. Portaling it to <body> and
+  // positioning it from the icon's own measured rect (already in real
+  // viewport coordinates, unaffected by any ancestor's `zoom`) sidesteps
+  // that clipping entirely, the same way this file's own modals already
+  // portal out from under ScaleToFit's zoom.
+  //
+  // Escaping that zoom also means escaping its SIZE, though -- unlike
+  // Sidebar.tsx's own tooltip, which shrinks along with the rest of the
+  // zoomed page, this one would render at native 1:1 size regardless of
+  // how zoomed out the page currently is, reading bigger than Sidebar's
+  // own the moment the page isn't at its full native scale (i.e. most
+  // real window widths). Scaling every px value here by that same
+  // `scale` keeps it visually identical to Sidebar's, just positioned
+  // via measured coordinates instead of inheriting the ambient zoom.
+  const scale = useScale();
+  const anchorRef = useRef<HTMLElement | null>(null);
+  const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number } | null>(null);
+
+  function showTooltip() {
+    const rect = anchorRef.current?.getBoundingClientRect();
+    if (rect) setTooltipPos({ top: rect.top + rect.height / 2, left: rect.right + 13.5 * scale });
+  }
+  function hideTooltip() {
+    setTooltipPos(null);
+  }
+
+  const tooltip =
+    tooltipPos &&
+    createPortal(
+      <span
+        className="pointer-events-none fixed z-[60] -translate-y-1/2 whitespace-nowrap bg-[#3e4140] font-medium text-white"
+        style={{
+          top: tooltipPos.top,
+          left: tooltipPos.left,
+          padding: `${9 * scale}px ${11 * scale}px`,
+          borderRadius: 15 * scale,
+          fontSize: 14 * scale,
+          lineHeight: `${20 * scale}px`,
+          letterSpacing: 0.15 * scale,
+        }}
+      >
         {label}
-      </span>
-    </>
-  );
+      </span>,
+      document.body,
+    );
+
+  const icon_ = <img alt="" src={withBasePath(isActive ? activeIcon! : icon)} className="h-[89px] w-[93px]" />;
 
   if (href) {
     return (
-      <Link href={href} aria-label={label} className="group relative flex h-[89px] w-[93px] shrink-0 items-center justify-center">
-        {content}
-      </Link>
+      <>
+        <Link
+          ref={anchorRef as React.Ref<HTMLAnchorElement>}
+          href={href}
+          aria-label={label}
+          onMouseEnter={showTooltip}
+          onMouseLeave={hideTooltip}
+          className="relative flex h-[89px] w-[93px] shrink-0 items-center justify-center"
+        >
+          {icon_}
+        </Link>
+        {tooltip}
+      </>
     );
   }
 
   return (
-    <button type="button" aria-label={label} onClick={onClick} className="group relative flex h-[89px] w-[93px] shrink-0 items-center justify-center">
-      {content}
-    </button>
+    <>
+      <button
+        ref={anchorRef as React.Ref<HTMLButtonElement>}
+        type="button"
+        aria-label={label}
+        onClick={onClick}
+        onMouseEnter={showTooltip}
+        onMouseLeave={hideTooltip}
+        className="relative flex h-[89px] w-[93px] shrink-0 items-center justify-center"
+      >
+        {icon_}
+      </button>
+      {tooltip}
+    </>
   );
 }
 

@@ -1,13 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { withBasePath } from "../lib/asset";
 import { DIAMOND_TO_CASH_RATE, MEMBER_DIAMOND_BALANCE, MIN_WITHDRAW_DIAMONDS, formatMoney } from "../lib/member";
 import PopupScaleToFit from "./PopupScaleToFit";
 
+// Matches RechargeModal's own card size exactly (per request) -- this
+// modal's real content is taller, so the body below the header scrolls
+// inside that fixed frame instead of the card growing to fit it.
 const CARD_WIDTH = 556;
-const CARD_HEIGHT = 1253;
+const CARD_HEIGHT = 868;
 
 const PURPLE_TO_TEAL = "linear-gradient(93.597deg, rgb(141, 84, 216) 0.27398%, rgb(20, 232, 184) 104.92%)";
 const PURPLE_TO_TEAL_BUTTON = "linear-gradient(102.233deg, rgb(141, 84, 216) 0.27398%, rgb(20, 232, 184) 104.92%)";
@@ -51,6 +54,60 @@ function WithdrawCard({ onClose }: { onClose: () => void }) {
   const fee = 0;
   const netAmount = cashAmount - fee;
 
+  // The body below the header scrolls within the card's own fixed height
+  // (Figma's own reference, node 37:19945, draws exactly this: a
+  // scroll-track/scroll-thumb pair starting right under the header) --
+  // same fade+thumb convention as WinList/AccountWallet's own transaction
+  // list, just this component's own colors (Figma gives an explicit
+  // rgba(0,0,0,0.05) track here, not the plain #f4f4f4 elsewhere).
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [thumb, setThumb] = useState({ top: 0, height: 0 });
+  const [fade, setFade] = useState({ up: false, down: false });
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    // Sitting flush on the card's own border (right-[-40px] below), the
+    // thumb's track has to stay clear of that border's rounded corners --
+    // both corners on this edge are the card's own 50px radius, so the
+    // track is inset that much top and bottom rather than running the
+    // scroll region's full height.
+    const CORNER_CLEARANCE = 50;
+
+    function update() {
+      if (!el) return;
+      const usableTrack = Math.max(0, el.clientHeight - CORNER_CLEARANCE * 2);
+      const { scrollTop, scrollHeight, clientHeight } = el;
+      const canScrollUp = scrollTop > 0;
+      const canScrollDown = scrollHeight - scrollTop - clientHeight > 1;
+      setFade({ up: canScrollUp, down: canScrollDown });
+      if (scrollHeight <= clientHeight) {
+        setThumb({ top: CORNER_CLEARANCE, height: usableTrack });
+        return;
+      }
+      // Shortened to 2/3 of the proportional length per request (still
+      // floored at 24 so it stays grabbable when content is very long).
+      const height = Math.max(24, (clientHeight / scrollHeight) * usableTrack * (2 / 3));
+      const maxTop = usableTrack - height;
+      const top = CORNER_CLEARANCE + (scrollTop / (scrollHeight - clientHeight)) * maxTop;
+      setThumb({ top, height });
+    }
+
+    update();
+    const resizeObserver = new ResizeObserver(update);
+    resizeObserver.observe(el);
+    el.addEventListener("scroll", update);
+    window.addEventListener("resize", update);
+    return () => {
+      resizeObserver.disconnect();
+      el.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [hasInput]);
+
+  const needsScroll = fade.up || fade.down;
+
   return (
     <div
       className="relative flex flex-col items-start gap-[24px] overflow-hidden rounded-bl-[50px] rounded-br-[50px] rounded-tr-[50px] bg-white/90 p-[40px] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.5),0_8px_24px_rgba(0,0,0,0.07),0_24px_64px_rgba(0,0,0,0.1)] backdrop-blur-[12px]"
@@ -59,23 +116,44 @@ function WithdrawCard({ onClose }: { onClose: () => void }) {
       <img alt="" src={withBasePath("/assets/registration/decor-small.svg")} className="pointer-events-none absolute left-[164px] top-[11px] h-[65px] w-[79px] max-w-none rotate-180" />
       <img alt="" src={withBasePath("/assets/registration/decor-large.svg")} className="pointer-events-none absolute left-[-105px] top-[-99px] h-[228px] w-[277px] max-w-none rotate-180" />
 
-      {/* Explicit z-10, not just relying on DOM order -- this title is long
-          enough to actually reach into the corner ribbon's own drawn area
-          (RechargeModal's own shorter "儲值帳戶" never does), so it needs to
-          unambiguously win rather than risk the ribbon painting over it. */}
-      <div className="relative z-10 flex w-full items-start justify-between">
-        <div className="flex w-[420px] flex-col items-start gap-[10px]">
+      {/* Stays put at the card's own top-right corner (per request) while
+          the title/description below it scroll away with the rest of the
+          body -- so it's positioned independently, at the same spot it sat
+          in before the header moved into the scroll region (card's own
+          p-[40px] from both edges). */}
+      <button
+        type="button"
+        aria-label="關閉"
+        onClick={onClose}
+        className="absolute right-[40px] top-[40px] z-20 flex size-[32px] shrink-0 items-center justify-center overflow-hidden rounded-[16px]"
+      >
+        <img alt="" src={withBasePath("/assets/registration/close.svg")} className="size-[25px]" />
+      </button>
+
+      <div className="relative w-full min-h-0 flex-1">
+        <div
+          ref={scrollRef}
+          className="no-scrollbar flex h-full w-full flex-col items-start gap-[16px] overflow-y-auto"
+          style={{
+            ...(needsScroll && {
+              maskImage: `linear-gradient(to bottom, ${fade.up ? "transparent" : "black"} 0px, black 64px, black calc(100% - 64px), ${fade.down ? "transparent" : "black"} 100%)`,
+            }),
+          }}
+        >
+        {/* Explicit z-10, not just relying on DOM order -- this title is long
+            enough to actually reach into the corner ribbon's own drawn area
+            (RechargeModal's own shorter "儲值帳戶" never does), so it needs to
+            unambiguously win rather than risk the ribbon painting over it.
+            Scrolls away with the rest of the body (per request) rather than
+            staying pinned above it -- only the close button above and the
+            submit button below stay fixed to the card itself. */}
+        <div className="relative z-10 flex w-full flex-col items-start gap-[10px] pr-[52px]">
           <p className="w-full text-[40px] font-bold leading-[48px] tracking-[0.36px] text-[#3e4140]">鑽石兌換現金提領</p>
           <p className="w-full text-[14px] leading-[20px] tracking-[0.15px] text-[#a2a2a2]">
             先確認可兌換的鑽石餘額，再輸入要兌換並提領的鑽石數量。系統會依兌換比例算出現金金額、扣除手續費後，再提領至你的收款帳戶。
           </p>
         </div>
-        <button type="button" aria-label="關閉" onClick={onClose} className="flex size-[32px] shrink-0 items-center justify-center overflow-hidden rounded-[16px]">
-          <img alt="" src={withBasePath("/assets/registration/close.svg")} className="size-[25px]" />
-        </button>
-      </div>
 
-      <div className="flex w-full flex-col items-start gap-[16px]">
         <div className={`flex w-full flex-col items-start gap-[14px] rounded-[15px] bg-[#f4f4f4] p-[20px] ${OUTLINE}`}>
           <div className="flex w-full items-center justify-between">
             <div className="flex items-center gap-[10px]">
@@ -190,19 +268,35 @@ function WithdrawCard({ onClose }: { onClose: () => void }) {
           <img alt="" src={withBasePath("/assets/withdraw/icon-secure.svg")} className="size-[20px] shrink-0" />
           <p className="min-w-px flex-1 text-[12px] leading-[18px] tracking-[0.15px] text-[#3e4140]">送出後系統會先將鑽石兌換成現金，再依序完成審核與入帳處理。請確認兌換數量、手續費與收款帳戶皆正確。</p>
         </div>
-
-        <div className="flex w-full flex-col items-start gap-[12px]">
-          <button
-            type="button"
-            disabled={!isValid}
-            onClick={onClose}
-            className="flex h-[56px] w-full items-center justify-center rounded-bl-[20px] rounded-br-[20px] rounded-tr-[20px] border border-[#a2a2a2] bg-[#f4f4f4] text-[#a2a2a2] backdrop-blur-[10px] transition-opacity disabled:opacity-70 enabled:border-0 enabled:text-white"
-            style={isValid ? { backgroundImage: PURPLE_TO_TEAL_BUTTON } : undefined}
-          >
-            <span className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px]">送出提領申請</span>
-          </button>
-          <p className="w-full text-center text-[12px] leading-[18px] tracking-[0.15px] text-[#a2a2a2]">送出後可於交易紀錄中查看兌換狀態、審核進度與到帳結果。</p>
         </div>
+        {/* Just the moving thumb, no separate track rect behind it -- matches
+            TalkingBar's own minimal scrollbar (its track is the panel's own
+            edge, not a drawn shape), same as AccountWallet's transaction
+            list, flush against the CARD's own border per request -- this
+            wrapper already sits inside the card's p-[40px], so -40px (not
+            0px) reaches all the way out to the card's true right edge
+            instead of stopping 40px short of it. The card's own
+            overflow-hidden only clips past its border box, not into its own
+            padding, so this stays visible. */}
+        {needsScroll && (
+          <div className="pointer-events-none absolute right-[-39px] w-[2px] rounded-full bg-[#23f3d5]" style={{ top: thumb.top, height: thumb.height }} />
+        )}
+      </div>
+
+      {/* Pinned to the card's own bottom (per request) -- only the region
+          above this scrolls, fading out whatever's cut off there instead
+          of pushing the submit button down out of the fixed-height card. */}
+      <div className="flex w-full shrink-0 flex-col items-start gap-[12px]">
+        <button
+          type="button"
+          disabled={!isValid}
+          onClick={onClose}
+          className="flex h-[56px] w-full items-center justify-center rounded-bl-[20px] rounded-br-[20px] rounded-tr-[20px] border border-[#a2a2a2] bg-[#f4f4f4] text-[#a2a2a2] backdrop-blur-[10px] transition-opacity disabled:opacity-70 enabled:border-0 enabled:text-white"
+          style={isValid ? { backgroundImage: PURPLE_TO_TEAL_BUTTON } : undefined}
+        >
+          <span className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px]">送出提領申請</span>
+        </button>
+        <p className="w-full text-center text-[12px] leading-[18px] tracking-[0.15px] text-[#a2a2a2]">送出後可於交易紀錄中查看兌換狀態、審核進度與到帳結果。</p>
       </div>
     </div>
   );
