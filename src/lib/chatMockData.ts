@@ -90,7 +90,7 @@ export const talkingBarFriends: Friend[] = [
     levelBackground: DEFAULT_RING_COLOR,
     status: "online",
     timestamp: "3 分鐘前",
-    lastMessage: "我剛剛才中了將二十萬出來",
+    lastMessage: "我剛剛才中了時二十萬出來",
     messages: [
       {
         avatar: "/assets/talk-section/avatar-jessica.png",
@@ -112,7 +112,7 @@ export const talkingBarFriends: Friend[] = [
         levelLabel: "Lv.100",
         levelBackground: DEFAULT_RING_COLOR,
         timestamp: "剛剛",
-        text: "我剛剛才中了將二十萬出來",
+        text: "我剛剛才中了時二十萬出來",
         variant: "other",
         replyTo: { name: "Jessica", text: "有什麼好玩的呢？有誰可以推薦嗎？" },
       },
