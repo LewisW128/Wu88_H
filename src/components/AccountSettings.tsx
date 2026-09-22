@@ -4,11 +4,9 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "./AuthProvider";
 import Footer from "./Footer";
-import Language from "./Language";
 import MinPanelHeight from "./MinPanelHeight";
 import ProfileSidebar from "./ProfileSidebar";
 import ScaleToFit from "./ScaleToFit";
-import Search from "./Search";
 import StickyUtilityBar from "./StickyUtilityBar";
 import TalkingBar from "./TalkingBar";
 import { talkingBarFriends } from "../lib/chatMockData";
@@ -239,11 +237,11 @@ export default function AccountSettings() {
             </div>
 
             <div className="flex flex-col gap-[25px] pb-[40px]">
+              {/* No Search/Language here (per request) -- the empty div keeps
+                  TopUp pinned to the right via StickyUtilityBar's own
+                  justify-between instead of it collapsing to the left. */}
               <StickyUtilityBar>
-                <div className="flex items-center gap-[20px]">
-                  <Search />
-                  <Language />
-                </div>
+                <div />
                 <TopUp />
               </StickyUtilityBar>
 

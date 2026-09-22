@@ -4,13 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import AnimatedArrowSpecial, { useArrowPulse } from "./AnimatedArrowSpecial";
 import { useAuth } from "./AuthProvider";
 import Footer from "./Footer";
-import Language from "./Language";
 import MinPanelHeight from "./MinPanelHeight";
 import RechargeModal from "./RechargeModal";
 import WithdrawModal from "./WithdrawModal";
 import ProfileSidebar from "./ProfileSidebar";
 import ScaleToFit from "./ScaleToFit";
-import Search from "./Search";
 import StickyUtilityBar from "./StickyUtilityBar";
 import TalkingBar from "./TalkingBar";
 import { talkingBarFriends } from "../lib/chatMockData";
@@ -797,19 +795,15 @@ export default function AccountWallet() {
 
             <div className="flex flex-col gap-[25px] pb-[40px]">
               <StickyUtilityBar>
-                <div className="flex items-center gap-[30px]">
-                  {/* Figma "Frame1347" (1J_WU88-H-PC_Recharge node 37:26997)
-                      own "Title" -- this page's own name, missing until now
-                      even though every other profile page's utility bar
-                      already reserves this same left slot for Search/Language. */}
-                  <div className="flex shrink-0 items-center gap-[10px]">
-                    <img alt="" src={withBasePath("/assets/wallet/icon-page-title.svg")} className="size-[25px]" />
-                    <p className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#3e4140]">帳戶明細</p>
-                  </div>
-                  <div className="flex items-center gap-[20px]">
-                    <Search />
-                    <Language />
-                  </div>
+                {/* Figma "Frame1347" (1J_WU88-H-PC_Recharge node 37:26997):
+                    just this page's own "Title", not the Search/Language
+                    pair every other profile page's utility bar has in this
+                    same left slot -- confirmed against the frame itself,
+                    which only ever pairs Title against the avatar/notify
+                    cluster on the right (per request, not Figma-inferred). */}
+                <div className="flex shrink-0 items-center gap-[10px]">
+                  <img alt="" src={withBasePath("/assets/wallet/icon-page-title.svg")} className="size-[25px]" />
+                  <p className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-[#3e4140]">帳戶明細</p>
                 </div>
                 <TopUp />
               </StickyUtilityBar>

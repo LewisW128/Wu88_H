@@ -8,14 +8,12 @@ import { useFavorites } from "./FavoritesProvider";
 import Footer from "./Footer";
 import GeneralGames from "./GeneralGames";
 import GuestPromoCard from "./GuestPromoCard";
-import Language from "./Language";
 import MinPanelHeight from "./MinPanelHeight";
 import ProfileCard from "./ProfileCard";
 import { type PromotionCardProps } from "./PromotionCard";
 import Promotions from "./Promotions";
 import QuickLinks from "./QuickLinks";
 import ScaleToFit from "./ScaleToFit";
-import Search from "./Search";
 import ProfileSidebar from "./ProfileSidebar";
 import SocialLinks from "./SocialLinks";
 import Statistics from "./Statistics";
@@ -125,11 +123,12 @@ export default function ProfileContent({ forceGuest }: { forceGuest: boolean }) 
             </div>
 
             <div className="flex flex-col gap-[25px] pb-[40px]">
+              {/* No Search/Language here (per request, same fix as
+                  AccountWallet/AccountSettings) -- the empty div keeps
+                  TopUp pinned to the right via StickyUtilityBar's own
+                  justify-between instead of it collapsing to the left. */}
               <StickyUtilityBar>
-                <div className="flex items-center gap-[20px]">
-                  <Search />
-                  <Language />
-                </div>
+                <div />
                 <TopUp />
               </StickyUtilityBar>
 

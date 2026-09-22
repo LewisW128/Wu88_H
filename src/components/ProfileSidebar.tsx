@@ -22,7 +22,7 @@ function Divider() {
 // current route actually matches `href` -- Figma's own rail shows a
 // DIFFERENT icon highlighted on each of the 3 real pages (confirmed by
 // fetching each page's own sidebar frame separately: 會員中心 glows on
-// /profile, 錢包 on /profile/wallet, 個人資訊 on /profile/account), not one
+// /profile, 帳戶明細 on /profile/wallet, 個人資訊 on /profile/account), not one
 // icon permanently pinned "on" regardless of where you actually are.
 function NavIcon({
   icon,
@@ -310,7 +310,7 @@ export default function ProfileSidebar() {
           <NavIcon
             icon="/assets/sidebar/profile-nav/wallet.svg"
             activeIcon="/assets/sidebar/profile-nav/wallet-active.svg"
-            label="錢包"
+            label="帳戶明細"
             href="/profile/wallet"
           />
           {/* /profile/account itself already bounces a guest straight back
