@@ -7,6 +7,7 @@ import Footer from "./Footer";
 import Language from "./Language";
 import MinPanelHeight from "./MinPanelHeight";
 import RechargeModal from "./RechargeModal";
+import WithdrawModal from "./WithdrawModal";
 import ProfileSidebar from "./ProfileSidebar";
 import ScaleToFit from "./ScaleToFit";
 import Search from "./Search";
@@ -725,6 +726,7 @@ export default function AccountWallet() {
   const topUpArrow = useArrowPulse();
   const sellArrow = useArrowPulse();
   const [showRecharge, setShowRecharge] = useState(false);
+  const [showWithdraw, setShowWithdraw] = useState(false);
 
   // 日期/類型 pills (Figma nodes 37:29157/37:29859): only one dropdown open
   // at a time, closed by an outside click or Escape -- same convention as
@@ -822,12 +824,11 @@ export default function AccountWallet() {
                       <AnimatedArrowSpecial hovered={topUpArrow.hovered} size={25} color="#3e4140" />
                     </button>
                     {/* Figma's own second pill next to 儲值 (node 37:28548) --
-                        no 託售 (consignment/resale) flow exists yet anywhere
-                        in the app to link to, so this matches the visual
-                        exactly (white pill, dark outline, same Arrow_Special
-                        hover) without a fabricated destination. */}
+                        now has a real destination (WithdrawModal, Figma
+                        37:19867/37:23265's own 鑽石兌換現金提領 flow). */}
                     <button
                       type="button"
+                      onClick={() => setShowWithdraw(true)}
                       onMouseEnter={sellArrow.pulse}
                       className="flex items-center gap-[20px] rounded-[20px] border border-[#3e4140] bg-white px-[20px] py-[10px]"
                     >
@@ -836,6 +837,7 @@ export default function AccountWallet() {
                     </button>
                   </div>
                   {showRecharge && <RechargeModal onClose={() => setShowRecharge(false)} />}
+                  {showWithdraw && <WithdrawModal onClose={() => setShowWithdraw(false)} />}
                 </div>
               </div>
 
