@@ -13,13 +13,14 @@ const PASSWORD_PATTERN = /^[A-Za-z0-9]{6,12}$/;
 // fail client-side checks instead of "succeeding" and dismissing the modal.
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-// Figma "Registration Card" (01_WU88-H-PC-Home-Page node 1304:117728, the
-// popup shown over the dimmed home page at 1303:114061): the sign-up form
-// LoginModal swaps to when 註冊 is clicked. A 560x659 frosted card (white/90
-// + 12px blur, deep double shadow) with a plain top-left corner -- that
-// corner is where the two pale diagonal ribbons bleed in, clipped by the
-// card -- and 50px radii on the other three. Every field is a real input;
-// "建立帳號" only submits once the form is valid, and a successful sign-up
+// Figma "Registration Card" (6A_Login---Register node 1:2441, shown over the
+// dimmed home page at 1:2363): the sign-up form LoginModal swaps to when 註冊
+// is clicked. A 560x659 frosted card (white/90 + 12px blur, deep double
+// shadow) with a plain top-left corner -- that corner is where the two pale
+// diagonal ribbons bleed in, clipped by the card -- and 50px radii on the
+// other three. Primary CTA uses a purple→teal gradient with matching
+// cut-corner radii (no top-left radius). Every field is a real input;
+// "註冊帳號" only submits once the form is valid, and a successful sign-up
 // logs the new member straight in (same hand-off LoginPopup's own login uses).
 export default function RegistrationPopup({
   onClose,
@@ -116,8 +117,15 @@ export default function RegistrationPopup({
         </label>
 
         <div className="flex w-full flex-col items-start gap-[20px]">
-          <button type="submit" className="flex h-[56px] w-full shrink-0 items-center justify-center rounded-[15px] bg-[#8d54d8]">
-            <span className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-white">建立帳號</span>
+          <button
+            type="submit"
+            className="flex h-[56px] w-full shrink-0 items-center justify-center rounded-bl-[20px] rounded-br-[20px] rounded-tr-[20px] backdrop-blur-[10px]"
+            style={{
+              backgroundImage:
+                "linear-gradient(102.36deg, rgb(141, 84, 216) 0.27%, rgb(20, 232, 184) 104.68%)",
+            }}
+          >
+            <span className="whitespace-nowrap text-[14px] font-bold leading-[20px] tracking-[0.15px] text-white">註冊帳號</span>
           </button>
           <p className="w-full text-center text-[12px] text-[#a2a2a2]">
             已有帳號？
