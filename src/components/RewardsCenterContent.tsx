@@ -980,16 +980,23 @@ export default function RewardsCenterContent() {
           transform: `translateY(calc(${(1 - screenTwoReveal) * 100}% + ${(1 - screenTwoReveal) * 20}px))`,
         }}
       >
-        {/* `menuIsFluid` stops this at the chat panel's own column
-            (`effectiveKitGap`'s own comment) -- the row's own content (below)
-            is sized to exactly fill that width via its own now-dynamic gap,
-            so nothing here overflows into scroll that didn't need to.
-            Otherwise (a window no wider than the canvas at this scale) it
-            spans the full viewport, as before. */}
+        {/* Per the user's own direct report ("怎麼滑最右邊還是會擋在聊天系統後面"):
+            this scroll VIEWPORT has to stop at the chat panel's own column
+            in BOTH cases, not just the `menuIsFluid` one -- Talking_Bar's
+            `z-10` sits above this row's own `z-[5]` on purpose (this row
+            belongs behind it), so any card that scrolls into that same
+            screen region is just invisible under it no matter how far you
+            drag; the old `: viewport.width` fallback let the non-fluid case
+            span the FULL viewport width (including that region), so the
+            last kit(s) could scroll to a position that's permanently
+            covered instead of ever actually reaching daylight left of the
+            panel. `menuIsFluid` still separately decides whether
+            `effectiveKitGap` spreads the cards out (its own comment) --
+            that part of the split was never the bug, only this width. */}
         <div
           ref={menuScrollRef}
           className="no-scrollbar pointer-events-auto cursor-grab overflow-x-auto overflow-y-hidden active:cursor-grabbing"
-          style={{ width: menuIsFluid ? Math.max(0, viewport.width - 295 * uiScale) : viewport.width }}
+          style={{ width: Math.max(0, viewport.width - 295 * uiScale) }}
         >
           <div className="flex w-max flex-col gap-[20px] pl-[164px]" style={{ zoom: uiScale } as React.CSSProperties}>
             {/* `gap: effectiveKitGap`, not a hardcoded `gap-[20px]` Tailwind
