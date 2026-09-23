@@ -16,10 +16,12 @@ import { withBasePath } from "../lib/asset";
 import { MEMBER_CONTINUOUS_DEPOSIT, MEMBER_EXP, MEMBER_LEVEL, MEMBER_MAX_EXP } from "../lib/member";
 import { topBarAnnouncements, talkingBarMessages, talkingBarSimulatedMessages, talkingBarFriends } from "../lib/chatMockData";
 
-// Figma "Level_line"/"Level_Point" (node 202:7697 / 203:7706): the season's
-// XP-milestone rail under the Reward_Kit row -- 8 points (numerals are this
-// season's own literal thresholds, not counters), each followed by a
-// connector line except the final "100" (under the last kit).
+// Figma "Level_line"/"Level_Point" (node 202:7697 / 203:7706, resized in a
+// later revision at node 667:15687/757:17358's own bottom menu -- 34px
+// points now, not the original 24px): the season's XP-milestone rail under
+// the Reward_Kit row -- 8 points (numerals are this season's own literal
+// thresholds, not counters), each followed by a connector line except the
+// final "100" (under the last kit).
 const LEVEL_POINTS = ["1", "14", "28", "41", "54", "67", "82", "100"];
 
 // Figma node 689:16248 (a standalone example of the FIRST point+line pair,
@@ -32,13 +34,13 @@ const LEVEL_POINTS = ["1", "14", "28", "41", "54", "67", "82", "100"];
 // a CSS filter over the plain ones.
 function LevelPoint({ numeral, active }: { numeral: string; active: boolean }) {
   return (
-    <div className="relative size-[24px] shrink-0">
-      {/* The hexagon (level-point.svg, natural 20.7846x24) needs its own
+    <div className="relative size-[34px] shrink-0">
+      {/* The hexagon (level-point.svg, natural 29.4449x34) needs its own
           6.7%-inset wrapper sized purely by that inset -- putting `size-full`
           on the SAME element as `inset-[0_6.7%]` (an earlier version here
           did) over-constrains the box: an explicit width/height wins over
           the implied one from left+right, so the hexagon rendered at the
-          full 24px square instead of 20.78px, stretched and overflowing
+          full 34px square instead of 29.44px, stretched and overflowing
           past its own container. Two nested elements, exactly matching
           Figma's own structure, avoids that fight entirely. */}
       <div className="absolute inset-[0_6.7%]">
@@ -1027,7 +1029,7 @@ export default function RewardsCenterContent() {
                 centered under its own card, current-level zoom included,
                 rather than a row laid out independently of the cards above
                 it. */}
-            <div className="relative h-[24px]" style={{ width: kitRowWidth }}>
+            <div className="relative h-[34px]" style={{ width: kitRowWidth }}>
               {LEVEL_POINTS.map((numeral, i) => {
                 // Per the user's own direct call, matching Figma's own
                 // example (node 689:16248): a milestone reads as reached
@@ -1053,15 +1055,24 @@ export default function RewardsCenterContent() {
                 const segmentEnd = i + 1 < LEVEL_POINTS.length
                   ? Number(LEVEL_POINTS[i + 1])
                   : segmentStart;
-                const lineWidth = hasTrailingLine ? lineEnd - center - 24 : 0;
+                // `- 34`/`- 17`, not the original `- 24`/`- 12` -- the point's
+                // own width doubled its role here now that it's 34px (Figma's
+                // later revision, LEVEL_POINTS' own comment): half of it is
+                // how far each point's wrapper sits left of its `center`, and
+                // the full width is how far past that same center the line
+                // after it has to start clearing the point's own right edge.
+                const lineWidth = hasTrailingLine ? lineEnd - center - 34 : 0;
                 const lineProgress = hasTrailingLine && loggedIn
                   ? (MEMBER_LEVEL - segmentStart) / Math.max(1, segmentEnd - segmentStart)
                   : 0;
                 return (
-                  <div key={i} className="absolute top-0" style={{ left: center - 12 }}>
+                  <div key={i} className="absolute top-0" style={{ left: center - 17 }}>
                     <LevelPoint numeral={numeral} active={achieved} />
                     {hasTrailingLine ? (
-                      <div className="absolute left-[24px] top-[2.5px]">
+                      // `top-[7.5px]`, not the original `2.5px` -- `(34-19)/2`,
+                      // matching Figma's own new `Level_line` y-offset exactly
+                      // (node 758:20716, x=34 y=7.5) for the bigger 34px point.
+                      <div className="absolute left-[34px] top-[7.5px]">
                         <LevelLine progress={lineProgress} width={lineWidth} />
                       </div>
                     ) : null}
