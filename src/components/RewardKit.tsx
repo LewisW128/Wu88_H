@@ -687,7 +687,22 @@ export function RewardKitDetailPanel({
 
             <img alt="" src={withBasePath("/assets/rewards/detail-divider.svg")} className="h-px w-[359px]" />
 
-            <div className="flex items-start gap-[20px] text-[12px] leading-[18px] tracking-[0.15px]">
+            {/* `min-h-[208px]` -- per the user's own direct report (a
+                screenshot showing the last kit's own Lv.99/Lv.100 rows
+                hidden behind the "立即領取" pill): every OTHER kit has a
+                13-14 level table, tall enough that the panel's own
+                content naturally pushes the bottom-anchored pill (its
+                own comment on `panelPath`/`boxHeight`) well clear of the
+                table above it. The last kit (合金石寶箱, Lv.93-100) is the
+                ONE 8-level table (REWARD_KITS' own comment on why -- it's
+                the tail bracket), so its own shorter content let the box
+                shrink enough that the pill crept back up into the right
+                column's last two rows. `208px` matches the OTHER kits'
+                own left-column height (8 rows * 26px row height, `py-4px`
+                +18px line-height), so a short table now reserves exactly
+                as much room as those already-safe kits do, regardless of
+                how few rows it actually has to show. */}
+            <div className="flex min-h-[208px] items-start gap-[20px] text-[12px] leading-[18px] tracking-[0.15px]">
               <RewardTableColumn rows={left} />
               <RewardTableColumn rows={right} />
             </div>
