@@ -481,8 +481,15 @@ export function RewardKitDetailPanel({
             -- this large detail-panel gem always spins, no hover needed,
             unlike the small card's own hover-gated version): plays
             `kit.animatedImage` (its own comment) straight away whenever it
-            exists, with no floating bob here -- Figma has no floating spec
-            for this instance, only the small card asked for that.
+            exists. Now also always-on `gem-float` (a later direct call,
+            "這裡的石頭也要微微的上下漂浮，跟下方選項hover效果一樣") -- same reasoning
+            as the rotation above: this instance has no hover state to gate
+            behind in the first place, so the small card's OWN hover-gated
+            version doesn't apply literally, just its floating motion.
+            Safe directly on this `<img>` (unlike the small card's own
+            split-across-two-elements version, RewardKitCard's own comment
+            on why) -- nothing else here sets a `transform` on this same
+            element for `gem-float`'s own `translateY` to clobber.
             `size-[432px]` (BOTH width and height explicit), not just a
             `w-[432px]` -- originally sized to 480px per the user's own
             direct call ("這裡的石頭要跟我畫的紅圈依樣大"), circling roughly 2x
@@ -503,7 +510,7 @@ export function RewardKitDetailPanel({
         <img
           alt=""
           src={withBasePath(kit.animatedImage ?? kit.image)}
-          className="size-[432px] max-w-none object-contain"
+          className="size-[432px] max-w-none animate-[gem-float_3s_ease-in-out_infinite] object-contain"
         />
       </div>
 

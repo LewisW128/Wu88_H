@@ -73,7 +73,10 @@ body {
    Reward_Kit card's own gem art gets a gentle up/down bob ONLY while
    hovered (RewardKitCard applies this class conditionally) -- the
    rotation itself is baked into the animated WebP asset, this class only
-   adds the vertical floating motion on top of it. */
+   adds the vertical floating motion on top of it. Also applied always-on
+   (no hover gate) to the big kit-detail-panel gem, per a later direct
+   call -- that instance already plays its own rotation unconditionally,
+   so gating this the same way the small card does never applied there. */
 @keyframes gem-float {
   0%,
   100% {
