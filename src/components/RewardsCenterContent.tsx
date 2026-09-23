@@ -980,25 +980,34 @@ export default function RewardsCenterContent() {
           transform: `translateY(calc(${(1 - screenTwoReveal) * 100}% + ${(1 - screenTwoReveal) * 20}px))`,
         }}
       >
-        {/* Per the user's own direct report ("怎麼滑最右邊還是會擋在聊天系統後面"):
-            this scroll VIEWPORT has to stop at the chat panel's own column
-            in BOTH cases, not just the `menuIsFluid` one -- Talking_Bar's
-            `z-10` sits above this row's own `z-[5]` on purpose (this row
-            belongs behind it), so any card that scrolls into that same
-            screen region is just invisible under it no matter how far you
-            drag; the old `: viewport.width` fallback let the non-fluid case
-            span the FULL viewport width (including that region), so the
-            last kit(s) could scroll to a position that's permanently
-            covered instead of ever actually reaching daylight left of the
-            panel. `menuIsFluid` still separately decides whether
-            `effectiveKitGap` spreads the cards out (its own comment) --
-            that part of the split was never the bug, only this width. */}
+        {/* Per the user's own direct follow-up ("會這樣被切掉是因為你開啟了遮罩" /
+            "可以關閉遮罩嗎" / "就是保留可以滑到最底的功能"): shrinking this VIEWPORT
+            itself (an earlier version here did, to stop it short of the chat
+            panel's column) fixed the last kit staying covered, but traded it
+            for a WORSE symptom -- a real `overflow-x-auto` clip edge now
+            sliced a card in half at rest, visibly, instead of that same card
+            just disappearing under Talking_Bar's opaque background the way
+            it always used to. The viewport stays the full `viewport.width`
+            again (so nothing about the REST view's own clipping changed),
+            and the extra scroll room needed to actually clear the last
+            kit(s) from behind the panel comes from the trailing spacer
+            below instead -- same end result at max scroll (nothing left
+            covered), without a new hard-edge clip appearing anywhere in
+            between. */}
         <div
           ref={menuScrollRef}
           className="no-scrollbar pointer-events-auto cursor-grab overflow-x-auto overflow-y-hidden active:cursor-grabbing"
-          style={{ width: Math.max(0, viewport.width - 295 * uiScale) }}
+          style={{ width: viewport.width }}
         >
-          <div className="flex w-max flex-col gap-[20px] pl-[164px]" style={{ zoom: uiScale } as React.CSSProperties}>
+          {/* `pr-[295px]` (in this div's own PRE-zoom design units, same as
+              every other flat number in this row -- `zoom` below scales the
+              whole box together, so this renders as a real `295 * uiScale`px
+              trailing spacer): the actual mechanism replacing the viewport
+              shrink above -- extra empty scroll room after the last card,
+              so dragging all the way still clears Talking_Bar's own column
+              at true max scroll, without narrowing the visible window
+              itself (that div's own comment). */}
+          <div className="flex w-max flex-col gap-[20px] pl-[164px] pr-[295px]" style={{ zoom: uiScale } as React.CSSProperties}>
             {/* `gap: effectiveKitGap`, not a hardcoded `gap-[20px]` Tailwind
                 literal or the flat `KIT_CARD_GAP` constant -- confirmed
                 live this was the actual root cause of the level rail
