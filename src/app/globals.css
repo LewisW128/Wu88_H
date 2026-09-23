@@ -87,6 +87,21 @@ body {
   }
 }
 
+/* Per the user's own direct call ("裂縫的亮部有微光像呼吸般閃爍" / "很像是石頭裡面有
+   個發光體"): pulses the opacity of RewardKitDetailPanel's own blurred/
+   brightened glow layer (its own comment) so the internal bloom breathes
+   in and out instead of sitting at one constant brightness. Experimental,
+   on the first kit (青銅寶箱) only for now. */
+@keyframes gem-glow-breathe {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
 @keyframes dot-twinkle {
   0%,
   100% {

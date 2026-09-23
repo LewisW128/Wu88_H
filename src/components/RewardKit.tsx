@@ -507,11 +507,62 @@ export function RewardKitDetailPanel({
             image's own aspect ratio. Setting both dimensions explicitly
             (the asset is square, so equal) sidesteps that algorithm rather
             than depending on it. */}
-        <img
-          alt=""
-          src={withBasePath(kit.animatedImage ?? kit.image)}
-          className="size-[432px] max-w-none animate-[gem-float_3s_ease-in-out_infinite] object-contain"
-        />
+        {(() => {
+          const gemSrc = withBasePath(kit.animatedImage ?? kit.image);
+          return (
+            <>
+              <img alt="" src={gemSrc} className="size-[432px] max-w-none animate-[gem-float_3s_ease-in-out_infinite] object-contain" />
+              {/* Experimental per the user's own direct call ("這個石頭的裂縫的
+                  亮部有微光像呼吸般閃爍" / "很像是石頭裡面有個發光體") -- try this on
+                  ONLY the first kit (青銅寶箱) for now, per their own direct
+                  request, before deciding whether to roll it out to the
+                  other 7 (each kit's own crack color/brightness differs, so
+                  this exact `brightness`/`blur` tuning may not read the same
+                  way on the rest).
+                  A second copy of the SAME source image, not a hand-cut
+                  crack mask (no such asset exists for any of the 8 gems) --
+                  `brightness(2.4)` blows the ALREADY-bright crack pixels
+                  toward white/blown-out while the much-darker rock body
+                  stays comparatively dim (brightness is multiplicative, so
+                  the gap between the two widens rather than both just
+                  lifting together), `blur` softens that into a soft bloom
+                  rather than a hard-edged recolor, and `mix-blend-mode:
+                  screen` (below, as an inline style since Tailwind's own
+                  `mix-blend-screen` utility isn't loaded in this project)
+                  only ever ADDS light on top of the base image underneath,
+                  never darkens or tints it.
+                  `maskImage: gemSrc` (the SAME source, not a separate cut
+                  mask) clips this glow layer to the base image's own alpha
+                  silhouette -- without it, `blur` would soften the image's
+                  own edges outward into a drop-shadow-style halo around the
+                  WHOLE gem, exactly the "外圍發光" (outer-edge glow) effect
+                  already rejected earlier in favor of an internal one.
+                  `gem-glow-breathe` (globals.css) then pulses this whole
+                  layer's own opacity, so the bloom itself breathes in and
+                  out rather than sitting at one constant brightness. */}
+              {kit === REWARD_KITS[0] && (
+                <img
+                  aria-hidden
+                  alt=""
+                  src={gemSrc}
+                  className="absolute inset-0 size-[432px] max-w-none animate-[gem-float_3s_ease-in-out_infinite,gem-glow-breathe_3s_ease-in-out_infinite] object-contain"
+                  style={{
+                    filter: "brightness(2.4) blur(6px)",
+                    mixBlendMode: "screen",
+                    WebkitMaskImage: `url(${gemSrc})`,
+                    maskImage: `url(${gemSrc})`,
+                    WebkitMaskSize: "contain",
+                    maskSize: "contain",
+                    WebkitMaskRepeat: "no-repeat",
+                    maskRepeat: "no-repeat",
+                    WebkitMaskPosition: "center",
+                    maskPosition: "center",
+                  }}
+                />
+              )}
+            </>
+          );
+        })()}
       </div>
 
       {/* `items-start`, not the original `items-center` -- centering only
