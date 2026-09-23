@@ -257,6 +257,17 @@ function useDragScroll<T extends HTMLElement>() {
     const drag = { down: false, startX: 0, startScrollLeft: 0, moved: false };
 
     function onPointerDown(e: PointerEvent) {
+      // Per the user's own direct report: dragging this row was also
+      // triggering the browser's own native text/image selection (the
+      // whole page flashing into a blue-highlighted "select all" state)
+      // alongside the custom scroll -- a plain `pointerdown` on this kind
+      // of content (background photo + text panels layered underneath)
+      // is exactly what a native drag-select gesture starts from, and
+      // nothing here was telling the browser not to. `preventDefault`
+      // suppresses that without affecting the click this same pointer
+      // sequence still fires afterward (`onClickCapture` below already
+      // handles telling an actual drag apart from a real click).
+      e.preventDefault();
       drag.down = true;
       drag.moved = false;
       drag.startX = e.clientX;
