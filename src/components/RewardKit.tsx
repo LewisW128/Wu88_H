@@ -341,6 +341,56 @@ function Hl({ children }: { children: React.ReactNode }) {
   return <span className="text-[#14d8bb]">{children}</span>;
 }
 
+// Hidden SVG `<defs>` for the big detail-panel gem's own experimental
+// breathing glow (its own callsite's comment on why this is a single-image
+// SVG filter, not a second stacked `<img>` copy).
+//
+// Per the user's own direct suggestion ("將發光那一層變成灰階然後加大對比 用濾鏡
+// screen蓋在彩色的本體上試試看"), replacing an earlier luminance-threshold/
+// feComposite version here (which still read as the WHOLE gem pulsing
+// together, not just the crack -- their own report, "為什麼是整顆石頭忽亮忽
+// 暗"): `feColorMatrix type="saturate" values="0"` desaturates a copy of
+// SourceGraphic to grayscale, then `feComponentTransfer`'s `type="linear"`
+// with `slope=4 intercept=-1.5` is a genuine contrast boost pivoted on
+// 0.5 gray (output = 4*input - 1.5, so 0.5 stays 0.5 while anything below
+// ~0.375 crushes to black and anything above ~0.625 clips to white) --
+// steepening that curve is what pushes the already-much-brighter crack
+// toward white while the darker rock body crushes toward black, same
+// intent as the earlier threshold but tuned as a plain contrast curve
+// instead. That high-contrast grayscale pass gets blurred into a soft
+// bloom, its own alpha scaled by `slope` -- animated 0.15 <-> 0.9 by the
+// nested SMIL `<animate>`, so it breathes rather than sitting at one
+// constant strength -- and finally `feBlend mode="screen"` lays it back
+// on top of the ORIGINAL colored `SourceGraphic` (screen only ever
+// brightens, same as the user's own request to overlay it on the colored
+// body with a screen filter). Rendered once, `width="0" height="0"` -- an
+// SVG `<filter>` def doesn't need to occupy any visible layout space
+// itself, only to exist in the document for `filter: url(#gem-glow-bloom)`
+// elsewhere to reference by id.
+function GemGlowFilter() {
+  return (
+    <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden>
+      <defs>
+        <filter id="gem-glow-bloom" x="-50%" y="-50%" width="200%" height="200%">
+          <feColorMatrix in="SourceGraphic" type="saturate" values="0" result="gray" />
+          <feComponentTransfer in="gray" result="contrasted">
+            <feFuncR type="linear" slope="4" intercept="-1.5" />
+            <feFuncG type="linear" slope="4" intercept="-1.5" />
+            <feFuncB type="linear" slope="4" intercept="-1.5" />
+          </feComponentTransfer>
+          <feGaussianBlur in="contrasted" stdDeviation="5" result="blurred" />
+          <feComponentTransfer in="blurred" result="pulsed">
+            <feFuncA type="linear" slope="0.3">
+              <animate attributeName="slope" values="0.15;0.9;0.15" dur="3s" repeatCount="indefinite" />
+            </feFuncA>
+          </feComponentTransfer>
+          <feBlend in="SourceGraphic" in2="pulsed" mode="screen" />
+        </filter>
+      </defs>
+    </svg>
+  );
+}
+
 export function RewardKitDetailPanel({
   kit,
   maxHeight,
@@ -509,57 +559,37 @@ export function RewardKitDetailPanel({
             than depending on it. */}
         {(() => {
           const gemSrc = withBasePath(kit.animatedImage ?? kit.image);
+          const glowKit = kit === REWARD_KITS[0];
           return (
             <>
-              <img alt="" src={gemSrc} className="size-[432px] max-w-none animate-[gem-float_3s_ease-in-out_infinite] object-contain" />
               {/* Experimental per the user's own direct call ("這個石頭的裂縫的
                   亮部有微光像呼吸般閃爍" / "很像是石頭裡面有個發光體") -- try this on
                   ONLY the first kit (青銅寶箱) for now, per their own direct
                   request, before deciding whether to roll it out to the
                   other 7 (each kit's own crack color/brightness differs, so
-                  this exact `brightness`/`blur` tuning may not read the same
-                  way on the rest).
-                  A second copy of the SAME source image, not a hand-cut
-                  crack mask (no such asset exists for any of the 8 gems) --
-                  `brightness(2.4)` blows the ALREADY-bright crack pixels
-                  toward white/blown-out while the much-darker rock body
-                  stays comparatively dim (brightness is multiplicative, so
-                  the gap between the two widens rather than both just
-                  lifting together), `blur` softens that into a soft bloom
-                  rather than a hard-edged recolor, and `mix-blend-mode:
-                  screen` (below, as an inline style since Tailwind's own
-                  `mix-blend-screen` utility isn't loaded in this project)
-                  only ever ADDS light on top of the base image underneath,
-                  never darkens or tints it.
-                  `maskImage: gemSrc` (the SAME source, not a separate cut
-                  mask) clips this glow layer to the base image's own alpha
-                  silhouette -- without it, `blur` would soften the image's
-                  own edges outward into a drop-shadow-style halo around the
-                  WHOLE gem, exactly the "外圍發光" (outer-edge glow) effect
-                  already rejected earlier in favor of an internal one.
-                  `gem-glow-breathe` (globals.css) then pulses this whole
-                  layer's own opacity, so the bloom itself breathes in and
-                  out rather than sitting at one constant brightness. */}
-              {kit === REWARD_KITS[0] && (
-                <img
-                  aria-hidden
-                  alt=""
-                  src={gemSrc}
-                  className="absolute inset-0 size-[432px] max-w-none animate-[gem-float_3s_ease-in-out_infinite,gem-glow-breathe_3s_ease-in-out_infinite] object-contain"
-                  style={{
-                    filter: "brightness(2.4) blur(6px)",
-                    mixBlendMode: "screen",
-                    WebkitMaskImage: `url(${gemSrc})`,
-                    maskImage: `url(${gemSrc})`,
-                    WebkitMaskSize: "contain",
-                    maskSize: "contain",
-                    WebkitMaskRepeat: "no-repeat",
-                    maskRepeat: "no-repeat",
-                    WebkitMaskPosition: "center",
-                    maskPosition: "center",
-                  }}
-                />
-              )}
+                  this exact filter tuning may not read the same way on
+                  them). A SINGLE `<img>` with an SVG `filter="url(#...)"`,
+                  NOT two stacked `<img>` copies of the same source -- a
+                  two-layer version here (brightened+blurred copy on top,
+                  `mix-blend-mode: screen`) looked right on a still frame,
+                  but `gemSrc` is `kit.animatedImage`, an ANIMATED webp: two
+                  independent `<img>` instances of the same animated source
+                  don't decode/paint perfectly in lockstep, so the two
+                  copies visibly drifted apart into an offset "ghost"
+                  duplicate of the rotating stone within a couple seconds --
+                  confirmed live exactly as the user's own screenshot showed
+                  it. An SVG filter chain instead derives the bloom from
+                  THIS element's own single rendered frame every repaint (see
+                  the `<GemGlowFilter>` def below) -- there is only ever one
+                  decoded/rotating image, so there is nothing left for a
+                  bloom copy to drift out of sync with. */}
+              <img
+                alt=""
+                src={gemSrc}
+                className="size-[432px] max-w-none animate-[gem-float_3s_ease-in-out_infinite] object-contain"
+                style={glowKit ? { filter: "url(#gem-glow-bloom)" } : undefined}
+              />
+              {glowKit && <GemGlowFilter />}
             </>
           );
         })()}
