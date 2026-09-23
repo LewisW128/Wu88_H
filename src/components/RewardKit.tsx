@@ -345,40 +345,62 @@ function Hl({ children }: { children: React.ReactNode }) {
 // breathing glow (its own callsite's comment on why this is a single-image
 // SVG filter, not a second stacked `<img>` copy).
 //
-// Per the user's own direct suggestion ("將發光那一層變成灰階然後加大對比 用濾鏡
-// screen蓋在彩色的本體上試試看"), replacing an earlier luminance-threshold/
-// feComposite version here (which still read as the WHOLE gem pulsing
-// together, not just the crack -- their own report, "為什麼是整顆石頭忽亮忽
-// 暗"): `feColorMatrix type="saturate" values="0"` desaturates a copy of
-// SourceGraphic to grayscale, then `feComponentTransfer`'s `type="linear"`
-// with `slope=4 intercept=-1.5` is a genuine contrast boost pivoted on
-// 0.5 gray (output = 4*input - 1.5, so 0.5 stays 0.5 while anything below
-// ~0.375 crushes to black and anything above ~0.625 clips to white) --
-// steepening that curve is what pushes the already-much-brighter crack
-// toward white while the darker rock body crushes toward black, same
-// intent as the earlier threshold but tuned as a plain contrast curve
-// instead. That high-contrast grayscale pass gets blurred into a soft
-// bloom, its own alpha scaled by `slope` -- animated 0.15 <-> 0.9 by the
-// nested SMIL `<animate>`, so it breathes rather than sitting at one
-// constant strength -- and finally `feBlend mode="screen"` lays it back
-// on top of the ORIGINAL colored `SourceGraphic` (screen only ever
-// brightens, same as the user's own request to overlay it on the colored
-// body with a screen filter). Rendered once, `width="0" height="0"` -- an
-// SVG `<filter>` def doesn't need to occupy any visible layout space
-// itself, only to exist in the document for `filter: url(#gem-glow-bloom)`
-// elsewhere to reference by id.
+// The grayscale-contrast version tried here (per the user's own earlier
+// direct suggestion, "將發光那一層變成灰階然後加大對比 用濾鏡screen蓋在彩色的本體上
+// 試試看") had a real bug the user's own report caught exactly ("你的glow似乎
+// 被黑邊的模糊蓋過了" / "現在發的是黑光" / "不是亮部的顏色"): the animated
+// `feFuncA` there only scaled ALPHA, on a layer whose whole interior was
+// already fully opaque -- at the peak of the pulse that alpha clamps to 1
+// across the ENTIRE gem silhouette regardless of color, and since MOST of
+// that silhouette's own contrasted grayscale value is crushed near-black
+// (only the crack itself reads near-white), screen-blending that now-
+// opaque, mostly-black layer produced visible black fringing right where
+// it should have been a bright glow, not the crack's own real color.
+//
+// This version isolates the bright pixels FIRST, before anything gets
+// blurred or its alpha touched: `feColorMatrix type="luminanceToAlpha"`
+// puts each pixel's own brightness into `lum`'s alpha channel, then
+// `highlightMask`'s `feFuncA` step table keeps only the brightest ~1/8 of
+// that range as opaque and crushes everything below it to fully
+// TRANSPARENT (not merely dark) -- a genuine hard cutoff. `feComposite
+// operator="in"` then pulls the ORIGINAL crack's own real color (its true
+// bright cyan/white, not a flattened grayscale value) out of
+// `SourceGraphic` wherever that mask is opaque, and nothing anywhere else
+// -- the dark rock body is fully transparent in `brightColor`, not opaque
+// black, so there is no dark layer left for the pulse to accidentally
+// clamp to full strength and screen-blend over the whole gem.
 function GemGlowFilter() {
   return (
     <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden>
       <defs>
         <filter id="gem-glow-bloom" x="-50%" y="-50%" width="200%" height="200%">
-          <feColorMatrix in="SourceGraphic" type="saturate" values="0" result="gray" />
-          <feComponentTransfer in="gray" result="contrasted">
-            <feFuncR type="linear" slope="4" intercept="-1.5" />
-            <feFuncG type="linear" slope="4" intercept="-1.5" />
-            <feFuncB type="linear" slope="4" intercept="-1.5" />
+          {/* `0 0 0 0 1 1 1 1 1` (cutoff ~0.5), not the original
+              `0 0 0 0 0 0 0 1 1` (cutoff ~0.75) -- per the user's own
+              direct report after the black-fringe fix ("因為現在已經看不出來
+              亮暗變化了"): isolating ONLY the very brightest core pixels
+              fixed the color bug, but left too little actual area for the
+              pulse to visibly sweep across. Lowering the cutoff brings in
+              the crack's own dimmer surrounding glow too, still well clear
+              of the dark rock body's own much lower luminance. */}
+          <feColorMatrix in="SourceGraphic" type="luminanceToAlpha" result="lum" />
+          <feComponentTransfer in="lum" result="highlightMask">
+            <feFuncA type="table" tableValues="0 0 0 0 1 1 1 1 1" />
           </feComponentTransfer>
-          <feGaussianBlur in="contrasted" stdDeviation="5" result="blurred" />
+          <feComposite in="SourceGraphic" in2="highlightMask" operator="in" result="brightColor" />
+          {/* Two blur passes off the SAME `brightColor` bright-only pass,
+              not one -- per the user's own direct follow-up ("可以再加上一層
+              glow嗎" / "讓發光體有光暈出現"): `tightBlur` (5px) is a sharp
+              bright core right at the crack; `wideBlur` (18px) spreads that
+              same bright-only pass much further out into a soft ambient
+              halo/aura around it, the way a real bloom shader layers a
+              tight core over a wide soft glow rather than relying on one
+              blur radius to do both jobs. Blurring `brightColor` (already
+              transparent outside the crack) instead of the WHOLE gem is
+              also what keeps this halo from re-introducing the same black-
+              fringing bug -- there's no opaque dark color anywhere in it
+              left to leak. */}
+          <feGaussianBlur in="brightColor" stdDeviation="6" result="tightBlur" />
+          <feGaussianBlur in="brightColor" stdDeviation="22" result="wideBlur" />
           {/* `0;2.8;0`, not the original `0.15;0.9;0.15` -- per the user's
               own direct report ("感覺像恆亮" -- reads as constantly lit): a
               `feBlend mode="screen"` result can only ever get BRIGHTER than
@@ -390,13 +412,22 @@ function GemGlowFilter() {
               layer contributes nothing, leaving just the source's own
               natural brightness) and a peak pushed well past 1 (saturates
               solid white at the crack, a genuine flare) makes the swing
-              between the two states unmistakable. */}
-          <feComponentTransfer in="blurred" result="pulsed">
+              between the two states unmistakable. Both the core and the
+              halo share this exact same breathing cycle (same `values`/
+              `dur`, not offset) so they read as one light source pulsing,
+              not two independently-timed layers. */}
+          <feComponentTransfer in="tightBlur" result="corePulsed">
             <feFuncA type="linear" slope="0">
-              <animate attributeName="slope" values="0;2.8;0" dur="3s" repeatCount="indefinite" />
+              <animate attributeName="slope" values="0;4;0" dur="3s" repeatCount="indefinite" />
             </feFuncA>
           </feComponentTransfer>
-          <feBlend in="SourceGraphic" in2="pulsed" mode="screen" />
+          <feComponentTransfer in="wideBlur" result="haloPulsed">
+            <feFuncA type="linear" slope="0">
+              <animate attributeName="slope" values="0;4;0" dur="3s" repeatCount="indefinite" />
+            </feFuncA>
+          </feComponentTransfer>
+          <feBlend in="SourceGraphic" in2="haloPulsed" mode="screen" result="withHalo" />
+          <feBlend in="withHalo" in2="corePulsed" mode="screen" />
         </filter>
       </defs>
     </svg>
