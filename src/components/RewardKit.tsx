@@ -602,16 +602,12 @@ export function RewardKitDetailPanel({
             than depending on it. */}
         {(() => {
           const gemSrc = withBasePath(kit.animatedImage ?? kit.image);
-          const glowKit = kit === REWARD_KITS[0];
           return (
             <>
-              {/* Experimental per the user's own direct call ("這個石頭的裂縫的
-                  亮部有微光像呼吸般閃爍" / "很像是石頭裡面有個發光體") -- try this on
-                  ONLY the first kit (青銅寶箱) for now, per their own direct
-                  request, before deciding whether to roll it out to the
-                  other 7 (each kit's own crack color/brightness differs, so
-                  this exact filter tuning may not read the same way on
-                  them). A SINGLE `<img>` with an SVG `filter="url(#...)"`,
+              {/* Per the user's own direct call ("這個石頭的裂縫的亮部有微光像呼吸
+                  般閃爍" / "很像是石頭裡面有個發光體"), now rolled out to all 8 kits
+                  ("其他石頭比照辦理吧") after confirming the effect on 青銅寶箱
+                  first. A SINGLE `<img>` with an SVG `filter="url(#...)"`,
                   NOT two stacked `<img>` copies of the same source -- a
                   two-layer version here (brightened+blurred copy on top,
                   `mix-blend-mode: screen`) looked right on a still frame,
@@ -625,14 +621,18 @@ export function RewardKitDetailPanel({
                   THIS element's own single rendered frame every repaint (see
                   the `<GemGlowFilter>` def below) -- there is only ever one
                   decoded/rotating image, so there is nothing left for a
-                  bloom copy to drift out of sync with. */}
+                  bloom copy to drift out of sync with. The luminance
+                  threshold inside that filter (its own comment) isolates
+                  whichever pixels are brightest in THIS kit's own gem, not
+                  a hardcoded color, so it applies uniformly across all 8
+                  without per-kit tuning. */}
               <img
                 alt=""
                 src={gemSrc}
                 className="size-[432px] max-w-none animate-[gem-float_3s_ease-in-out_infinite] object-contain"
-                style={glowKit ? { filter: "url(#gem-glow-bloom)" } : undefined}
+                style={{ filter: "url(#gem-glow-bloom)" }}
               />
-              {glowKit && <GemGlowFilter />}
+              <GemGlowFilter />
             </>
           );
         })()}
