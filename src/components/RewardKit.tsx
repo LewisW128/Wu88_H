@@ -379,9 +379,21 @@ function GemGlowFilter() {
             <feFuncB type="linear" slope="4" intercept="-1.5" />
           </feComponentTransfer>
           <feGaussianBlur in="contrasted" stdDeviation="5" result="blurred" />
+          {/* `0;2.8;0`, not the original `0.15;0.9;0.15` -- per the user's
+              own direct report ("感覺像恆亮" -- reads as constantly lit): a
+              `feBlend mode="screen"` result can only ever get BRIGHTER than
+              `SourceGraphic`'s own baseline, never dimmer than it, so at the
+              trough this layer still contributed a little extra light on
+              top of the crack's own already-bright base pixels, and the gap
+              to the peak wasn't wide enough to read as a real flash rather
+              than a faint shimmer. Trough all the way to literal 0 (this
+              layer contributes nothing, leaving just the source's own
+              natural brightness) and a peak pushed well past 1 (saturates
+              solid white at the crack, a genuine flare) makes the swing
+              between the two states unmistakable. */}
           <feComponentTransfer in="blurred" result="pulsed">
-            <feFuncA type="linear" slope="0.3">
-              <animate attributeName="slope" values="0.15;0.9;0.15" dur="3s" repeatCount="indefinite" />
+            <feFuncA type="linear" slope="0">
+              <animate attributeName="slope" values="0;2.8;0" dur="3s" repeatCount="indefinite" />
             </feFuncA>
           </feComponentTransfer>
           <feBlend in="SourceGraphic" in2="pulsed" mode="screen" />
